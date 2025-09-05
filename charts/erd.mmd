@@ -1,0 +1,41 @@
+erDiagram
+    direction LR
+    RECRUITER {
+        int recruiterId PK
+        string username
+        string password
+        string companyName
+    }
+    JOB_POST {
+        int postId PK
+        int recruiterId FK
+        string title
+        string description
+        string requirements
+        string postedDate
+    }
+    CANDIDATE {
+        int candidateId PK
+        string fullName
+        string email
+    }
+    CV {
+        int cvId PK
+        int postId FK
+        int candidateId FK
+        string filePath
+        string submissionDate
+    }
+    SCREENING_RESULT {
+        int resultId PK
+        int cvId FK
+        double score
+        string summary
+        string strengths
+        string weaknesses
+    }
+
+    RECRUITER ||--o{ JOB_POST : "đăng"
+    JOB_POST ||--o{ CV : "có"
+    CANDIDATE ||--o{ CV : "nộp"
+    CV ||--|{ SCREENING_RESULT : "được xử lý thành"

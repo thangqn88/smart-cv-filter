@@ -1,0 +1,19 @@
+graph TD
+    subgraph Giao diện người dùng
+        A(Frontend)
+    end
+    subgraph Tầng Logic nghiệp vụ
+        B(Backend)
+    end
+    subgraph Tầng Dữ liệu
+        C[Cơ sở dữ liệu]
+    end
+    subgraph Dịch vụ ngoài
+        D(Gemini AI)
+    end
+
+    A -- "Gửi yêu cầu" --> B
+    B -- "Lấy/Lưu dữ liệu" --> C
+    B -- "Gửi dữ liệu CV" --> D
+    D -- "Trả về kết quả sàng lọc" --> B
+    B -- "Gửi kết quả hiển thị" --> A

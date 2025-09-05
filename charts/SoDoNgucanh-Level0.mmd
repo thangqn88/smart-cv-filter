@@ -1,0 +1,11 @@
+graph TD
+    actor[Nhà tuyển dụng]
+    actor1[Ứng Viên]
+    actor2[Gemini AI]
+    process(Hệ thống Web Sàng lọc CV)
+
+    actor -- Yêu cầu quản lý tin, Yêu cầu sàng lọc --> process
+    process -- Kết quả, báo cáo --> actor
+    actor1 -- Hồ sơ CV --> process
+    process -- Yêu cầu phân tích CV --> actor2
+    actor2 -- Kết quả phân tích --> process

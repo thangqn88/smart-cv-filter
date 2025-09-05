@@ -1,0 +1,15 @@
+graph LR
+    actor
+    actorxxx
+    uc1(Sàng lọc CV)
+    uc2(Phân tích nội dung CV)
+    uc3(Lưu trữ kết quả sàng lọc)
+    uc4(Tạo báo cáo chi tiết);
+    uc5(Cập nhật tiêu chí sàng lọc)
+    actor -- Gửi yêu cầu --> uc1
+
+    uc1..> uc2: <<include>>
+    uc1..> uc3: <<include>>
+    uc4.> uc1: <<extend>>
+    uc5.> uc1: <<extend>>
+    uc2 -- Gửi nhận dữ liệu --> actorxxx

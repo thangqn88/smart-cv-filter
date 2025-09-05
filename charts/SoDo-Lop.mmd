@@ -1,0 +1,44 @@
+classDiagram
+    class JobPost {
+        -int postId
+        -string title
+        -string description
+        -string requirements
+        +createJob()
+        +updateJob()
+        +deleteJob()
+    }
+
+    class CV {
+        -int cvId
+        -string filePath
+        -datetime submissionDate
+        +submitCV()
+    }
+
+    class ScreeningResult {
+        -int resultId
+        -double score
+        -string summary
+        -string strengths
+        -string weaknesses
+        +saveResult()
+    }
+
+    class GeminiService {
+        +ScreeningResult screen(CV cv, JobPost jobPost)
+    }
+
+    class CVProcessor {
+        -GeminiService geminiService
+        -Recruiter recruiter
+        +ScreeningResult process(CV cv, JobPost jobPost)
+    }
+
+    JobPost "1" --> "N" CV : "chứa"
+    CV "1" --> "1" ScreeningResult : "được xử lý"
+    CVProcessor --> GeminiService : "sử dụng"
+    CVProcessor --> CV : "xử lý"
+    CVProcessor --> JobPost : "xử lý"
+    CVProcessor --> ScreeningResult : "tạo ra"
+

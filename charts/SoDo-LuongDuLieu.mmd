@@ -1,0 +1,41 @@
+graph LR
+    subgraph "Hệ thống Web Sàng lọc CV"
+        direction LR
+        subgraph P1[Quản lý tin]
+            P1a(Đăng tin)
+            P1b(Cập nhật tin)
+            P1c(Xóa tin)
+        end
+        subgraph P2[Quản lý Ứng viên]
+            P2a(Nộp CV)
+            P2b(Lưu CV)
+        end
+        subgraph P3[Sàng lọc CV]
+            P3a(Gửi yêu cầu sàng lọc)
+            P3b(Gọi API Gemini AI)
+            P3c(Lưu kết quả sàng lọc)
+            P3d(Hiển thị kết quả)
+        end
+        D1@{ shape: cyl, label: "Database" }
+        D4(Nhà tuyển dụng)
+
+        P1 --> D1
+        P2a -- Hồ sơ CV --> P2b
+        P2b -- Lưu vào --> D1
+        P3a -- Tiêu chí & CV --> P3b
+        P3b -- Kết quả phân tích --> P3c
+        P3c -- Lưu vào --> D1
+        P3d -- Lấy từ --> D1
+        P3d -- Hiển thị --> actor
+
+    end
+    actor[Nhà tuyển dụng]
+    actor1[Ứng Viên]
+    actor2[Gemini AI]
+
+    actor -- "Quản lý tin" --> P1
+    actor -- "Yêu cầu xem tin" --> P1
+    actor -- "Yêu cầu sàng lọc" --> P3
+    actor1 -- "Hồ sơ CV" --> P2
+    P3b -- "Yêu cầu API" --> actor2
+    actor2 -- "Kết quả API" --> P3b
