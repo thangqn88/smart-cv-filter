@@ -1,15 +1,18 @@
-graph LR
-    actor
-    actorxxx
-    uc1(Sàng lọc CV)
-    uc2(Phân tích nội dung CV)
-    uc3(Lưu trữ kết quả sàng lọc)
-    uc4(Tạo báo cáo chi tiết);
-    uc5(Cập nhật tiêu chí sàng lọc)
-    actor -- Gửi yêu cầu --> uc1
+graph TD
+    subgraph Ranh giới Hệ thống
+        direction TB
+        actor[Người dùng]
+        actor1[Gemini AI]
+        uc1(Sàng lọc CV)
+        uc2(Phân tích nội dung CV)
+        uc3(Lưu trữ kết quả sàng lọc)
+        uc4(Tạo báo cáo chi tiết)
+        uc5(Cập nhật tiêu chí sàng lọc)
 
-    uc1..> uc2: <<include>>
-    uc1..> uc3: <<include>>
-    uc4.> uc1: <<extend>>
-    uc5.> uc1: <<extend>>
-    uc2 -- Gửi nhận dữ liệu --> actorxxx
+        actor -- Gửi yêu cầu --> uc1
+        uc1 -. include .-> uc2
+        uc1 -. include .-> uc3
+        uc4 -. extend .-> uc1
+        uc5 -. extend .-> uc1
+        uc2 -- Gửi/Nhận dữ liệu --> actor1
+    end

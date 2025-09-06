@@ -1,0 +1,37 @@
+graph TD
+    subgraph Sơ đồ Use Case Tổng quan
+        direction LR
+        actor[Nhà tuyển dụng]
+        actor1[Ứng Viên]
+        actor2[Gemini AI]
+        subgraph Hệ thống Web Sàng lọc CV
+            direction TB
+            subgraph Quản lý Người dùng
+                uc1(Đăng ký/Đăng nhập)
+                uc2(Quản lý thông tin cá nhân)
+            end
+            subgraph Quản lý Tin tuyển dụng
+                uc3(Đăng tin tuyển dụng)
+                uc4(Quản lý tin tuyển dụng)
+            end
+            subgraph Quản lý Ứng viên
+                uc5(Nộp CV)
+                uc6(Xem danh sách ứng viên)
+            end
+            subgraph Sàng lọc CV với AI
+                uc7(Gửi yêu cầu sàng lọc CV)
+                uc8(Hiển thị kết quả sàng lọc)
+            end
+        end
+
+        actor -- tương tác --> uc1
+        actor -- tương tác --> uc2
+        actor -- tương tác --> uc3
+        actor -- tương tác --> uc4
+        actor -- tương tác --> uc6
+        actor -- tương tác --> uc7
+        actor -- tương tác --> uc8
+
+        actor1 -- tương tác --> uc5
+        uc7 -- tương tác --> actor2
+    end

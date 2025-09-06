@@ -1,6 +1,6 @@
-graph LR
+graph TB
     subgraph "Hệ thống Web Sàng lọc CV"
-        direction LR
+        direction TB
         subgraph P1[Quản lý tin]
             P1a(Đăng tin)
             P1b(Cập nhật tin)
@@ -30,12 +30,12 @@ graph LR
 
     end
     actor[Nhà tuyển dụng]
-    actor1[Ứng Viên]
     actor2[Gemini AI]
+    actor1[Ứng Viên]
 
+    actor1 -- "Hồ sơ CV" --> P2
     actor -- "Quản lý tin" --> P1
     actor -- "Yêu cầu xem tin" --> P1
     actor -- "Yêu cầu sàng lọc" --> P3
-    actor1 -- "Hồ sơ CV" --> P2
     P3b -- "Yêu cầu API" --> actor2
     actor2 -- "Kết quả API" --> P3b
