@@ -28,11 +28,11 @@ A .NET 8 Web API for automated CV screening using AI (Gemini AI). This backend s
 
 ```bash
 # Create database
-createdb SmartCVFilterDB
+createdb smart_cv_filter_db
 
 # Or using psql
 psql -U postgres
-CREATE DATABASE "SmartCVFilterDB";
+CREATE DATABASE "smart_cv_filter_db";
 ```
 
 2. Update the connection string in `appsettings.json`:
@@ -40,7 +40,7 @@ CREATE DATABASE "SmartCVFilterDB";
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=SmartCVFilterDB;Username=postgres;Password=your_password_here"
+    "DefaultConnection": "Host=localhost;Database=smart_cv_filter_db;Username=postgres;Password=your_password_here"
   }
 }
 ```

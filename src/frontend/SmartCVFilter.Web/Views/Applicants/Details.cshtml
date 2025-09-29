@@ -1,0 +1,347 @@
+@using SmartCVFilter.Web.Models
+@model ApplicantResponse
+@{
+    ViewData["Title"] = "Applicant Details";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">@Model.FirstName @Model.LastName</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Edit", new { jobPostId = Model.JobPostId, id = Model.Id })" class="btn btn-warning">
+                <i class="bi bi-pencil"></i>
+                Edit
+            </a>
+            <a href="@Url.Action("Index", "Screening", new { applicantId = Model.Id })" class="btn btn-info">
+                <i class="bi bi-search"></i>
+                View AI Results
+            </a>
+        </div>
+        <div class="btn-group">
+            <a href="@Url.Action("Index", new { jobPostId = Model.JobPostId })" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Personal Information -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person"></i>
+                    Personal Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>First Name:</strong> @Model.FirstName
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Last Name:</strong> @Model.LastName
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Email:</strong> 
+                        <a href="mailto:@Model.Email">@Model.Email</a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Phone:</strong> @(Model.PhoneNumber ?? "Not provided")
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Status:</strong> 
+                        <span class="badge @(Model.Status == "Pending" ? "bg-warning" : Model.Status == "Screened" ? "bg-info" : "bg-danger")">
+                            @Model.Status
+                        </span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <strong>Applied Date:</strong> @Model.AppliedDate.ToString("MMM dd, yyyy 'at' h:mm tt")
+                    </div>
+                </div>
+                @if (Model.LastUpdated.HasValue)
+                {
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Last Updated:</strong> @Model.LastUpdated.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Professional Links -->
+        @if (!string.IsNullOrEmpty(Model.LinkedInProfile) || !string.IsNullOrEmpty(Model.PortfolioUrl))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-link-45deg"></i>
+                        Professional Links
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.LinkedInProfile))
+                    {
+                        <div class="mb-3">
+                            <strong>LinkedIn:</strong> 
+                            <a href="@Model.LinkedInProfile" target="_blank" class="text-decoration-none">
+                                @Model.LinkedInProfile
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PortfolioUrl))
+                    {
+                        <div class="mb-3">
+                            <strong>Portfolio:</strong> 
+                            <a href="@Model.PortfolioUrl" target="_blank" class="text-decoration-none">
+                                @Model.PortfolioUrl
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Cover Letter -->
+        @if (!string.IsNullOrEmpty(Model.CoverLetter))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-text"></i>
+                        Cover Letter
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.CoverLetter</p>
+                </div>
+            </div>
+        }
+
+        <!-- CV Files -->
+        @if (Model.CVFiles.Any())
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        CV Files (@Model.CVFiles.Count)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Uploaded</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var file in Model.CVFiles)
+                                {
+                                    <tr>
+                                        <td>@file.FileName</td>
+                                        <td>@file.FileExtension</td>
+                                        <td>@file.FileSize bytes</td>
+                                        <td>@file.UploadedDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            <span class="badge @(file.Status == "Processed" ? "bg-success" : "bg-warning")">
+                                                @file.Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="downloadFile(@file.Id)">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- AI Screening Results -->
+        @if (Model.ScreeningResults.Any())
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search"></i>
+                        AI Screening Results (@Model.ScreeningResults.Count)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var result in Model.ScreeningResults)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <h6 class="mb-0">Screening Result #@result.Id</h6>
+                                        <small class="text-muted">Created: @result.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="badge @(result.Status == "Completed" ? "bg-success" : "bg-warning")">
+                                            @result.Status
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Overall Score:</strong> 
+                                        <span class="@(result.OverallScore >= 80 ? "score-excellent" : result.OverallScore >= 60 ? "score-good" : "score-poor")">
+                                            @result.OverallScore/100
+                                        </span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Completed:</strong> 
+                                        @(result.CompletedAt?.ToString("MMM dd, yyyy 'at' h:mm tt") ?? "In Progress")
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <strong>Summary:</strong>
+                                    <p class="mt-2">@result.Summary</p>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <strong>Strengths:</strong>
+                                        <ul class="list-unstyled mt-2">
+                                            @foreach (var strength in result.Strengths)
+                                            {
+                                                <li><i class="bi bi-check-circle text-success"></i> @strength</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Areas for Improvement:</strong>
+                                        <ul class="list-unstyled mt-2">
+                                            @foreach (var weakness in result.Weaknesses)
+                                            {
+                                                <li><i class="bi bi-exclamation-circle text-warning"></i> @weakness</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="@Url.Action("Details", "Screening", new { id = result.Id })" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                        View Detailed Analysis
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-primary">@Model.CVFiles.Count</h3>
+                            <p class="text-muted mb-0">CV Files</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-info">@Model.ScreeningResults.Count</h3>
+                        <p class="text-muted mb-0">AI Results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Information -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-briefcase"></i>
+                    Job Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Position:</strong> @Model.JobTitle</p>
+                <p><strong>Job Post ID:</strong> @Model.JobPostId</p>
+                <a href="@Url.Action("Details", "JobPosts", new { id = Model.JobPostId })" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                    View Job Post
+                </a>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Edit", new { jobPostId = Model.JobPostId, id = Model.Id })" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i>
+                        Edit Applicant
+                    </a>
+                    <a href="@Url.Action("Index", "Screening", new { applicantId = Model.Id })" class="btn btn-info">
+                        <i class="bi bi-search"></i>
+                        View AI Results
+                    </a>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete('@Model.FirstName @Model.LastName', () => deleteApplicant(@Model.JobPostId, @Model.Id))">
+                        <i class="bi bi-trash"></i>
+                        Delete Applicant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function deleteApplicant(jobPostId, applicantId) {
+            const form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete")/' + jobPostId + '/' + applicantId;
+            form.submit();
+        }
+
+        function downloadFile(fileId) {
+            // TODO: Implement file download functionality
+            alert('File download functionality will be implemented in a future update.');
+        }
+    </script>
+}

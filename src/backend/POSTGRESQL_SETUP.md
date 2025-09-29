@@ -34,7 +34,7 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
    ```json
    {
      "ConnectionStrings": {
-       "DefaultConnection": "Host=localhost;Database=SmartCVFilterDB;Username=postgres;Password=postgres123;Port=5432"
+       "DefaultConnection": "Host=localhost;Database=smart_cv_filter_db;Username=postgres;Password=postgres123;Port=5432"
      }
    }
    ```
@@ -60,7 +60,7 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
    ```cmd
    # Open Command Prompt as Administrator
    psql -U postgres
-   CREATE DATABASE "SmartCVFilterDB";
+   CREATE DATABASE "smart_cv_filter_db";
    \q
    ```
 
@@ -75,7 +75,7 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
 
 2. **Create Database:**
    ```bash
-   createdb SmartCVFilterDB
+   createdb smart_cv_filter_db
    ```
 
 ### Linux (Ubuntu/Debian)
@@ -91,8 +91,7 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
 
 2. **Create Database:**
    ```bash
-   sudo -u postgres createdb SmartCVFilterDB
-   sudo -u postgres createdb SmartCVFilterDB_Dev
+   sudo -u postgres createdb smart_cv_filter_db
    ```
 
 ## Connection String Configuration
@@ -104,7 +103,7 @@ Update your `appsettings.json` with the appropriate connection string:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=SmartCVFilterDB;Username=postgres;Password=your_password_here;Port=5432"
+    "DefaultConnection": "Host=localhost;Database=smart_cv_filter_db;Username=postgres;Password=your_password_here;Port=5432"
   }
 }
 ```
@@ -114,7 +113,7 @@ Update your `appsettings.json` with the appropriate connection string:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=SmartCVFilterDB;Username=postgres;Password=postgres123;Port=5432"
+    "DefaultConnection": "Host=localhost;Database=smart_cv_filter_db;Username=postgres;Password=postgres123;Port=5432"
   }
 }
 ```
@@ -124,7 +123,7 @@ Update your `appsettings.json` with the appropriate connection string:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=your-host;Database=SmartCVFilterDB;Username=your-username;Password=your-password;Port=5432;SSL Mode=Require;"
+    "DefaultConnection": "Host=your-host;Database=smart_cv_filter_db;Username=your-username;Password=your-password;Port=5432;SSL Mode=Require;"
   }
 }
 ```
@@ -160,7 +159,7 @@ Update your `appsettings.json` with the appropriate connection string:
 
    ```bash
    # Using psql
-   psql -U postgres -d SmartCVFilterDB
+   psql -U postgres -d smart_cv_filter_db
    \dt
    \q
    ```
@@ -219,7 +218,7 @@ psql -U postgres
 \l
 
 # Connect to specific database
-\c SmartCVFilterDB
+\c smart_cv_filter_db
 
 # List tables
 \dt
