@@ -1,0 +1,127 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: smart-cv-filter-postgres
+    environment:
+      POSTGRES_DB: smart_cv_filter_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/backend/init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - smart-cv-filter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smart_cv_filter_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: smart-cv-filter-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@smartcv.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Backend API
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: SmartCVFilter.API/Dockerfile
+    container_name: smart-cv-filter-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=smart_cv_filter_db;Username=postgres;Password=postgres123
+      - JwtSettings__SecretKey=YourSuperSecretKeyThatIsAtLeast32CharactersLong!
+      - JwtSettings__Issuer=SmartCVFilter
+      - JwtSettings__Audience=SmartCVFilter
+      - GeminiAI__ApiKey=${GEMINI_API_KEY:-your-gemini-api-key-here}
+      - FileUpload__MaxFileSizeMB=10
+      - FileUpload__AllowedExtensions=.pdf,.doc,.docx
+      - FileUpload__UploadPath=/app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "5000:80"
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    build:
+      context: ./src/frontend/smart-cv-filter
+      dockerfile: Dockerfile
+    container_name: smart-cv-filter-frontend
+    ports:
+      - "3000:80"
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5000/api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and session management (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: smart-cv-filter-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - smart-cv-filter-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  uploads_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  smart-cv-filter-network:
+    driver: bridge

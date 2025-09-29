@@ -61,7 +61,6 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
    # Open Command Prompt as Administrator
    psql -U postgres
    CREATE DATABASE "SmartCVFilterDB";
-   CREATE DATABASE "SmartCVFilterDB_Dev";
    \q
    ```
 
@@ -77,7 +76,6 @@ This guide will help you set up PostgreSQL for the Smart CV Filter backend API.
 2. **Create Database:**
    ```bash
    createdb SmartCVFilterDB
-   createdb SmartCVFilterDB_Dev
    ```
 
 ### Linux (Ubuntu/Debian)
