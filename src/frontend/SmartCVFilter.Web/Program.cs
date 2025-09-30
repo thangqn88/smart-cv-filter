@@ -9,6 +9,9 @@ builder.Services.AddControllersWithViews();
 // Add HttpClient
 builder.Services.AddHttpClient();
 
+// Add HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
+
 // Add services
 builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddScoped<IJobPostService, JobPostService>();
@@ -24,6 +27,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Auth/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
+        options.ReturnUrlParameter = "ReturnUrl";
     });
 
 // Add authorization

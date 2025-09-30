@@ -35,20 +35,31 @@ public class ApiService : IApiService
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            _logger.LogInformation("Calling backend API: {BaseUrl}/auth/login", _httpClient.BaseAddress);
             var response = await _httpClient.PostAsync("auth/login", content);
+
+            _logger.LogInformation("Backend API response status: {StatusCode}", response.StatusCode);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Backend API response content: {Content}", responseContent);
+
                 var authResponse = JsonConvert.DeserializeObject<AuthResponse>(responseContent);
 
                 if (authResponse != null)
                 {
+                    _logger.LogInformation("Authentication successful, setting token and signing in user");
                     SetToken(authResponse.Token);
                     await SignInUserAsync(authResponse.User);
                 }
 
                 return authResponse;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Backend API error response: {StatusCode} - {Content}", response.StatusCode, errorContent);
             }
 
             return null;
@@ -149,6 +160,7 @@ public class ApiService : IApiService
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
             new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role ?? "User"),
             new("FirstName", user.FirstName),
             new("LastName", user.LastName),
             new("CompanyName", user.CompanyName)

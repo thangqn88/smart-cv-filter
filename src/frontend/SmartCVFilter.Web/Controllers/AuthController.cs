@@ -18,7 +18,7 @@ public class AuthController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login()
+    public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -26,29 +26,45 @@ public class AuthController : Controller
         }
 
         ViewData["Title"] = "Login";
+        ViewData["ReturnUrl"] = returnUrl;
+        _logger.LogInformation("Login page accessed with ReturnUrl: {ReturnUrl}", returnUrl);
         return View();
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginRequest model)
+    public async Task<IActionResult> Login(LoginRequest model, string? returnUrl = null)
     {
         if (!ModelState.IsValid)
         {
+            ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on validation errors
             return View(model);
         }
 
         try
         {
+            _logger.LogInformation("Attempting login for user: {Email} with ReturnUrl: {ReturnUrl}", model.Email, returnUrl);
             var result = await _apiService.LoginAsync(model);
             if (result != null)
             {
+                _logger.LogInformation("Login successful for user: {Email}", model.Email);
                 TempData["Success"] = "Login successful!";
+
+                // Redirect to returnUrl if provided and valid, otherwise go to Home
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    _logger.LogInformation("Redirecting to returnUrl: {ReturnUrl}", returnUrl);
+                    return Redirect(returnUrl);
+                }
+
+                _logger.LogInformation("Redirecting to Home/Index");
                 return RedirectToAction("Index", "Home");
             }
             else
             {
+                _logger.LogWarning("Login failed for user: {Email}", model.Email);
                 ModelState.AddModelError("", "Invalid email or password.");
+                ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on login failure
                 return View(model);
             }
         }
@@ -56,6 +72,7 @@ public class AuthController : Controller
         {
             _logger.LogError(ex, "Error during login");
             ModelState.AddModelError("", "An error occurred during login. Please try again.");
+            ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on error
             return View(model);
         }
     }
