@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Role Management";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Role Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Create Role
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-shield-check display-1 text-muted"></i>
+                <h3 class="text-muted mt-3">Role Management</h3>
+                <p class="text-muted">Role management functionality will be implemented in a future update.</p>
+                <p class="text-muted">This feature will include:</p>
+                <ul class="list-unstyled text-muted">
+                    <li><i class="bi bi-check"></i> Role creation and management</li>
+                    <li><i class="bi bi-check"></i> Permission assignment</li>
+                    <li><i class="bi bi-check"></i> Role-based access control</li>
+                    <li><i class="bi bi-check"></i> User role assignment</li>
+                </ul>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                    <i class="bi bi-house"></i>
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,6 +3,8 @@ using SmartCVFilter.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// HTTP only configuration - no HTTPS redirection
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -45,7 +47,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// HTTP only - no HTTPS redirection
 app.UseStaticFiles();
 
 app.UseRouting();

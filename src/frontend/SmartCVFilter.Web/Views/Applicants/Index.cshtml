@@ -211,7 +211,7 @@ else
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form asp-action="StartScreening" method="post">
+            <form asp-controller="Applicants" asp-action="StartScreening" method="post">
                 <input type="hidden" name="jobPostId" value="@Model.SelectedJobPostId" />
                 <div class="modal-body">
                     <p>Select applicants to screen with AI:</p>
@@ -263,9 +263,9 @@ else
 
                 applicantIds.push(checkbox.value);
                 html += `<div class="alert alert-info alert-sm">
-                        <strong>${name}</strong><br>
-                        <small>${email}</small>
-                    </div>`;
+                                <strong>${name}</strong><br>
+                                <small>${email}</small>
+                            </div>`;
             });
 
             selectedApplicantsDiv.innerHTML = html || '<p class="text-muted">No applicants selected</p>';

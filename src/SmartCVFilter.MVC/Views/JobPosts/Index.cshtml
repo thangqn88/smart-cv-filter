@@ -1,0 +1,164 @@
+@using SmartCVFilter.API.DTOs
+@model List<JobPostResponse>
+@{
+    ViewData["Title"] = "Job Posting Management";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Job Posting Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Create", "JobPostsMvc")" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Create Job Post
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control table-search" placeholder="Search job posts...">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="statusFilter" id="all" value="all" checked>
+            <label class="btn btn-outline-secondary" for="all">All</label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="active" value="Active">
+            <label class="btn btn-outline-success" for="active">Active</label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="inactive" value="Inactive">
+            <label class="btn btn-outline-secondary" for="inactive">Inactive</label>
+        </div>
+    </div>
+</div>
+
+<!-- Job Posts Table -->
+<div class="card shadow">
+    <div class="card-body">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover data-table" id="jobPostsTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Location</th>
+                            <th>Department</th>
+                            <th>Employment Type</th>
+                            <th>Experience Level</th>
+                            <th>Status</th>
+                            <th>Applicants</th>
+                            <th>Posted Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var jobPost in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@jobPost.Title</strong>
+                                </td>
+                                <td>@jobPost.Location</td>
+                                <td>@jobPost.Department</td>
+                                <td>@jobPost.EmploymentType</td>
+                                <td>@jobPost.ExperienceLevel</td>
+                                <td>
+                                    <span class="badge @(jobPost.Status == "Active" ? "bg-success" : "bg-secondary")">
+                                        @jobPost.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@jobPost.ApplicantCount</span>
+                                </td>
+                                <td>@jobPost.PostedDate.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", "JobPostsMvc", new { id = jobPost.Id })"
+                                            class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
+                                            title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", "JobPostsMvc", new { id = jobPost.Id })"
+                                            class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="@Url.Action("Index", "Applicants", new { jobPostId = jobPost.Id })"
+                                            class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip"
+                                            title="View Applicants">
+                                            <i class="bi bi-people"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip"
+                                            title="Delete"
+                                            onclick="confirmDelete('@jobPost.Title', () => deleteJobPost(@jobPost.Id))">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-briefcase display-1 text-muted"></i>
+                <h3 class="text-muted mt-3">No Job Posts Found</h3>
+                <p class="text-muted">Get started by creating your first job post.</p>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i>
+                    Create Job Post
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function deleteJobPost(id) {
+            const form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete", "JobPostsMvc")/' + id;
+            form.submit();
+        }
+
+        // Filter by status
+        document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const status = this.value;
+                const rows = document.querySelectorAll('#jobPostsTable tbody tr');
+
+                rows.forEach(row => {
+                    if (status === 'all') {
+                        row.style.display = '';
+                    } else {
+                        const statusCell = row.querySelector('td:nth-child(6) .badge');
+                        const cellStatus = statusCell ? statusCell.textContent.trim() : '';
+                        row.style.display = cellStatus === status ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}

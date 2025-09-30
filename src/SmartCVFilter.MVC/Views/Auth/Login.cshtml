@@ -1,0 +1,56 @@
+@using SmartCVFilter.API.DTOs
+@model LoginRequest
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LoginLayout";
+}
+
+<form asp-controller="AuthMvc" asp-action="Login" method="post" class="needs-validation" novalidate>
+    @Html.Hidden("returnUrl", ViewData["ReturnUrl"])
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email Address</label>
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-envelope"></i>
+            </span>
+            <input asp-for="Email" class="form-control" placeholder="Enter your email" required />
+        </div>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Password</label>
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-lock"></i>
+            </span>
+            <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" required />
+        </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="rememberMe">
+        <label class="form-check-label" for="rememberMe">
+            Remember me
+        </label>
+    </div>
+
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Sign In
+        </button>
+    </div>
+
+    <div class="text-center mt-3">
+        <p class="text-muted">
+            Don't have an account?
+            <a asp-action="Register" class="text-decoration-none">Sign up here</a>
+        </p>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

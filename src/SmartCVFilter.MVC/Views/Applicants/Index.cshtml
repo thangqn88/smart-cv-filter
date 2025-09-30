@@ -1,0 +1,317 @@
+@using SmartCVFilter.API.DTOs
+@using SmartCVFilter.API.ViewModels
+@model ApplicantIndexViewModel
+@{
+    ViewData["Title"] = "Applicant Management";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Applicant Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        @if (Model?.SelectedJobPostId.HasValue == true)
+        {
+            <div class="btn-group me-2">
+                <a href="@Url.Action("Create", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId })"
+                    class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i>
+                    Add Applicant
+                </a>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#screeningModal">
+                    <i class="bi bi-search"></i>
+                    Start AI Screening
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Job Post Selection -->
+@if (Model?.SelectedJobPostId.HasValue != true)
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-briefcase"></i>
+                        Select Job Post
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model?.JobPosts != null && Model.JobPosts.Count > 0)
+                    {
+                        <div class="row">
+                            @foreach (var jobPost in Model.JobPosts)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@jobPost.Title</h6>
+                                            <p class="card-text text-muted">@jobPost.Location • @jobPost.Department</p>
+                                            <p class="card-text">
+                                                <span class="badge @(jobPost.Status == "Active" ? "bg-success" : "bg-secondary")">
+                                                    @jobPost.Status
+                                                </span>
+                                                <span class="badge bg-info ms-1">@jobPost.ApplicantCount applicants</span>
+                                            </p>
+                                        </div>
+                                        <div class="card-footer">
+                                            <a href="@Url.Action("Index", new { jobPostId = jobPost.Id })"
+                                                class="btn btn-primary btn-sm w-100">
+                                                <i class="bi bi-people"></i>
+                                                Manage Applicants
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-briefcase display-1 text-muted"></i>
+                            <p class="text-muted mt-3">No job posts found. <a href="@Url.Action("Create", "JobPosts")">Create a
+                                    job post</a> first to manage applicants.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control table-search" placeholder="Search applicants...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="statusFilter" id="all" value="all" checked>
+                <label class="btn btn-outline-secondary" for="all">All</label>
+
+                <input type="radio" class="btn-check" name="statusFilter" id="pending" value="Pending">
+                <label class="btn btn-outline-warning" for="pending">Pending</label>
+
+                <input type="radio" class="btn-check" name="statusFilter" id="screened" value="Screened">
+                <label class="btn btn-outline-info" for="screened">Screened</label>
+
+                <input type="radio" class="btn-check" name="statusFilter" id="rejected" value="Rejected">
+                <label class="btn btn-outline-danger" for="rejected">Rejected</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applicants Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            @if (Model?.Applicants != null && Model.Applicants.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover data-table" id="applicantsTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Applied Date</th>
+                                <th>CV Files</th>
+                                <th>Screening Results</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var applicant in Model.Applicants)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="form-check-input applicant-checkbox" value="@applicant.Id">
+                                    </td>
+                                    <td>
+                                        <strong>@applicant.FirstName @applicant.LastName</strong>
+                                    </td>
+                                    <td>@applicant.Email</td>
+                                    <td>@(applicant.PhoneNumber ?? "N/A")</td>
+                                    <td>
+                                        <span
+                                            class="badge @(applicant.Status == "Pending" ? "bg-warning" : applicant.Status == "Screened" ? "bg-info" : "bg-danger")">
+                                            @applicant.Status
+                                        </span>
+                                    </td>
+                                    <td>@applicant.AppliedDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@applicant.CVFiles.Count</span>
+                                    </td>
+                                    <td>
+                                        @if (applicant.ScreeningResults.Any())
+                                        {
+                                            <span class="badge bg-success">@applicant.ScreeningResults.Count</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">0</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("Details", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId, id = applicant.Id })"
+                                                class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
+                                                title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId, id = applicant.Id })"
+                                                class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip"
+                                                title="Delete"
+                                                onclick="confirmDelete('@applicant.FirstName @applicant.LastName', () => deleteApplicant(@Model.SelectedJobPostId, @applicant.Id))">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-people display-1 text-muted"></i>
+                    <h3 class="text-muted mt-3">No Applicants Found</h3>
+                    <p class="text-muted">No applicants have applied for this job post yet.</p>
+                    <a href="@Url.Action("Create", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId })"
+                        class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i>
+                        Add First Applicant
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- AI Screening Modal -->
+<div class="modal fade" id="screeningModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-search"></i>
+                    Start AI Screening
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Applicants" asp-action="StartScreening" method="post">
+                <input type="hidden" name="jobPostId" value="@Model.SelectedJobPostId" />
+                <div class="modal-body">
+                    <p>Select applicants to screen with AI:</p>
+                    <div id="selectedApplicants">
+                        <!-- Selected applicants will be populated here -->
+                    </div>
+                    <input type="hidden" name="ApplicantIds" id="applicantIds" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-search"></i>
+                        Start Screening
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('.applicant-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Update selected applicants in modal
+        function updateSelectedApplicants() {
+            const selectedCheckboxes = document.querySelectorAll('.applicant-checkbox:checked');
+            const selectedApplicantsDiv = document.getElementById('selectedApplicants');
+            const applicantIdsInput = document.getElementById('applicantIds');
+
+            let applicantIds = [];
+            let html = '';
+
+            selectedCheckboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const name = row.querySelector('td:nth-child(2)').textContent.trim();
+                const email = row.querySelector('td:nth-child(3)').textContent.trim();
+
+                applicantIds.push(checkbox.value);
+                html += `<div class="alert alert-info alert-sm">
+                                        <strong>${name}</strong><br>
+                                        <small>${email}</small>
+                                    </div>`;
+            });
+
+            selectedApplicantsDiv.innerHTML = html || '<p class="text-muted">No applicants selected</p>';
+            applicantIdsInput.value = applicantIds.join(',');
+        }
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.applicant-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedApplicants);
+        });
+
+        // Update modal when opened
+        document.getElementById('screeningModal').addEventListener('show.bs.modal', updateSelectedApplicants);
+
+        // Filter by status
+        document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const status = this.value;
+                const rows = document.querySelectorAll('#applicantsTable tbody tr');
+
+                rows.forEach(row => {
+                    if (status === 'all') {
+                        row.style.display = '';
+                    } else {
+                        const statusCell = row.querySelector('td:nth-child(5) .badge');
+                        const cellStatus = statusCell ? statusCell.textContent.trim() : '';
+                        row.style.display = cellStatus === status ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        function deleteApplicant(jobPostId, applicantId) {
+            const form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete")/' + jobPostId + '/' + applicantId;
+            form.submit();
+        }
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}

@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form asp-action="Create" method="post" class="needs-validation" novalidate>
+<form asp-controller="Applicants" asp-action="Create" method="post" class="needs-validation" novalidate>
     <input type="hidden" name="jobPostId" value="@jobPostId" />
 
     <div class="row">
@@ -199,10 +199,10 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                        <h6>${firstName} ${lastName}</h6>
-                        <p class="text-muted">${email}</p>
-                        <p class="text-muted">${phone}</p>
-                    `;
+                                <h6>${firstName} ${lastName}</h6>
+                                <p class="text-muted">${email}</p>
+                                <p class="text-muted">${phone}</p>
+                            `;
         }
 
         // Add event listeners for live preview

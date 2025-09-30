@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<form asp-action="Edit" method="post" class="needs-validation" novalidate>
+<form asp-controller="JobPosts" asp-action="Edit" method="post" class="needs-validation" novalidate>
     <div class="row">
         <div class="col-lg-8">
             <!-- Basic Information -->
@@ -242,10 +242,10 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                        <h6>${title}</h6>
-                        <p class="text-muted">${location} • ${department}</p>
-                        <p class="text-muted">${employmentType} • ${experienceLevel}</p>
-                    `;
+                                <h6>${title}</h6>
+                                <p class="text-muted">${location} • ${department}</p>
+                                <p class="text-muted">${employmentType} • ${experienceLevel}</p>
+                            `;
         }
 
         // Add event listeners for live preview

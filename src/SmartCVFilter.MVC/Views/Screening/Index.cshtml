@@ -1,0 +1,172 @@
+@using SmartCVFilter.API.DTOs
+@model List<ScreeningResultResponse>
+@{
+    ViewData["Title"] = "AI Screening Results";
+    var applicantId = ViewData["ApplicantId"];
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">AI Screening Results</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-outline-secondary"
+                onclick="exportToCSV('screeningResultsTable', 'screening-results.csv')">
+                <i class="bi bi-download"></i>
+                Export CSV
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="printTable('screeningResultsTable')">
+                <i class="bi bi-printer"></i>
+                Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" class="form-control table-search" placeholder="Search screening results...">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="statusFilter" id="all" value="all" checked>
+            <label class="btn btn-outline-secondary" for="all">All</label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="completed" value="Completed">
+            <label class="btn btn-outline-success" for="completed">Completed</label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="processing" value="Processing">
+            <label class="btn btn-outline-warning" for="processing">Processing</label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="failed" value="Failed">
+            <label class="btn btn-outline-danger" for="failed">Failed</label>
+        </div>
+    </div>
+</div>
+
+<!-- Screening Results -->
+<div class="card shadow">
+    <div class="card-body">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover data-table" id="screeningResultsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Overall Score</th>
+                            <th>Summary</th>
+                            <th>Strengths</th>
+                            <th>Weaknesses</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>#@result.Id</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress me-2" style="width: 60px; height: 20px;">
+                                            <div class="progress-bar @(result.OverallScore >= 80 ? "bg-success" : result.OverallScore >= 60 ? "bg-warning" : "bg-danger")"
+                                                style="width: @result.OverallScore%"></div>
+                                        </div>
+                                        <span
+                                            class="@(result.OverallScore >= 80 ? "score-excellent" : result.OverallScore >= 60 ? "score-good" : "score-poor")">
+                                            @result.OverallScore/100
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="@result.Summary">
+                                        @result.Summary
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">@result.Strengths.Count</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">@result.Weaknesses.Count</span>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge @(result.Status == "Completed" ? "bg-success" : result.Status == "Processing" ? "bg-warning" : "bg-danger")">
+                                        @result.Status
+                                    </span>
+                                </td>
+                                <td>@result.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>@(result.CompletedAt?.ToString("MMM dd, yyyy") ?? "N/A")</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", "ScreeningMvc", new { id = result.Id })"
+                                            class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip"
+                                            title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-search display-1 text-muted"></i>
+                <h3 class="text-muted mt-3">No Screening Results Found</h3>
+                <p class="text-muted">
+                    @if (applicantId != null)
+                    {
+                        <span>No AI screening results found for this applicant.</span>
+                    }
+                    else
+                    {
+                        <span>No AI screening results found. <a href="@Url.Action("Index", "Applicants")">Start screening
+                                applicants</a> to see results here.</span>
+                    }
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filter by status
+        document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const status = this.value;
+                const rows = document.querySelectorAll('#screeningResultsTable tbody tr');
+
+                rows.forEach(row => {
+                    if (status === 'all') {
+                        row.style.display = '';
+                    } else {
+                        const statusCell = row.querySelector('td:nth-child(6) .badge');
+                        const cellStatus = statusCell ? statusCell.textContent.trim() : '';
+                        row.style.display = cellStatus === status ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}

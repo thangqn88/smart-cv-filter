@@ -1,0 +1,290 @@
+@using SmartCVFilter.API.DTOs
+@model ScreeningResultResponse
+@{
+    ViewData["Title"] = "Screening Result Details";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">AI Screening Result #@Model.Id</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="printPage()">
+                <i class="bi bi-printer"></i>
+                Print
+            </button>
+        </div>
+        <div class="btn-group">
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to Results
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Overall Score -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Overall Assessment
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <div class="display-4 @(Model.OverallScore >= 80 ? "score-excellent" : Model.OverallScore >= 60 ? "score-good" : "score-poor")">
+                                @Model.OverallScore
+                            </div>
+                            <div class="text-muted">out of 100</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="progress mb-3" style="height: 30px;">
+                            <div class="progress-bar @(Model.OverallScore >= 80 ? "bg-success" : Model.OverallScore >= 60 ? "bg-warning" : "bg-danger")" 
+                                 style="width: @Model.OverallScore%" role="progressbar">
+                                @Model.OverallScore%
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <span class="badge @(Model.OverallScore >= 80 ? "bg-success" : Model.OverallScore >= 60 ? "bg-warning" : "bg-danger") fs-6">
+                                @(Model.OverallScore >= 80 ? "Excellent" : Model.OverallScore >= 60 ? "Good" : "Needs Improvement")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-text"></i>
+                    AI Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">@Model.Summary</p>
+            </div>
+        </div>
+
+        <!-- Strengths and Weaknesses -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check-circle"></i>
+                            Strengths (@Model.Strengths.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Strengths.Any())
+                        {
+                            <ul class="list-unstyled">
+                                @foreach (var strength in Model.Strengths)
+                                {
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        @strength
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No specific strengths identified.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Areas for Improvement (@Model.Weaknesses.Count)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Weaknesses.Any())
+                        {
+                            <ul class="list-unstyled">
+                                @foreach (var weakness in Model.Weaknesses)
+                                {
+                                    <li class="mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                        @weakness
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No specific areas for improvement identified.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analysis -->
+        @if (!string.IsNullOrEmpty(Model.DetailedAnalysis))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search"></i>
+                        Detailed Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="analysis-content">
+                        @Html.Raw(Model.DetailedAnalysis.Replace("\n", "<br>"))
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Status Information -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Status Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Status:</strong>
+                    <span class="badge @(Model.Status == "Completed" ? "bg-success" : Model.Status == "Processing" ? "bg-warning" : "bg-danger") ms-2">
+                        @Model.Status
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Created:</strong>
+                    <div class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</div>
+                </div>
+                @if (Model.CompletedAt.HasValue)
+                {
+                    <div class="mb-3">
+                        <strong>Completed:</strong>
+                        <div class="text-muted">@Model.CompletedAt.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Processing Time:</strong>
+                        <div class="text-muted">@((Model.CompletedAt.Value - Model.CreatedAt).TotalMinutes.ToString("F1")) minutes</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <strong>Processing Time:</strong>
+                        <div class="text-muted">@((DateTime.UtcNow - Model.CreatedAt).TotalMinutes.ToString("F1")) minutes (ongoing)</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Score Breakdown -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart"></i>
+                    Score Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="display-6 @(Model.OverallScore >= 80 ? "score-excellent" : Model.OverallScore >= 60 ? "score-good" : "score-poor")">
+                        @Model.OverallScore/100
+                    </div>
+                    <div class="text-muted">Overall Score</div>
+                </div>
+                
+                <!-- Score interpretation -->
+                <div class="alert @(Model.OverallScore >= 80 ? "alert-success" : Model.OverallScore >= 60 ? "alert-warning" : "alert-danger")">
+                    @if (Model.OverallScore >= 80)
+                    {
+                        <text>
+                            <strong>Excellent Match!</strong><br>
+                            This candidate shows strong alignment with the job requirements.
+                        </text>
+                    }
+                    else if (Model.OverallScore >= 60)
+                    {
+                        <text>
+                            <strong>Good Match</strong><br>
+                            This candidate has potential with some areas for development.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            <strong>Needs Improvement</strong><br>
+                            This candidate may not be the best fit for this position.
+                        </text>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i>
+                    Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary" onclick="printPage()">
+                        <i class="bi bi-printer"></i>
+                        Print Report
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Results
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printPage() {
+            window.print();
+        }
+
+        // Add print styles
+        const printStyles = `
+            @@media print {
+                .btn, .btn-toolbar, .card-header .btn {
+                    display: none !important;
+                }
+                .card {
+                    border: 1px solid #dee2e6 !important;
+                    box-shadow: none !important;
+                }
+                .card-header {
+                    background-color: #f8f9fa !important;
+                    color: #495057 !important;
+                }
+            }
+        `;
+        
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = printStyles;
+        document.head.appendChild(styleSheet);
+    </script>
+}

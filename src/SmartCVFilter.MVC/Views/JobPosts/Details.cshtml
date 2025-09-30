@@ -1,0 +1,266 @@
+@using SmartCVFilter.API.DTOs
+@model JobPostResponse
+@{
+    ViewData["Title"] = "Job Post Details";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">@Model.Title</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
+                <i class="bi bi-pencil"></i>
+                Edit
+            </a>
+            <a href="@Url.Action("Index", "Applicants", new { jobPostId = Model.Id })" class="btn btn-info">
+                <i class="bi bi-people"></i>
+                View Applicants (@Model.ApplicantCount)
+            </a>
+        </div>
+        <div class="btn-group">
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Job Details -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    Job Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Location:</strong> @Model.Location
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Department:</strong> @Model.Department
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Employment Type:</strong> @Model.EmploymentType
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Experience Level:</strong> @Model.ExperienceLevel
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">
+                            @Model.Status
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Posted Date:</strong> @Model.PostedDate.ToString("MMM dd, yyyy")
+                    </div>
+                </div>
+                @if (Model.ClosingDate.HasValue)
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Closing Date:</strong> @Model.ClosingDate.Value.ToString("MMM dd, yyyy")
+                        </div>
+                    </div>
+                }
+                @if (Model.SalaryMin.HasValue || Model.SalaryMax.HasValue)
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Salary Range:</strong>
+                            @if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
+                            {
+                                @($"${Model.SalaryMin:N0} - ${Model.SalaryMax:N0}")
+                            }
+                            else if (Model.SalaryMin.HasValue)
+                            {
+                                @($"From ${Model.SalaryMin:N0}")
+                            }
+                            else if (Model.SalaryMax.HasValue)
+                            {
+                                @($"Up to ${Model.SalaryMax:N0}")
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-text"></i>
+                    Description
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>@Model.Description</p>
+            </div>
+        </div>
+
+        <!-- Required Skills -->
+        @if (!string.IsNullOrEmpty(Model.RequiredSkills))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check-circle"></i>
+                        Required Skills
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.RequiredSkills</p>
+                </div>
+            </div>
+        }
+
+        <!-- Preferred Skills -->
+        @if (!string.IsNullOrEmpty(Model.PreferredSkills))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-star"></i>
+                        Preferred Skills
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.PreferredSkills</p>
+                </div>
+            </div>
+        }
+
+        <!-- Responsibilities -->
+        @if (!string.IsNullOrEmpty(Model.Responsibilities))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-task"></i>
+                        Responsibilities
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.Responsibilities</p>
+                </div>
+            </div>
+        }
+
+        <!-- Benefits -->
+        @if (!string.IsNullOrEmpty(Model.Benefits))
+        {
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gift"></i>
+                        Benefits
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.Benefits</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Quick Stats -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    Quick Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-primary">@Model.ApplicantCount</h3>
+                            <p class="text-muted mb-0">Total Applicants</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success">@Model.Status</h3>
+                        <p class="text-muted mb-0">Status</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Index", "Applicants", new { jobPostId = Model.Id })" class="btn btn-primary">
+                        <i class="bi bi-people"></i>
+                        Manage Applicants
+                    </a>
+                    <a href="@Url.Action("Create", "Applicants", new { jobPostId = Model.Id })" class="btn btn-success">
+                        <i class="bi bi-person-plus"></i>
+                        Add Applicant
+                    </a>
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i>
+                        Edit Job Post
+                    </a>
+                    <button type="button" class="btn btn-danger"
+                        onclick="confirmDelete('@Model.Title', () => deleteJobPost(@Model.Id))">
+                        <i class="bi bi-trash"></i>
+                        Delete Job Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Post Info -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info"></i>
+                    Job Post Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Created by:</strong> @Model.User.FirstName @Model.User.LastName</p>
+                <p><strong>Company:</strong> @Model.User.CompanyName</p>
+                <p><strong>Posted:</strong> @Model.PostedDate.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+                @if (Model.ClosingDate.HasValue)
+                {
+                    <p><strong>Closes:</strong> @Model.ClosingDate.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        function deleteJobPost(id) {
+            const form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete")/' + id;
+            form.submit();
+        }
+    </script>
+}

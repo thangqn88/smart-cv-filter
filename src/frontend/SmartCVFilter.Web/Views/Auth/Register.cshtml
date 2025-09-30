@@ -5,7 +5,7 @@
     Layout = "_LoginLayout";
 }
 
-<form asp-action="Register" method="post" class="needs-validation" novalidate>
+<form asp-controller="Auth" asp-action="Register" method="post" class="needs-validation" novalidate>
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="FirstName" class="form-label">First Name</label>
