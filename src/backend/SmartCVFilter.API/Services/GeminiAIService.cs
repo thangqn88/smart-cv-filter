@@ -137,7 +137,7 @@ public class GeminiAIService : IGeminiAIService
                 throw new InvalidOperationException("No processed CV found for this applicant.");
 
             var analysis = await AnalyzeCVAsync(
-                latestCV.ExtractedText,
+                latestCV.ExtractedText ?? throw new InvalidOperationException("CV extracted text is null"),
                 jobPost.Description,
                 jobPost.RequiredSkills
             );

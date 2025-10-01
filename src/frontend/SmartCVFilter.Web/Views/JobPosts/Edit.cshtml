@@ -27,6 +27,7 @@
 </div>
 
 <form asp-controller="JobPosts" asp-action="Edit" method="post" class="needs-validation" novalidate>
+    @Html.Hidden("id", ViewContext.RouteData.Values["id"])
     <div class="row">
         <div class="col-lg-8">
             <!-- Basic Information -->
@@ -43,7 +44,8 @@
                         <div class="col-md-12">
                             <div class="form-floating">
                                 <input asp-for="Title" class="form-control"
-                                    placeholder="e.g., Senior Software Developer" required />
+                                    placeholder="e.g., Senior Software Developer" 
+                                    value="@(Model?.Title ?? "")" required />
                                 <label asp-for="Title">Job Title *</label>
                             </div>
                             <span asp-validation-for="Title" class="text-danger small"></span>
@@ -54,7 +56,7 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input asp-for="Location" class="form-control" placeholder="e.g., New York, NY"
-                                    required />
+                                    value="@(Model?.Location ?? "")" required />
                                 <label asp-for="Location">Location *</label>
                             </div>
                             <span asp-validation-for="Location" class="text-danger small"></span>
@@ -62,7 +64,7 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <input asp-for="Department" class="form-control" placeholder="e.g., Engineering"
-                                    required />
+                                    value="@(Model?.Department ?? "")" required />
                                 <label asp-for="Department">Department *</label>
                             </div>
                             <span asp-validation-for="Department" class="text-danger small"></span>
@@ -74,11 +76,11 @@
                             <div class="form-floating">
                                 <select asp-for="EmploymentType" class="form-select" required>
                                     <option value="">Select employment type</option>
-                                    <option value="Full-time">Full-time</option>
-                                    <option value="Part-time">Part-time</option>
-                                    <option value="Contract">Contract</option>
-                                    <option value="Internship">Internship</option>
-                                    <option value="Remote">Remote</option>
+                                    <option value="Full-time" selected="@(Model?.EmploymentType == "Full-time")">Full-time</option>
+                                    <option value="Part-time" selected="@(Model?.EmploymentType == "Part-time")">Part-time</option>
+                                    <option value="Contract" selected="@(Model?.EmploymentType == "Contract")">Contract</option>
+                                    <option value="Internship" selected="@(Model?.EmploymentType == "Internship")">Internship</option>
+                                    <option value="Remote" selected="@(Model?.EmploymentType == "Remote")">Remote</option>
                                 </select>
                                 <label asp-for="EmploymentType">Employment Type *</label>
                             </div>
@@ -88,11 +90,11 @@
                             <div class="form-floating">
                                 <select asp-for="ExperienceLevel" class="form-select" required>
                                     <option value="">Select experience level</option>
-                                    <option value="Entry Level">Entry Level</option>
-                                    <option value="Mid Level">Mid Level</option>
-                                    <option value="Senior Level">Senior Level</option>
-                                    <option value="Lead">Lead</option>
-                                    <option value="Executive">Executive</option>
+                                    <option value="Entry Level" selected="@(Model?.ExperienceLevel == "Entry Level")">Entry Level</option>
+                                    <option value="Mid Level" selected="@(Model?.ExperienceLevel == "Mid Level")">Mid Level</option>
+                                    <option value="Senior Level" selected="@(Model?.ExperienceLevel == "Senior Level")">Senior Level</option>
+                                    <option value="Lead" selected="@(Model?.ExperienceLevel == "Lead")">Lead</option>
+                                    <option value="Executive" selected="@(Model?.ExperienceLevel == "Executive")">Executive</option>
                                 </select>
                                 <label asp-for="ExperienceLevel">Experience Level *</label>
                             </div>
@@ -102,24 +104,26 @@
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="form-floating">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">$</span>
-                                    <input asp-for="SalaryMin" type="number" class="form-control border-start-0"
-                                        placeholder="50000" min="0" step="1000" />
-                                </div>
-                                <label asp-for="SalaryMin" class="form-label">Minimum Salary</label>
+                            <label asp-for="SalaryMin" class="form-label fw-bold text-dark mb-2">
+                                <i class="bi bi-currency-dollar text-success me-1"></i>
+                                Minimum Salary
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">$</span>
+                                <input asp-for="SalaryMin" type="number" class="form-control border-start-0"
+                                    placeholder="50000" min="0" step="1000" value="@(Model?.SalaryMin?.ToString() ?? "")" />
                             </div>
                             <span asp-validation-for="SalaryMin" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <div class="form-floating">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">$</span>
-                                    <input asp-for="SalaryMax" type="number" class="form-control border-start-0"
-                                        placeholder="80000" min="0" step="1000" />
-                                </div>
-                                <label asp-for="SalaryMax" class="form-label">Maximum Salary</label>
+                            <label asp-for="SalaryMax" class="form-label fw-bold text-dark mb-2">
+                                <i class="bi bi-currency-dollar text-success me-1"></i>
+                                Maximum Salary
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">$</span>
+                                <input asp-for="SalaryMax" type="number" class="form-control border-start-0"
+                                    placeholder="80000" min="0" step="1000" value="@(Model?.SalaryMax?.ToString() ?? "")" />
                             </div>
                             <span asp-validation-for="SalaryMax" class="text-danger small"></span>
                         </div>
@@ -129,10 +133,10 @@
                         <div class="col-md-6">
                             <div class="form-floating">
                                 <select asp-for="Status" class="form-select">
-                                    <option value="Draft">Draft</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                    <option value="Closed">Closed</option>
+                                    <option value="Draft" selected="@(Model?.Status == "Draft")">Draft</option>
+                                    <option value="Active" selected="@(Model?.Status == "Active")">Active</option>
+                                    <option value="Inactive" selected="@(Model?.Status == "Inactive")">Inactive</option>
+                                    <option value="Closed" selected="@(Model?.Status == "Closed")">Closed</option>
                                 </select>
                                 <label asp-for="Status">Status</label>
                             </div>
@@ -140,7 +144,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-floating">
-                                <input asp-for="ClosingDate" type="date" class="form-control" />
+                                <input asp-for="ClosingDate" type="date" class="form-control" 
+                                    value="@(Model?.ClosingDate?.ToString("yyyy-MM-dd") ?? "")" />
                                 <label asp-for="ClosingDate">Closing Date</label>
                             </div>
                             <span asp-validation-for="ClosingDate" class="text-danger small"></span>
@@ -162,7 +167,7 @@
                     <div class="form-floating">
                         <textarea asp-for="Description" class="form-control" rows="6"
                             placeholder="Provide a detailed description of the role, responsibilities, and what the candidate will be working on..."
-                            required></textarea>
+                            required>@(Model?.Description ?? "")</textarea>
                         <label asp-for="Description">Job Description *</label>
                     </div>
                     <span asp-validation-for="Description" class="text-danger small"></span>
@@ -183,7 +188,7 @@
                         <div class="col-12">
                             <div class="form-floating">
                                 <textarea asp-for="RequiredSkills" class="form-control" rows="3"
-                                    placeholder="List the essential skills and qualifications required for this position..."></textarea>
+                                    placeholder="List the essential skills and qualifications required for this position...">@(Model?.RequiredSkills ?? "")</textarea>
                                 <label asp-for="RequiredSkills">Required Skills</label>
                             </div>
                             <span asp-validation-for="RequiredSkills" class="text-danger small"></span>
@@ -191,7 +196,7 @@
                         <div class="col-12">
                             <div class="form-floating">
                                 <textarea asp-for="PreferredSkills" class="form-control" rows="3"
-                                    placeholder="List any additional skills that would be beneficial but not required..."></textarea>
+                                    placeholder="List any additional skills that would be beneficial but not required...">@(Model?.PreferredSkills ?? "")</textarea>
                                 <label asp-for="PreferredSkills">Preferred Skills</label>
                             </div>
                             <span asp-validation-for="PreferredSkills" class="text-danger small"></span>
@@ -214,7 +219,7 @@
                         <div class="col-12">
                             <div class="form-floating">
                                 <textarea asp-for="Responsibilities" class="form-control" rows="4"
-                                    placeholder="Outline the main responsibilities and duties for this role..."></textarea>
+                                    placeholder="Outline the main responsibilities and duties for this role...">@(Model?.Responsibilities ?? "")</textarea>
                                 <label asp-for="Responsibilities">Key Responsibilities</label>
                             </div>
                             <span asp-validation-for="Responsibilities" class="text-danger small"></span>
@@ -222,7 +227,7 @@
                         <div class="col-12">
                             <div class="form-floating">
                                 <textarea asp-for="Benefits" class="form-control" rows="4"
-                                    placeholder="Describe the benefits, perks, and opportunities this position offers..."></textarea>
+                                    placeholder="Describe the benefits, perks, and opportunities this position offers...">@(Model?.Benefits ?? "")</textarea>
                                 <label asp-for="Benefits">Benefits and Perks</label>
                             </div>
                             <span asp-validation-for="Benefits" class="text-danger small"></span>
@@ -290,10 +295,10 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                    <h6 class="text-dark mb-2">${title}</h6>
-                    <p class="text-muted small mb-1">${location} • ${department}</p>
-                    <p class="text-muted small mb-0">${employmentType} • ${experienceLevel}</p>
-                `;
+                            <h6 class="text-dark mb-2">${title}</h6>
+                            <p class="text-muted small mb-1">${location} • ${department}</p>
+                            <p class="text-muted small mb-0">${employmentType} • ${experienceLevel}</p>
+                        `;
         }
 
         // Add event listeners for live preview

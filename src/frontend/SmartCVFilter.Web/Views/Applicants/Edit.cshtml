@@ -4,6 +4,38 @@
     ViewData["Title"] = "Edit Applicant";
     Layout = "_Layout";
     var jobPostId = ViewData["JobPostId"];
+    var applicantId = ViewData["ApplicantId"];
+}
+
+<!-- Debug Information -->
+@if (Model != null)
+{
+    <div class="alert alert-info mb-4">
+        <h6><i class="bi bi-info-circle me-2"></i>Debug Information</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1"><strong>JobPostId:</strong> @(jobPostId?.ToString() ?? "NULL")</p>
+                <p class="mb-1"><strong>ApplicantId:</strong> @(applicantId?.ToString() ?? "NULL")</p>
+                <p class="mb-1"><strong>FirstName:</strong> @(Model?.FirstName ?? "NULL")</p>
+                <p class="mb-1"><strong>LastName:</strong> @(Model?.LastName ?? "NULL")</p>
+                <p class="mb-1"><strong>Email:</strong> @(Model?.Email ?? "NULL")</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>PhoneNumber:</strong> @(Model?.PhoneNumber ?? "NULL")</p>
+                <p class="mb-1"><strong>Status:</strong> @(Model?.Status ?? "NULL")</p>
+                <p class="mb-1"><strong>LinkedInProfile:</strong> @(Model?.LinkedInProfile ?? "NULL")</p>
+                <p class="mb-1"><strong>PortfolioUrl:</strong> @(Model?.PortfolioUrl ?? "NULL")</p>
+                <p class="mb-1"><strong>CoverLetter:</strong> @(string.IsNullOrEmpty(Model?.CoverLetter) ? "NULL" : Model.CoverLetter.Substring(0, Math.Min(50, Model.CoverLetter.Length)) + "...")</p>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger mb-4">
+        <h6><i class="bi bi-exclamation-triangle me-2"></i>Model is NULL</h6>
+        <p>The model passed to the view is null. This indicates an issue with the controller action.</p>
+    </div>
 }
 
 <!-- Welcome Section -->
@@ -27,8 +59,8 @@
     </div>
 </div>
 
-<form asp-controller="Applicants" asp-action="Edit" method="post" class="needs-validation" novalidate>
-    <input type="hidden" name="jobPostId" value="@jobPostId" />
+<form asp-controller="Applicants" asp-action="Edit" asp-route-jobPostId="@jobPostId" asp-route-id="@ViewData["ApplicantId"]" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
 
     <div class="row">
         <div class="col-lg-8">
@@ -50,7 +82,7 @@
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
                                 <input asp-for="FirstName" class="form-control border-start-0"
-                                    placeholder="Enter first name" required />
+                                    placeholder="Enter first name" value="@(Model?.FirstName ?? "")" required />
                             </div>
                             <span asp-validation-for="FirstName" class="text-danger small"></span>
                         </div>
@@ -62,7 +94,7 @@
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
                                 <input asp-for="LastName" class="form-control border-start-0"
-                                    placeholder="Enter last name" required />
+                                    placeholder="Enter last name" value="@(Model?.LastName ?? "")" required />
                             </div>
                             <span asp-validation-for="LastName" class="text-danger small"></span>
                         </div>
@@ -76,7 +108,7 @@
                                     <i class="bi bi-envelope text-muted"></i>
                                 </span>
                                 <input asp-for="Email" type="email" class="form-control border-start-0"
-                                    placeholder="Enter email address" required />
+                                    placeholder="Enter email address" value="@(Model?.Email ?? "")" required />
                             </div>
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
@@ -88,7 +120,7 @@
                                     <i class="bi bi-telephone text-muted"></i>
                                 </span>
                                 <input asp-for="PhoneNumber" class="form-control border-start-0"
-                                    placeholder="Enter phone number" />
+                                    placeholder="Enter phone number" value="@(Model?.PhoneNumber ?? "")" />
                             </div>
                             <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
@@ -115,7 +147,8 @@
                                     <i class="bi bi-linkedin text-muted"></i>
                                 </span>
                                 <input asp-for="LinkedInProfile" class="form-control border-start-0"
-                                    placeholder="https://linkedin.com/in/username" />
+                                    placeholder="https://linkedin.com/in/username"
+                                    value="@(Model?.LinkedInProfile ?? "")" />
                             </div>
                             <span asp-validation-for="LinkedInProfile" class="text-danger small"></span>
                         </div>
@@ -127,7 +160,7 @@
                                     <i class="bi bi-globe text-muted"></i>
                                 </span>
                                 <input asp-for="PortfolioUrl" class="form-control border-start-0"
-                                    placeholder="https://portfolio.com" />
+                                    placeholder="https://portfolio.com" value="@(Model?.PortfolioUrl ?? "")" />
                             </div>
                             <span asp-validation-for="PortfolioUrl" class="text-danger small"></span>
                         </div>
@@ -148,7 +181,7 @@
                     <div class="mb-4">
                         <label asp-for="CoverLetter" class="form-label fw-bold text-dark">Cover Letter</label>
                         <textarea asp-for="CoverLetter" class="form-control" rows="6"
-                            placeholder="Enter cover letter or additional notes about the applicant..."></textarea>
+                            placeholder="Enter cover letter or additional notes about the applicant...">@(Model?.CoverLetter ?? "")</textarea>
                         <span asp-validation-for="CoverLetter" class="text-danger small"></span>
                     </div>
                 </div>
@@ -167,10 +200,10 @@
                     <div class="mb-4">
                         <label asp-for="Status" class="form-label fw-bold text-dark">Applicant Status</label>
                         <select asp-for="Status" class="form-select">
-                            <option value="Pending">Pending</option>
-                            <option value="Screened">Screened</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Hired">Hired</option>
+                            <option value="Pending" selected="@(Model?.Status == "Pending")">Pending</option>
+                            <option value="Screened" selected="@(Model?.Status == "Screened")">Screened</option>
+                            <option value="Rejected" selected="@(Model?.Status == "Rejected")">Rejected</option>
+                            <option value="Hired" selected="@(Model?.Status == "Hired")">Hired</option>
                         </select>
                         <span asp-validation-for="Status" class="text-danger small"></span>
                     </div>
@@ -236,15 +269,25 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                                    <h6>${firstName} ${lastName}</h6>
-                                    <p class="text-muted">${email}</p>
-                                    <p class="text-muted">${phone}</p>
-                                `;
+                                                <h6>${firstName} ${lastName}</h6>
+                                                <p class="text-muted">${email}</p>
+                                                <p class="text-muted">${phone}</p>
+                                            `;
         }
 
         // Add event listeners for live preview
         document.querySelectorAll('input[name="FirstName"], input[name="LastName"], input[name="Email"], input[name="PhoneNumber"]').forEach(element => {
             element.addEventListener('input', updatePreview);
+        });
+
+        // Form submission debugging
+        document.querySelector('form').addEventListener('submit', function(e) {
+            console.log('Form submission started');
+            const formData = new FormData(this);
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
         });
 
         // Initialize preview

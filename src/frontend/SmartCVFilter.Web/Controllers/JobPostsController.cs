@@ -38,6 +38,7 @@ public class JobPostsController : Controller
         }
     }
 
+    [Authorize]
     public async Task<IActionResult> Details(int id)
     {
         try
@@ -104,9 +105,14 @@ public class JobPostsController : Controller
     {
         try
         {
+            _logger.LogInformation("Attempting to load job post for edit, ID: {JobPostId}", id);
+
             var jobPost = await _jobPostService.GetJobPostAsync(id);
+            _logger.LogInformation("Job post retrieved: {JobPost}", jobPost != null ? "Success" : "Null");
+
             if (jobPost == null)
             {
+                _logger.LogWarning("Job post not found for ID: {JobPostId}", id);
                 TempData["Error"] = "Job post not found.";
                 return RedirectToAction("Index");
             }
@@ -131,6 +137,7 @@ public class JobPostsController : Controller
                 ClosingDate = jobPost.ClosingDate
             };
 
+            _logger.LogInformation("Update model created with Title: {Title}", updateModel.Title);
             return View(updateModel);
         }
         catch (Exception ex)

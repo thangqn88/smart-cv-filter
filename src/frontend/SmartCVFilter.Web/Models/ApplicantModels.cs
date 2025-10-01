@@ -106,3 +106,22 @@ public class ScreeningRequest
     [Required]
     public List<int> ApplicantIds { get; set; } = new();
 }
+
+public class ScreenedApplicantResponse
+{
+    public int ApplicantId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime AppliedDate { get; set; }
+    public int JobPostId { get; set; }
+    public string JobTitle { get; set; } = string.Empty;
+    public string JobLocation { get; set; } = string.Empty;
+    public string JobDepartment { get; set; } = string.Empty;
+    public int LatestScore { get; set; }
+    public string LatestScoreStatus { get; set; } = string.Empty;
+    public DateTime LatestScreeningDate { get; set; }
+    public int TotalScreenings { get; set; }
+}

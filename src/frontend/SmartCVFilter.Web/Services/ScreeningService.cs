@@ -41,4 +41,18 @@ public class ScreeningService : IScreeningService
         }
     }
 
+    public async Task<List<ScreenedApplicantResponse>> GetScreenedApplicantsAsync()
+    {
+        try
+        {
+            var response = await _apiService.MakeRequestAsync<List<ScreenedApplicantResponse>>("screening/screened-applicants", HttpMethod.Get);
+            return response ?? new List<ScreenedApplicantResponse>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting screened applicants");
+            return new List<ScreenedApplicantResponse>();
+        }
+    }
+
 }

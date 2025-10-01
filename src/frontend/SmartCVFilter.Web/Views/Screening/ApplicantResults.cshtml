@@ -1,0 +1,222 @@
+@using SmartCVFilter.Web.Models
+@model List<ScreeningResultResponse>
+@{
+    ViewData["Title"] = "Screening Results";
+    Layout = "_Layout";
+}
+
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-search text-primary me-2"></i>
+                    Screening Results
+                </h1>
+                <p class="text-muted mb-0">AI screening results for this applicant</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Screened Applicants
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Screening Results -->
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-white border-0 py-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-list-check text-primary me-2"></i>
+                    Screening Results
+                </h5>
+                <p class="text-muted mb-0">All AI screening assessments for this candidate</p>
+            </div>
+            <div class="text-muted">
+                <small>Total: <span class="fw-bold text-dark">@(Model?.Count ?? 0)</span> screening results</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="row g-4 p-4">
+                @foreach (var result in Model)
+                {
+                    <div class="col-lg-6">
+                        <div class="card shadow border-0 h-100 hover-card">
+                            <div class="card-header bg-white border-0 py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold text-dark">
+                                        <i class="bi bi-search text-primary me-2"></i>
+                                        Screening #@result.Id
+                                    </h6>
+                                    <span class="badge @(result.Status == "Completed" ? "bg-success" : result.Status == "Processing" ? "bg-warning" : "bg-danger") px-3 py-2">
+                                        @result.Status
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Score Display -->
+                                <div class="text-center mb-4">
+                                    <div class="score-circle-large @(result.OverallScore >= 80 ? "score-excellent" : result.OverallScore >= 60 ? "score-good" : "score-poor") mx-auto mb-3">
+                                        @result.OverallScore
+                                    </div>
+                                    <h5 class="fw-bold text-dark">@result.OverallScore/100</h5>
+                                    <p class="text-muted mb-0">@(result.OverallScore >= 80 ? "Excellent" : result.OverallScore >= 60 ? "Good" : "Needs Improvement")</p>
+                                </div>
+
+                                <!-- Summary -->
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="bi bi-file-text text-primary me-2"></i>
+                                        Summary
+                                    </h6>
+                                    <p class="text-muted small">@result.Summary</p>
+                                </div>
+
+                                <!-- Strengths and Weaknesses -->
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <h6 class="fw-bold text-success mb-2">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            Strengths (@result.Strengths.Count)
+                                        </h6>
+                                        @if (result.Strengths.Any())
+                                        {
+                                            <ul class="list-unstyled small">
+                                                @foreach (var strength in result.Strengths.Take(3))
+                                                {
+                                                    <li class="mb-1">
+                                                        <i class="bi bi-check text-success me-1"></i>
+                                                        @strength
+                                                    </li>
+                                                }
+                                                @if (result.Strengths.Count > 3)
+                                                {
+                                                    <li class="text-muted">+@(result.Strengths.Count - 3) more</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                    <div class="col-6">
+                                        <h6 class="fw-bold text-warning mb-2">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Areas for Improvement (@result.Weaknesses.Count)
+                                        </h6>
+                                        @if (result.Weaknesses.Any())
+                                        {
+                                            <ul class="list-unstyled small">
+                                                @foreach (var weakness in result.Weaknesses.Take(3))
+                                                {
+                                                    <li class="mb-1">
+                                                        <i class="bi bi-dash text-warning me-1"></i>
+                                                        @weakness
+                                                    </li>
+                                                }
+                                                @if (result.Weaknesses.Count > 3)
+                                                {
+                                                    <li class="text-muted">+@(result.Weaknesses.Count - 3) more</li>
+                                                }
+                                            </ul>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Dates -->
+                                <div class="d-flex justify-content-between text-muted small mb-3">
+                                    <div>
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Created: @result.CreatedAt.ToString("MMM dd, yyyy")
+                                    </div>
+                                    @if (result.CompletedAt.HasValue)
+                                    {
+                                        <div>
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Completed: @result.CompletedAt.Value.ToString("MMM dd, yyyy")
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Action Button -->
+                                <div class="d-grid">
+                                    <a href="@Url.Action("Details", new { id = result.Id })" class="btn btn-primary">
+                                        <i class="bi bi-eye me-2"></i>
+                                        View Detailed Analysis
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-search display-1 text-muted opacity-50"></i>
+                </div>
+                <h5 class="text-muted mb-3">No screening results found</h5>
+                <p class="text-muted mb-4">This applicant hasn't completed any AI screening yet.</p>
+                <a href="@Url.Action("Index")" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Back to Screened Applicants
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}
+
+<style>
+    .score-circle-large {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+        color: white;
+    }
+    
+    .score-excellent {
+        background-color: #28a745;
+    }
+    
+    .score-good {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .score-poor {
+        background-color: #dc3545;
+    }
+    
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>

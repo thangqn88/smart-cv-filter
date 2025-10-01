@@ -28,7 +28,7 @@ public class CVUploadService : ICVUploadService
 
     public async Task<string> UploadCVAsync(IFormFile file, int applicantId)
     {
-        if (!await ValidateCVFileAsync(file))
+        if (!ValidateCVFile(file))
         {
             throw new InvalidOperationException("Invalid file format or size.");
         }
@@ -148,7 +148,7 @@ public class CVUploadService : ICVUploadService
         return await File.ReadAllBytesAsync(cvFile.FilePath);
     }
 
-    public async Task<bool> ValidateCVFileAsync(IFormFile file)
+    public bool ValidateCVFile(IFormFile file)
     {
         if (file == null || file.Length == 0)
             return false;

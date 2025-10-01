@@ -32,14 +32,14 @@ public class CreateApplicantRequest
 
 public class UpdateApplicantRequest
 {
-    [StringLength(100)]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "First name is required and must be between 1 and 100 characters.")]
     public string? FirstName { get; set; }
 
-    [StringLength(100)]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "Last name is required and must be between 1 and 100 characters.")]
     public string? LastName { get; set; }
 
-    [EmailAddress]
-    [StringLength(200)]
+    [StringLength(200, MinimumLength = 1, ErrorMessage = "Email address is required and must be between 1 and 200 characters.")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
     public string? Email { get; set; }
 
     [StringLength(20)]
@@ -105,5 +105,24 @@ public class ScreeningRequest
 {
     [Required]
     public List<int> ApplicantIds { get; set; } = new();
+}
+
+public class ScreenedApplicantResponse
+{
+    public int ApplicantId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime AppliedDate { get; set; }
+    public int JobPostId { get; set; }
+    public string JobTitle { get; set; } = string.Empty;
+    public string JobLocation { get; set; } = string.Empty;
+    public string JobDepartment { get; set; } = string.Empty;
+    public int LatestScore { get; set; }
+    public string LatestScoreStatus { get; set; } = string.Empty;
+    public DateTime LatestScreeningDate { get; set; }
+    public int TotalScreenings { get; set; }
 }
 

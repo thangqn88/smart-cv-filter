@@ -71,5 +71,30 @@ public class ScreeningController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving screening results." });
         }
     }
+
+    [HttpGet("screened-applicants")]
+    public async Task<ActionResult<IEnumerable<ScreenedApplicantResponse>>> GetScreenedApplicants()
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var applicants = await _screeningService.GetScreenedApplicantsAsync(userId, userRole == "Admin");
+            return Ok(applicants);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting screened applicants");
+            return StatusCode(500, new { message = "An error occurred while retrieving screened applicants." });
+        }
+    }
 }
 

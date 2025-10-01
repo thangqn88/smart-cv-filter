@@ -97,6 +97,17 @@ public class ApplicantsController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("UpdateApplicant called with JobPostId: {JobPostId}, Id: {Id}", jobPostId, id);
+            _logger.LogInformation("Request data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
+                request.FirstName, request.LastName, request.Email);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("ModelState is invalid. Errors: {Errors}",
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return BadRequest(ModelState);
+            }
+
             var applicant = await _applicantService.UpdateApplicantAsync(id, request);
             if (applicant.JobPostId != jobPostId)
                 return NotFound();

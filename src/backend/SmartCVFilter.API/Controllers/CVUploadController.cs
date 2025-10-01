@@ -26,7 +26,7 @@ public class CVUploadController : ControllerBase
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "No file uploaded." });
 
-            if (!await _cvUploadService.ValidateCVFileAsync(file))
+            if (!_cvUploadService.ValidateCVFile(file))
                 return BadRequest(new { message = "Invalid file format or size. Please upload PDF, DOC, DOCX, or TXT files (max 10MB)." });
 
             var filePath = await _cvUploadService.UploadCVAsync(file, applicantId);

@@ -86,6 +86,51 @@ public class ScreeningService : IScreeningService
         });
     }
 
+    public async Task<IEnumerable<ScreenedApplicantResponse>> GetScreenedApplicantsAsync(string userId, bool isAdmin = false)
+    {
+        var query = _context.Applicants
+            .Include(a => a.JobPost)
+            .Include(a => a.ScreeningResults)
+            .Where(a => a.ScreeningResults.Any()) // Only applicants who have been screened
+            .AsQueryable();
+
+        // Admin users can access any screened applicants, regular users can only access their own job posts' applicants
+        if (!isAdmin)
+        {
+            query = query.Where(a => a.JobPost.UserId == userId);
+        }
+
+        var applicants = await query
+            .OrderByDescending(a => a.ScreeningResults.Max(sr => sr.CreatedAt))
+            .ToListAsync();
+
+        return applicants.Select(applicant =>
+        {
+            var latestScreening = applicant.ScreeningResults
+                .OrderByDescending(sr => sr.CreatedAt)
+                .First();
+
+            return new ScreenedApplicantResponse
+            {
+                ApplicantId = applicant.Id,
+                FirstName = applicant.FirstName,
+                LastName = applicant.LastName,
+                Email = applicant.Email,
+                PhoneNumber = applicant.PhoneNumber,
+                Status = applicant.Status,
+                AppliedDate = applicant.AppliedDate,
+                JobPostId = applicant.JobPostId,
+                JobTitle = applicant.JobPost.Title,
+                JobLocation = applicant.JobPost.Location,
+                JobDepartment = applicant.JobPost.Department,
+                LatestScore = latestScreening.OverallScore,
+                LatestScoreStatus = latestScreening.Status,
+                LatestScreeningDate = latestScreening.CreatedAt,
+                TotalScreenings = applicant.ScreeningResults.Count
+            };
+        });
+    }
+
     public async Task<bool> ProcessScreeningAsync(int applicantId, int jobPostId)
     {
         try

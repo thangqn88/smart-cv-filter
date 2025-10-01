@@ -133,6 +133,7 @@ public class ApplicantsController : Controller
         }
     }
 
+    [HttpGet]
     [Authorize]
     public async Task<IActionResult> Edit(int jobPostId, int id)
     {
@@ -147,6 +148,7 @@ public class ApplicantsController : Controller
 
             ViewData["Title"] = $"Edit Applicant - {applicant.FirstName} {applicant.LastName}";
             ViewData["JobPostId"] = jobPostId;
+            ViewData["ApplicantId"] = id;
 
             var updateModel = new UpdateApplicantRequest
             {
@@ -173,11 +175,19 @@ public class ApplicantsController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
+    [ActionName("Edit")]
     public async Task<IActionResult> Edit(int jobPostId, int id, UpdateApplicantRequest model)
     {
+        _logger.LogInformation("Edit POST called with JobPostId: {JobPostId}, Id: {Id}", jobPostId, id);
+        _logger.LogInformation("Model data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
+            model?.FirstName, model?.LastName, model?.Email);
+
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("ModelState is invalid. Errors: {Errors}",
+                string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
             ViewData["JobPostId"] = jobPostId;
+            ViewData["ApplicantId"] = id;
             return View(model);
         }
 
@@ -193,6 +203,7 @@ public class ApplicantsController : Controller
             {
                 ModelState.AddModelError("", "Failed to update applicant. Please try again.");
                 ViewData["JobPostId"] = jobPostId;
+                ViewData["ApplicantId"] = id;
                 return View(model);
             }
         }
@@ -201,6 +212,7 @@ public class ApplicantsController : Controller
             _logger.LogError(ex, "Error updating applicant {ApplicantId}", id);
             ModelState.AddModelError("", "An error occurred while updating the applicant. Please try again.");
             ViewData["JobPostId"] = jobPostId;
+            ViewData["ApplicantId"] = id;
             return View(model);
         }
     }

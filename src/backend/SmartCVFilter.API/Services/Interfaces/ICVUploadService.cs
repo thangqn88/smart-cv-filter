@@ -8,6 +8,6 @@ public interface ICVUploadService
     Task<bool> DeleteCVAsync(int cvFileId);
     Task<string> ExtractTextFromCVAsync(int cvFileId);
     Task<byte[]> GetCVFileAsync(int cvFileId);
-    Task<bool> ValidateCVFileAsync(IFormFile file);
+    bool ValidateCVFile(IFormFile file);
 }
 

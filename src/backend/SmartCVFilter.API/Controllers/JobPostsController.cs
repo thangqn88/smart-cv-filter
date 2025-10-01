@@ -25,10 +25,16 @@ public class JobPostsController : ControllerBase
         try
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var jobPosts = await _jobPostService.GetJobPostsByUserAsync(userId);
+            // Admin users can see all job posts, regular users can only see their own
+            var jobPosts = userRole == "Admin"
+                ? await _jobPostService.GetAllJobPostsForAdminAsync()
+                : await _jobPostService.GetJobPostsByUserAsync(userId);
+
             return Ok(jobPosts);
         }
         catch (Exception ex)

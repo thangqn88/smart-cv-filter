@@ -106,7 +106,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<bool> ValidateTokenAsync(string token)
+    public bool ValidateToken(string token)
     {
         try
         {

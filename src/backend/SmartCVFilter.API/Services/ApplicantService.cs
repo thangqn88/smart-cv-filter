@@ -40,7 +40,7 @@ public class ApplicantService : IApplicantService
         _context.Applicants.Add(applicant);
         await _context.SaveChangesAsync();
 
-        return await GetApplicantByIdAsync(applicant.Id, "", true);
+        return await GetApplicantByIdAsync(applicant.Id, "", true) ?? throw new InvalidOperationException("Failed to retrieve created applicant");
     }
 
     public async Task<ApplicantResponse?> GetApplicantByIdAsync(int id, string userId, bool isAdmin = false)
@@ -168,12 +168,12 @@ public class ApplicantService : IApplicantService
         if (applicant == null)
             throw new InvalidOperationException("Applicant not found.");
 
-        // Update only provided fields
-        if (!string.IsNullOrEmpty(request.FirstName))
+        // Update all fields (they are all provided in the form)
+        if (request.FirstName != null)
             applicant.FirstName = request.FirstName;
-        if (!string.IsNullOrEmpty(request.LastName))
+        if (request.LastName != null)
             applicant.LastName = request.LastName;
-        if (!string.IsNullOrEmpty(request.Email))
+        if (request.Email != null)
             applicant.Email = request.Email;
         if (request.PhoneNumber != null)
             applicant.PhoneNumber = request.PhoneNumber;
@@ -183,13 +183,13 @@ public class ApplicantService : IApplicantService
             applicant.PortfolioUrl = request.PortfolioUrl;
         if (request.CoverLetter != null)
             applicant.CoverLetter = request.CoverLetter;
-        if (!string.IsNullOrEmpty(request.Status))
+        if (request.Status != null)
             applicant.Status = request.Status;
 
         applicant.LastUpdated = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        return await GetApplicantByIdAsync(id, "", true);
+        return await GetApplicantByIdAsync(id, "", true) ?? throw new InvalidOperationException("Failed to retrieve updated applicant");
     }
 
     public async Task<bool> DeleteApplicantAsync(int id)

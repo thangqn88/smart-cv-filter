@@ -43,7 +43,7 @@ public class JobPostService : IJobPostService
         _context.JobPosts.Add(jobPost);
         await _context.SaveChangesAsync();
 
-        return await GetJobPostByIdAsync(jobPost.Id, userId);
+        return await GetJobPostByIdAsync(jobPost.Id, userId) ?? throw new InvalidOperationException("Failed to retrieve created job post");
     }
 
     public async Task<JobPostResponse?> GetJobPostByIdAsync(int id, string userId, bool isAdmin = false)
@@ -155,7 +155,7 @@ public class JobPostService : IJobPostService
             jobPost.ClosingDate = request.ClosingDate;
 
         await _context.SaveChangesAsync();
-        return await GetJobPostByIdAsync(id, userId);
+        return await GetJobPostByIdAsync(id, userId) ?? throw new InvalidOperationException("Failed to retrieve updated job post");
     }
 
     public async Task<bool> DeleteJobPostAsync(int id, string userId)

@@ -28,21 +28,25 @@ public class ScreeningController : Controller
         {
             ViewData["Title"] = "AI Screening Results";
 
-            List<ScreeningResultResponse> results = new();
-
             if (applicantId.HasValue)
             {
-                results = await _screeningService.GetScreeningResultsByApplicantAsync(applicantId.Value);
+                // Show specific applicant's screening results
+                var results = await _screeningService.GetScreeningResultsByApplicantAsync(applicantId.Value);
                 ViewData["ApplicantId"] = applicantId.Value;
+                return View("ApplicantResults", results);
             }
-
-            return View(results);
+            else
+            {
+                // Show list of all screened applicants
+                var screenedApplicants = await _screeningService.GetScreenedApplicantsAsync();
+                return View("ScreenedApplicants", screenedApplicants);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading screening results");
             TempData["Error"] = "An error occurred while loading screening results.";
-            return View(new List<ScreeningResultResponse>());
+            return View("ScreenedApplicants", new List<ScreenedApplicantResponse>());
         }
     }
 

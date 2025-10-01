@@ -38,4 +38,5 @@ public interface IScreeningService
 {
     Task<ScreeningResultResponse?> GetScreeningResultAsync(int resultId);
     Task<List<ScreeningResultResponse>> GetScreeningResultsByApplicantAsync(int applicantId);
+    Task<List<ScreenedApplicantResponse>> GetScreenedApplicantsAsync();
 }

@@ -1,0 +1,333 @@
+@using SmartCVFilter.Web.Models
+@model List<ScreenedApplicantResponse>
+@{
+    ViewData["Title"] = "Screened Applicants";
+    Layout = "_Layout";
+}
+
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-search text-primary me-2"></i>
+                    Screened Applicants
+                </h1>
+                <p class="text-muted mb-0">AI-powered screening results and candidate assessments</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group">
+                    <a href="@Url.Action("Index", "JobPosts")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to Job Posts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" class="form-control border-start-0 table-search"
+                placeholder="Search by name, email, or job title...">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="scoreFilter" id="all" value="all" checked>
+            <label class="btn btn-outline-secondary" for="all">
+                <i class="bi bi-list me-1"></i>All Scores
+            </label>
+
+            <input type="radio" class="btn-check" name="scoreFilter" id="excellent" value="excellent">
+            <label class="btn btn-outline-success" for="excellent">
+                <i class="bi bi-star me-1"></i>Excellent (80+)
+            </label>
+
+            <input type="radio" class="btn-check" name="scoreFilter" id="good" value="good">
+            <label class="btn btn-outline-warning" for="good">
+                <i class="bi bi-check-circle me-1"></i>Good (60-79)
+            </label>
+
+            <input type="radio" class="btn-check" name="scoreFilter" id="poor" value="poor">
+            <label class="btn btn-outline-danger" for="poor">
+                <i class="bi bi-exclamation-triangle me-1"></i>Needs Improvement (<60)
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Screened Applicants Table -->
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-white border-0 py-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-people text-primary me-2"></i>
+                    Screened Applicants
+                </h5>
+                <p class="text-muted mb-0">Candidates who have completed AI screening</p>
+            </div>
+            <div class="text-muted">
+                <small>Total: <span class="fw-bold text-dark">@(Model?.Count ?? 0)</span> screened applicants</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="screenedApplicantsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Applicant</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Job Position</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark sortable" data-column="score">
+                                Latest Score
+                                <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                            </th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Status</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Screening Date</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Total Screenings</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var applicant in Model)
+                        {
+                            <tr class="border-bottom">
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="bi bi-person text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@applicant.FirstName @applicant.LastName</div>
+                                            <div class="text-muted small">
+                                                <i class="bi bi-envelope me-1"></i>
+                                                @applicant.Email
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(applicant.PhoneNumber))
+                                            {
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-phone me-1"></i>
+                                                    @applicant.PhoneNumber
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="fw-bold text-dark">@applicant.JobTitle</div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        @applicant.JobLocation
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-building me-1"></i>
+                                        @applicant.JobDepartment
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <div class="score-circle @(applicant.LatestScore >= 80 ? "score-excellent" : applicant.LatestScore >= 60 ? "score-good" : "score-poor")">
+                                                @applicant.LatestScore
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@applicant.LatestScore/100</div>
+                                            <small class="text-muted">@(applicant.LatestScore >= 80 ? "Excellent" : applicant.LatestScore >= 60 ? "Good" : "Needs Improvement")</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge @(applicant.LatestScoreStatus == "Completed" ? "bg-success" : applicant.LatestScoreStatus == "Processing" ? "bg-warning" : "bg-danger") px-3 py-2">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                                        @applicant.LatestScoreStatus
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    @applicant.LatestScreeningDate.ToString("MMM dd, yyyy")
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge bg-info px-3 py-2">
+                                        <i class="bi bi-search me-1"></i>
+                                        @applicant.TotalScreenings
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Index", new { applicantId = applicant.ApplicantId })"
+                                            class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="tooltip"
+                                            title="View Screening Results">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Details", "Applicants", new { jobPostId = applicant.JobPostId, id = applicant.ApplicantId })"
+                                            class="btn btn-outline-info btn-sm me-1" data-bs-toggle="tooltip"
+                                            title="View Applicant Details">
+                                            <i class="bi bi-person"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-search display-1 text-muted opacity-50"></i>
+                </div>
+                <h5 class="text-muted mb-3">No screened applicants found</h5>
+                <p class="text-muted mb-4">No applicants have completed AI screening yet.</p>
+                <a href="@Url.Action("Index", "JobPosts")" class="btn btn-primary">
+                    <i class="bi bi-briefcase me-2"></i>
+                    View Job Posts
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Search functionality
+        document.querySelector('.table-search').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#screenedApplicantsTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const job = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                const matches = name.includes(searchTerm) || job.includes(searchTerm);
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+
+        // Filter by score
+        document.querySelectorAll('input[name="scoreFilter"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const filter = this.value;
+                const rows = document.querySelectorAll('#screenedApplicantsTable tbody tr');
+
+                rows.forEach(row => {
+                    if (filter === 'all') {
+                        row.style.display = '';
+                    } else {
+                        const scoreCell = row.querySelector('td:nth-child(3) .score-circle');
+                        const score = parseInt(scoreCell?.textContent || '0');
+                        
+                        let show = false;
+                        if (filter === 'excellent' && score >= 80) show = true;
+                        else if (filter === 'good' && score >= 60 && score < 80) show = true;
+                        else if (filter === 'poor' && score < 60) show = true;
+                        
+                        row.style.display = show ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        // Sorting functionality
+        let sortDirection = {};
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function () {
+                const column = this.dataset.column;
+                const tbody = document.querySelector('#screenedApplicantsTable tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                // Toggle sort direction
+                sortDirection[column] = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+
+                // Update sort icon
+                const icon = this.querySelector('i');
+                icon.className = sortDirection[column] === 'asc' ? 'bi bi-arrow-up ms-1 text-primary' : 'bi bi-arrow-down ms-1 text-primary';
+
+                // Reset other column icons
+                document.querySelectorAll('.sortable i').forEach(otherIcon => {
+                    if (otherIcon !== icon) {
+                        otherIcon.className = 'bi bi-arrow-down-up ms-1 text-muted';
+                    }
+                });
+
+                // Sort rows
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+
+                    if (column === 'score') {
+                        const aScoreCell = a.querySelector('td:nth-child(3) .score-circle');
+                        const bScoreCell = b.querySelector('td:nth-child(3) .score-circle');
+                        
+                        aValue = parseInt(aScoreCell?.textContent || '0');
+                        bValue = parseInt(bScoreCell?.textContent || '0');
+                    }
+
+                    if (sortDirection[column] === 'asc') {
+                        return aValue - bValue;
+                    } else {
+                        return bValue - aValue;
+                    }
+                });
+
+                // Re-append sorted rows
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}
+
+<style>
+    .score-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: white;
+    }
+    
+    .score-excellent {
+        background-color: #28a745;
+    }
+    
+    .score-good {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .score-poor {
+        background-color: #dc3545;
+    }
+    
+    .sortable:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        border-radius: 4px;
+    }
+    
+    .sortable i {
+        transition: color 0.2s ease-in-out;
+    }
+</style>

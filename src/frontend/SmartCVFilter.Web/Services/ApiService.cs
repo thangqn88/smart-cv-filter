@@ -155,11 +155,19 @@ public class ApiService : IApiService
             }
 
             var response = await _httpClient.SendAsync(request);
+            _logger.LogInformation("API response status: {StatusCode} for endpoint: {Endpoint}", response.StatusCode, endpoint);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("API response content length: {Length} for endpoint: {Endpoint}", responseContent.Length, endpoint);
                 return JsonConvert.DeserializeObject<T>(responseContent);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("API request failed with status {StatusCode} for endpoint {Endpoint}. Error: {Error}",
+                    response.StatusCode, endpoint, errorContent);
             }
 
             return default(T);

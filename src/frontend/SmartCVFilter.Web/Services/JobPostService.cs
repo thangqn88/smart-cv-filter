@@ -60,7 +60,9 @@ public class JobPostService : IJobPostService
     {
         try
         {
+            _logger.LogInformation("Making API request for job post ID: {JobPostId}", id);
             var response = await _apiService.MakeRequestAsync<JobPostResponse>($"jobposts/{id}", HttpMethod.Get);
+            _logger.LogInformation("API response for job post {JobPostId}: {Response}", id, response != null ? "Success" : "Null");
             return response;
         }
         catch (Exception ex)
