@@ -48,8 +48,27 @@ public class HomeController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading dashboard");
-            TempData["Error"] = "An error occurred while loading the dashboard.";
-            return View();
+
+            // If it's a connection error, show a more user-friendly message
+            if (ex.Message.Contains("BaseAddress") || ex.Message.Contains("connection"))
+            {
+                TempData["Warning"] = "Unable to connect to the backend API. Please ensure the backend service is running.";
+            }
+            else
+            {
+                TempData["Error"] = "An error occurred while loading the dashboard.";
+            }
+
+            // Return empty dashboard data
+            var emptyDashboardData = new
+            {
+                TotalJobPosts = 0,
+                ActiveJobPosts = 0,
+                TotalApplicants = 0,
+                RecentJobPosts = new List<object>()
+            };
+
+            return View(emptyDashboardData);
         }
     }
 

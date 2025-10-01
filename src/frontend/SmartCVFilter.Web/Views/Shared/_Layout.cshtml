@@ -141,6 +141,38 @@
                     </div>
                 </div>
 
+                <!-- Alert Container -->
+                <div class="alert-container">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Warning"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            @TempData["Warning"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Info"] != null)
+                    {
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            @TempData["Info"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                </div>
+
                 <!-- Page content -->
                 @RenderBody()
             </main>

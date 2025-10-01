@@ -10,6 +10,7 @@ public interface IApiService
     Task LogoutAsync();
     string? GetToken();
     void SetToken(string token);
+    Task<T?> MakeRequestAsync<T>(string endpoint, HttpMethod method, object? content = null);
 }
 
 public interface IJobPostService

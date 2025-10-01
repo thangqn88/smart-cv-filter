@@ -22,16 +22,9 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
-            var response = await _httpClient.GetAsync("jobposts");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<List<JobPostListResponse>>(content) ?? new List<JobPostListResponse>();
-            }
-
-            return new List<JobPostListResponse>();
+            // Use ApiService to make the request with proper configuration
+            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("jobposts", HttpMethod.Get);
+            return response ?? new List<JobPostListResponse>();
         }
         catch (Exception ex)
         {

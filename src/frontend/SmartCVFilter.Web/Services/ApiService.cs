@@ -129,6 +129,46 @@ public class ApiService : IApiService
         SetToken(string.Empty);
     }
 
+    public async Task<T?> MakeRequestAsync<T>(string endpoint, HttpMethod method, object? content = null)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var request = new HttpRequestMessage(method, endpoint);
+
+            if (content != null)
+            {
+                var json = JsonConvert.SerializeObject(content);
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            }
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(responseContent);
+            }
+
+            return default(T);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error making API request to {Endpoint}", endpoint);
+            return default(T);
+        }
+    }
+
+    private async Task EnsureAuthenticatedAsync()
+    {
+        var token = GetToken();
+        if (!string.IsNullOrEmpty(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
     public string? GetToken()
     {
         return _httpContextAccessor.HttpContext?.Request.Cookies["auth_token"];
