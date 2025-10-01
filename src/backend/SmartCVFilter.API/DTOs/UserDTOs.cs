@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SmartCVFilter.Web.Models;
+namespace SmartCVFilter.API.DTOs;
 
 public class CreateUserRequest
 {
@@ -62,14 +62,6 @@ public class UserResponse
     public DateTime? LastUpdated { get; set; }
 }
 
-public class UserIndexViewModel
-{
-    public List<UserResponse> Users { get; set; } = new();
-    public int TotalUsers { get; set; }
-    public int ActiveUsers { get; set; }
-    public int InactiveUsers { get; set; }
-}
-
 public class UserListResponse
 {
     public List<UserResponse> Users { get; set; } = new();
@@ -90,13 +82,3 @@ public class ChangePasswordRequest
     [StringLength(100, MinimumLength = 6)]
     public string NewPassword { get; set; } = string.Empty;
 }
-
-public class AssignRoleRequest
-{
-    [Required]
-    public string UserId { get; set; } = string.Empty;
-
-    [Required]
-    public string RoleName { get; set; } = string.Empty;
-}
-

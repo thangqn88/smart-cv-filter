@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SmartCVFilter.Web.Models;
+namespace SmartCVFilter.API.DTOs;
 
 public class CreateRoleRequest
 {
@@ -39,14 +39,6 @@ public class RoleResponse
     public DateTime? LastUpdated { get; set; }
 }
 
-public class RoleIndexViewModel
-{
-    public List<RoleResponse> Roles { get; set; } = new();
-    public int TotalRoles { get; set; }
-    public int ActiveRoles { get; set; }
-    public int InactiveRoles { get; set; }
-}
-
 public class RoleListResponse
 {
     public List<RoleResponse> Roles { get; set; } = new();
@@ -56,6 +48,15 @@ public class RoleListResponse
     public int Page { get; set; }
     public int PageSize { get; set; }
     public int TotalPages { get; set; }
+}
+
+public class AssignRoleRequest
+{
+    [Required]
+    public string UserId { get; set; } = string.Empty;
+
+    [Required]
+    public string RoleName { get; set; } = string.Empty;
 }
 
 public static class RolePermissions
@@ -116,4 +117,3 @@ public static class RolePermissions
         { "Settings.Edit", "Edit system settings" }
     };
 }
-

@@ -1,7 +1,14 @@
+@using SmartCVFilter.Web.Models
 @model SmartCVFilter.Web.ViewModels.ApplicantIndexViewModel
 @{
     ViewData["Title"] = "Applicant Management";
     Layout = "_Layout";
+    var paginationInfo = new PaginationInfo
+    {
+        CurrentPage = ViewData["CurrentPage"] as int? ?? 1,
+        PageSize = ViewData["PageSize"] as int? ?? 10,
+        TotalRecords = Model?.Applicants?.Count ?? 0
+    };
 }
 
 @if (Model == null)
@@ -316,6 +323,9 @@ else
             }
         </div>
     </div>
+
+    <!-- Pagination -->
+    <partial name="_Pagination" model="paginationInfo" />
 }
 
 <!-- AI Screening Modal -->

@@ -3,6 +3,12 @@
 @{
     ViewData["Title"] = "Role Management";
     Layout = "_Layout";
+    var paginationInfo = new PaginationInfo
+    {
+        CurrentPage = ViewData["CurrentPage"] as int? ?? 1,
+        PageSize = ViewData["PageSize"] as int? ?? 10,
+        TotalRecords = Model.TotalRoles
+    };
 }
 
 <!-- Welcome Section -->
@@ -177,7 +183,7 @@
                 <p class="text-muted mb-0">Manage system roles and their permissions</p>
             </div>
             <div class="text-muted">
-                <small>Total: <span class="fw-bold text-dark">@Model.Roles.Count</span> roles</small>
+                <small>Total: <span class="fw-bold text-dark">@Model.TotalRoles</span> roles</small>
             </div>
         </div>
     </div>
@@ -273,6 +279,9 @@
         }
     </div>
 </div>
+
+<!-- Pagination -->
+<partial name="_Pagination" model="paginationInfo" />
 
 <!-- Delete Form -->
 <form id="deleteForm" method="post" style="display: none;">

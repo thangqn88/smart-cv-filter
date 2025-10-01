@@ -3,6 +3,12 @@
 @{
     ViewData["Title"] = "Job Posting Management";
     Layout = "_Layout";
+    var paginationInfo = new PaginationInfo
+    {
+        CurrentPage = ViewData["CurrentPage"] as int? ?? 1,
+        PageSize = ViewData["PageSize"] as int? ?? 10,
+        TotalRecords = Model?.Count ?? 0
+    };
 }
 
 <!-- Header Section -->
@@ -196,6 +202,9 @@
         </div>
     </div>
 </div>
+
+<!-- Pagination -->
+<partial name="_Pagination" model="paginationInfo" />
 
 <!-- Delete Form -->
 <form id="deleteForm" method="post" style="display: none;">

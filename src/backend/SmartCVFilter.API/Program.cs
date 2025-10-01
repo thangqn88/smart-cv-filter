@@ -117,6 +117,8 @@ builder.Services.AddScoped<IJobPostService, JobPostService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<ICVUploadService, CVUploadService>();
 builder.Services.AddScoped<IScreeningService, ScreeningService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 // HTTP Client for Gemini AI
 builder.Services.AddHttpClient<IGeminiAIService, GeminiAIService>();

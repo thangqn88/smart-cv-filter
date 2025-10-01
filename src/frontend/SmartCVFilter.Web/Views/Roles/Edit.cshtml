@@ -1,31 +1,286 @@
+@using SmartCVFilter.Web.Models
+@model UpdateRoleRequest
 @{
     ViewData["Title"] = "Edit Role";
+    Layout = "_Layout";
     var roleId = ViewData["RoleId"];
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Edit Role</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i>
-            Back to List
-        </a>
-    </div>
-</div>
-
-<div class="row">
+<!-- Welcome Section -->
+<div class="row mb-4">
     <div class="col-12">
-        <div class="card shadow">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-shield-check display-1 text-muted"></i>
-                <h3 class="text-muted mt-3">Edit Role</h3>
-                <p class="text-muted">Role editing functionality will be implemented in a future update.</p>
-                <p class="text-muted">Role ID: @roleId</p>
-                <a href="@Url.Action("Index")" class="btn btn-primary">
-                    <i class="bi bi-arrow-left"></i>
-                    Back to Role Management
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-pencil text-primary me-2"></i>
+                    Edit Role
+                </h1>
+                <p class="text-muted mb-0">Update role information and permissions</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to List
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<form asp-controller="Roles" asp-action="Edit" method="post" class="needs-validation" novalidate>
+    <input type="hidden" name="id" value="@roleId" />
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Role Information -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-shield-check text-primary me-2"></i>
+                        Role Information
+                    </h5>
+                    <p class="text-muted mb-0">Basic role details</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Name" class="form-label fw-bold text-dark">Role Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-shield-check text-muted"></i>
+                                </span>
+                                <input asp-for="Name" class="form-control border-start-0" placeholder="Enter role name"
+                                    value="@(Model?.Name ?? "")" required />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="form-check form-switch mt-4">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" id="isActiveSwitch"
+                                    checked="@(Model?.IsActive == true)">
+                                <label class="form-check-label fw-bold text-dark" for="isActiveSwitch">
+                                    Active Role
+                                </label>
+                            </div>
+                            <div class="form-text">Inactive roles cannot be assigned to users.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Description" class="form-label fw-bold text-dark">Description</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-text-paragraph text-muted"></i>
+                            </span>
+                            <textarea asp-for="Description" class="form-control border-start-0" rows="3"
+                                placeholder="Enter role description">@(Model?.Description ?? "")</textarea>
+                        </div>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissions -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-key text-primary me-2"></i>
+                        Permissions
+                    </h5>
+                    <p class="text-muted mb-0">Select the permissions for this role</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row" id="permissionsContainer">
+                        <!-- Permissions will be loaded dynamically -->
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading permissions...</span>
+                            </div>
+                            <p class="text-muted mt-2">Loading available permissions...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Preview Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-eye text-primary me-2"></i>
+                        Live Preview
+                    </h5>
+                    <p class="text-muted mb-0">See how the role will appear</p>
+                </div>
+                <div class="card-body p-4">
+                    <div id="previewContent">
+                        <div class="text-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 60px; height: 60px;">
+                                <i class="bi bi-shield-check text-primary fs-4"></i>
+                            </div>
+                            <h6 class="text-muted">Role name will appear here</h6>
+                            <p class="text-muted small">Role description</p>
+                            <span class="badge bg-secondary">Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-lightning text-primary me-2"></i>
+                        Actions
+                    </h5>
+                    <p class="text-muted mb-0">Save or cancel the form</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Update Role
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="alert alert-info border-0 shadow-sm">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Note:</strong> Changes will take effect immediately. Users with this role will be affected by
+                permission changes.
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Load permissions on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadPermissions();
+        });
+
+        // Load available permissions
+        async function loadPermissions() {
+            try {
+                const response = await fetch('/api/roles/permissions/all');
+                const permissions = await response.json();
+
+                const descriptionsResponse = await fetch('/api/roles/permissions/descriptions');
+                const descriptions = await descriptionsResponse.json();
+
+                renderPermissions(permissions, descriptions);
+            } catch (error) {
+                console.error('Error loading permissions:', error);
+                document.getElementById('permissionsContainer').innerHTML =
+                    '<div class="col-12 text-center"><p class="text-danger">Error loading permissions</p></div>';
+            }
+        }
+
+        // Render permissions checkboxes
+        function renderPermissions(permissions, descriptions) {
+            const container = document.getElementById('permissionsContainer');
+            const currentPermissions = @Html.Raw(Json.Serialize(Model?.Permissions ?? new List<string>()));
+
+            let html = '';
+            const categories = {};
+
+            // Group permissions by category
+            permissions.forEach(permission => {
+                const category = permission.split('.')[0];
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(permission);
+            });
+
+            // Render each category
+            Object.keys(categories).forEach(category => {
+                html += `
+                        <div class="col-md-6 mb-4">
+                            <h6 class="fw-bold text-dark mb-3">
+                                <i class="bi bi-folder text-primary me-2"></i>
+                                ${category.charAt(0).toUpperCase() + category.slice(1)} Management
+                            </h6>
+                            <div class="permission-group">
+                    `;
+
+                categories[category].forEach(permission => {
+                    const isChecked = currentPermissions.includes(permission);
+                    const description = descriptions[permission] || permission;
+
+                    html += `
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="Permissions" value="${permission}" 
+                                       id="perm_${permission.replace('.', '_')}" ${isChecked ? 'checked' : ''}>
+                                <label class="form-check-label small" for="perm_${permission.replace('.', '_')}">
+                                    <strong>${permission}</strong>
+                                    <br><span class="text-muted">${description}</span>
+                                </label>
+                            </div>
+                        `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    `;
+            });
+
+            container.innerHTML = html;
+            updatePreview();
+        }
+
+        // Live preview functionality
+        function updatePreview() {
+            const name = document.querySelector('input[name="Name"]').value || 'Role Name';
+            const description = document.querySelector('textarea[name="Description"]').value || 'Role description';
+            const isActive = document.querySelector('input[name="IsActive"]').checked;
+            const selectedPermissions = Array.from(document.querySelectorAll('input[name="Permissions"]:checked')).length;
+
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-shield-check text-primary fs-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark">${name}</h6>
+                        <p class="text-muted small">${description}</p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <span class="badge ${isActive ? 'bg-success' : 'bg-warning'}">${isActive ? 'Active' : 'Inactive'}</span>
+                            <span class="badge bg-info">${selectedPermissions} permissions</span>
+                        </div>
+                    </div>
+                `;
+        }
+
+        // Add event listeners for live preview
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add listeners for form fields
+            const formFields = ['input[name="Name"]', 'textarea[name="Description"]', 'input[name="IsActive"]'];
+            formFields.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                    element.addEventListener('change', updatePreview);
+                }
+            });
+        });
+
+        // Add listeners for permission checkboxes (delegated event handling)
+        document.addEventListener('change', function (e) {
+            if (e.target.name === 'Permissions') {
+                updatePreview();
+            }
+        });
+    </script>
+}
