@@ -25,10 +25,13 @@ public class ApplicantsController : ControllerBase
         try
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var applicants = await _applicantService.GetApplicantsByJobPostAsync(jobPostId, userId);
+            // Admin users can access all applicants, regular users can only access their own job post's applicants
+            var applicants = await _applicantService.GetApplicantsByJobPostAsync(jobPostId, userId, userRole == "Admin");
             return Ok(applicants);
         }
         catch (UnauthorizedAccessException ex)
@@ -47,11 +50,21 @@ public class ApplicantsController : ControllerBase
     {
         try
         {
-            var applicant = await _applicantService.GetApplicantByIdAsync(id);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var applicant = await _applicantService.GetApplicantByIdAsync(id, userId, userRole == "Admin");
             if (applicant == null || applicant.JobPostId != jobPostId)
                 return NotFound();
 
             return Ok(applicant);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (Exception ex)
         {
@@ -125,10 +138,12 @@ public class ApplicantsController : ControllerBase
         try
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var result = await _applicantService.StartScreeningAsync(jobPostId, request, userId);
+            var result = await _applicantService.StartScreeningAsync(jobPostId, request, userId, userRole == "Admin");
             if (!result)
                 return BadRequest(new { message = "Failed to start screening process." });
 

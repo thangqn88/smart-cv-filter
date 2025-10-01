@@ -40,16 +40,24 @@ public class ApplicantService : IApplicantService
         _context.Applicants.Add(applicant);
         await _context.SaveChangesAsync();
 
-        return await GetApplicantByIdAsync(applicant.Id);
+        return await GetApplicantByIdAsync(applicant.Id, "", true);
     }
 
-    public async Task<ApplicantResponse?> GetApplicantByIdAsync(int id)
+    public async Task<ApplicantResponse?> GetApplicantByIdAsync(int id, string userId, bool isAdmin = false)
     {
-        var applicant = await _context.Applicants
+        var query = _context.Applicants
             .Include(a => a.JobPost)
             .Include(a => a.CVFiles)
             .Include(a => a.ScreeningResults)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .AsQueryable();
+
+        // Admin users can access any applicant, regular users can only access applicants from their job posts
+        if (!isAdmin)
+        {
+            query = query.Where(a => a.JobPost.UserId == userId);
+        }
+
+        var applicant = await query.FirstOrDefaultAsync(a => a.Id == id);
 
         if (applicant == null)
             return null;
@@ -94,14 +102,17 @@ public class ApplicantService : IApplicantService
         };
     }
 
-    public async Task<IEnumerable<ApplicantResponse>> GetApplicantsByJobPostAsync(int jobPostId, string userId)
+    public async Task<IEnumerable<ApplicantResponse>> GetApplicantsByJobPostAsync(int jobPostId, string userId, bool isAdmin = false)
     {
-        // Verify that the job post belongs to the user
-        var jobPost = await _context.JobPosts
-            .FirstOrDefaultAsync(jp => jp.Id == jobPostId && jp.UserId == userId);
+        // Admin users can access any job post's applicants, regular users can only access their own job post's applicants
+        if (!isAdmin)
+        {
+            var jobPost = await _context.JobPosts
+                .FirstOrDefaultAsync(jp => jp.Id == jobPostId && jp.UserId == userId);
 
-        if (jobPost == null)
-            throw new UnauthorizedAccessException("You don't have access to this job post.");
+            if (jobPost == null)
+                throw new UnauthorizedAccessException("You don't have access to this job post.");
+        }
 
         var applicants = await _context.Applicants
             .Where(a => a.JobPostId == jobPostId)
@@ -178,7 +189,7 @@ public class ApplicantService : IApplicantService
         applicant.LastUpdated = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
-        return await GetApplicantByIdAsync(id);
+        return await GetApplicantByIdAsync(id, "", true);
     }
 
     public async Task<bool> DeleteApplicantAsync(int id)
@@ -192,14 +203,17 @@ public class ApplicantService : IApplicantService
         return true;
     }
 
-    public async Task<bool> StartScreeningAsync(int jobPostId, ScreeningRequest request, string userId)
+    public async Task<bool> StartScreeningAsync(int jobPostId, ScreeningRequest request, string userId, bool isAdmin = false)
     {
-        // Verify that the job post belongs to the user
-        var jobPost = await _context.JobPosts
-            .FirstOrDefaultAsync(jp => jp.Id == jobPostId && jp.UserId == userId);
+        // Admin users can start screening for any job post, regular users can only start screening for their own job posts
+        if (!isAdmin)
+        {
+            var jobPost = await _context.JobPosts
+                .FirstOrDefaultAsync(jp => jp.Id == jobPostId && jp.UserId == userId);
 
-        if (jobPost == null)
-            throw new UnauthorizedAccessException("You don't have access to this job post.");
+            if (jobPost == null)
+                throw new UnauthorizedAccessException("You don't have access to this job post.");
+        }
 
         // Verify that all applicants belong to this job post
         var applicants = await _context.Applicants

@@ -24,11 +24,21 @@ public class ScreeningController : ControllerBase
     {
         try
         {
-            var result = await _screeningService.GetScreeningResultAsync(resultId);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _screeningService.GetScreeningResultAsync(resultId, userId, userRole == "Admin");
             if (result == null)
                 return NotFound();
 
             return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (Exception ex)
         {
@@ -42,8 +52,18 @@ public class ScreeningController : ControllerBase
     {
         try
         {
-            var results = await _screeningService.GetScreeningResultsByApplicantAsync(applicantId);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var results = await _screeningService.GetScreeningResultsByApplicantAsync(applicantId, userId, userRole == "Admin");
             return Ok(results);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (Exception ex)
         {

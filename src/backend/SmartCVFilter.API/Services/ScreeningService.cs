@@ -22,12 +22,20 @@ public class ScreeningService : IScreeningService
         _logger = logger;
     }
 
-    public async Task<ScreeningResultResponse?> GetScreeningResultAsync(int resultId)
+    public async Task<ScreeningResultResponse?> GetScreeningResultAsync(int resultId, string userId, bool isAdmin = false)
     {
-        var result = await _context.ScreeningResults
+        var query = _context.ScreeningResults
             .Include(sr => sr.Applicant)
             .Include(sr => sr.JobPost)
-            .FirstOrDefaultAsync(sr => sr.Id == resultId);
+            .AsQueryable();
+
+        // Admin users can access any screening result, regular users can only access results from their job posts
+        if (!isAdmin)
+        {
+            query = query.Where(sr => sr.JobPost.UserId == userId);
+        }
+
+        var result = await query.FirstOrDefaultAsync(sr => sr.Id == resultId);
 
         if (result == null)
             return null;
@@ -46,10 +54,21 @@ public class ScreeningService : IScreeningService
         };
     }
 
-    public async Task<IEnumerable<ScreeningResultResponse>> GetScreeningResultsByApplicantAsync(int applicantId)
+    public async Task<IEnumerable<ScreeningResultResponse>> GetScreeningResultsByApplicantAsync(int applicantId, string userId, bool isAdmin = false)
     {
-        var results = await _context.ScreeningResults
+        var query = _context.ScreeningResults
+            .Include(sr => sr.Applicant)
+            .Include(sr => sr.JobPost)
             .Where(sr => sr.ApplicantId == applicantId)
+            .AsQueryable();
+
+        // Admin users can access any screening results, regular users can only access results from their job posts
+        if (!isAdmin)
+        {
+            query = query.Where(sr => sr.JobPost.UserId == userId);
+        }
+
+        var results = await query
             .OrderByDescending(sr => sr.CreatedAt)
             .ToListAsync();
 

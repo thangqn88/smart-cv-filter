@@ -191,6 +191,10 @@ else
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">Email</th>
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">Phone</th>
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">Status</th>
+                                <th class="border-0 px-4 py-3 fw-bold text-dark sortable" data-column="score">
+                                    Overall Score
+                                    <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                </th>
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">Applied Date</th>
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">CV Files</th>
                                 <th class="border-0 px-4 py-3 fw-bold text-dark">Screening Results</th>
@@ -221,6 +225,30 @@ else
                                             <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
                                             @applicant.Status
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if (applicant.ScreeningResults.Any())
+                                        {
+                                            var latestResult = applicant.ScreeningResults.OrderByDescending(sr => sr.CreatedAt).First();
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2">
+                                                    <div class="score-circle @(latestResult.OverallScore >= 80 ? "score-excellent" : latestResult.OverallScore >= 60 ? "score-good" : "score-poor")">
+                                                        @latestResult.OverallScore
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">@latestResult.OverallScore/100</div>
+                                                    <small class="text-muted">@(latestResult.OverallScore >= 80 ? "Excellent" : latestResult.OverallScore >= 60 ? "Good" : "Needs Improvement")</small>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                <i class="bi bi-dash-circle me-1"></i>
+                                                Not Screened
+                                            </span>
+                                        }
                                     </td>
                                     <td class="px-4 py-3 text-muted">
                                         <i class="bi bi-calendar me-1"></i>
@@ -401,6 +429,71 @@ else
             });
         });
 
+        // Search functionality
+        document.querySelector('.table-search').addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#applicantsTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const email = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                const phone = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                
+                const matches = name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+
+        // Sorting functionality
+        let sortDirection = {};
+        document.querySelectorAll('.sortable').forEach(header => {
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', function () {
+                const column = this.dataset.column;
+                const tbody = document.querySelector('#applicantsTable tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                
+                // Toggle sort direction
+                sortDirection[column] = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+                
+                // Update sort icon
+                const icon = this.querySelector('i');
+                icon.className = sortDirection[column] === 'asc' ? 'bi bi-arrow-up ms-1 text-primary' : 'bi bi-arrow-down ms-1 text-primary';
+                
+                // Reset other column icons
+                document.querySelectorAll('.sortable i').forEach(otherIcon => {
+                    if (otherIcon !== icon) {
+                        otherIcon.className = 'bi bi-arrow-down-up ms-1 text-muted';
+                    }
+                });
+                
+                // Sort rows
+                rows.sort((a, b) => {
+                    let aValue, bValue;
+                    
+                    if (column === 'score') {
+                        const aScoreCell = a.querySelector('td:nth-child(6)');
+                        const bScoreCell = b.querySelector('td:nth-child(6)');
+                        
+                        // Extract score from the display text or use 0 if not screened
+                        aValue = aScoreCell.textContent.includes('Not Screened') ? 0 : 
+                                parseInt(aScoreCell.querySelector('.score-circle')?.textContent || '0');
+                        bValue = bScoreCell.textContent.includes('Not Screened') ? 0 : 
+                                parseInt(bScoreCell.querySelector('.score-circle')?.textContent || '0');
+                    }
+                    
+                    if (sortDirection[column] === 'asc') {
+                        return aValue - bValue;
+                    } else {
+                        return bValue - aValue;
+                    }
+                });
+                
+                // Re-append sorted rows
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+
         function deleteApplicant(jobPostId, applicantId) {
             const form = document.getElementById('deleteForm');
             form.action = '@Url.Action("Delete")/' + jobPostId + '/' + applicantId;
@@ -414,3 +507,48 @@ else
         });
     </script>
 }
+
+<style>
+    .score-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: white;
+    }
+    
+    .score-excellent {
+        background-color: #28a745;
+    }
+    
+    .score-good {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .score-poor {
+        background-color: #dc3545;
+    }
+    
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .sortable:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        border-radius: 4px;
+    }
+    
+    .sortable i {
+        transition: color 0.2s ease-in-out;
+    }
+</style>
