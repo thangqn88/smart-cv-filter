@@ -17,7 +17,7 @@ public class ScreeningService : IScreeningService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<ScreeningResultResponse>($"api/screening/results/{resultId}", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<ScreeningResultResponse>($"screening/results/{resultId}", HttpMethod.Get);
             return response;
         }
         catch (Exception ex)
@@ -31,7 +31,7 @@ public class ScreeningService : IScreeningService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<List<ScreeningResultResponse>>($"api/screening/applicants/{applicantId}/results", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<List<ScreeningResultResponse>>($"screening/applicants/{applicantId}/results", HttpMethod.Get);
             return response ?? new List<ScreeningResultResponse>();
         }
         catch (Exception ex)

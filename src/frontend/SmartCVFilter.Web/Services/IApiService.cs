@@ -17,6 +17,7 @@ public interface IJobPostService
 {
     Task<List<JobPostListResponse>> GetJobPostsAsync();
     Task<List<JobPostListResponse>> GetAllJobPostsAsync();
+    Task<List<JobPostListResponse>> GetAllJobPostsForAdminAsync();
     Task<JobPostResponse?> GetJobPostAsync(int id);
     Task<JobPostResponse?> CreateJobPostAsync(CreateJobPostRequest request);
     Task<JobPostResponse?> UpdateJobPostAsync(int id, UpdateJobPostRequest request);

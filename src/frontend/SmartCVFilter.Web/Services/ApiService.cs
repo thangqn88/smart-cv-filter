@@ -142,7 +142,11 @@ public class ApiService : IApiService
         {
             await EnsureAuthenticatedAsync();
 
-            var request = new HttpRequestMessage(method, endpoint);
+            // Create full URL like the working methods
+            var fullUrl = new Uri(_httpClient.BaseAddress!, endpoint);
+            _logger.LogInformation("Making API request to: {FullUrl}", fullUrl);
+
+            var request = new HttpRequestMessage(method, fullUrl);
 
             if (content != null)
             {

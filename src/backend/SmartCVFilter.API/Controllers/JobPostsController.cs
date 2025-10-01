@@ -54,16 +54,44 @@ public class JobPostsController : ControllerBase
         }
     }
 
+    [HttpGet("admin/all")]
+    public async Task<ActionResult<IEnumerable<JobPostListResponse>>> GetAllJobPostsForAdmin()
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            // Only admin users can access this endpoint
+            if (userRole != "Admin")
+                return Forbid();
+
+            var jobPosts = await _jobPostService.GetAllJobPostsForAdminAsync();
+            return Ok(jobPosts);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all job posts for admin");
+            return StatusCode(500, new { message = "An error occurred while retrieving job posts." });
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<JobPostResponse>> GetJobPost(int id)
     {
         try
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var jobPost = await _jobPostService.GetJobPostByIdAsync(id, userId);
+            // Admin users can see all job posts, regular users can only see their own
+            var jobPost = await _jobPostService.GetJobPostByIdAsync(id, userId, userRole == "Admin");
             if (jobPost == null)
                 return NotFound();
 

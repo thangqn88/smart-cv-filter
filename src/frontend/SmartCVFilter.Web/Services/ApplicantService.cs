@@ -17,7 +17,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<List<ApplicantResponse>>($"api/jobposts/{jobPostId}/applicants", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<List<ApplicantResponse>>($"jobposts/{jobPostId}/applicants", HttpMethod.Get);
             return response ?? new List<ApplicantResponse>();
         }
         catch (Exception ex)
@@ -31,7 +31,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"api/jobposts/{jobPostId}/applicants/{id}", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"jobposts/{jobPostId}/applicants/{id}", HttpMethod.Get);
             return response;
         }
         catch (Exception ex)
@@ -45,7 +45,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"api/jobposts/{jobPostId}/applicants", HttpMethod.Post, request);
+            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"jobposts/{jobPostId}/applicants", HttpMethod.Post, request);
             return response;
         }
         catch (Exception ex)
@@ -59,7 +59,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"api/jobposts/{jobPostId}/applicants/{id}", HttpMethod.Put, request);
+            var response = await _apiService.MakeRequestAsync<ApplicantResponse>($"jobposts/{jobPostId}/applicants/{id}", HttpMethod.Put, request);
             return response;
         }
         catch (Exception ex)
@@ -73,7 +73,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<object>($"api/jobposts/{jobPostId}/applicants/{id}", HttpMethod.Delete);
+            var response = await _apiService.MakeRequestAsync<object>($"jobposts/{jobPostId}/applicants/{id}", HttpMethod.Delete);
             return response != null;
         }
         catch (Exception ex)
@@ -87,7 +87,7 @@ public class ApplicantService : IApplicantService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<object>($"api/jobposts/{jobPostId}/applicants/screen", HttpMethod.Post, request);
+            var response = await _apiService.MakeRequestAsync<object>($"jobposts/{jobPostId}/applicants/screen", HttpMethod.Post, request);
             return response != null;
         }
         catch (Exception ex)

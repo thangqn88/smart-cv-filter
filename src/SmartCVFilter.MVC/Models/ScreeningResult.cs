@@ -27,6 +27,7 @@ public class ScreeningResult
     public string Weaknesses { get; set; } = string.Empty; // JSON array of weaknesses
 
     [Required]
+    [StringLength(2000)]
     public string DetailedAnalysis { get; set; } = string.Empty; // Detailed AI analysis
 
     [Required]

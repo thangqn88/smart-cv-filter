@@ -21,7 +21,13 @@ public class JobPostsController : Controller
         try
         {
             ViewData["Title"] = "Job Posting Management";
-            var jobPosts = await _jobPostService.GetJobPostsAsync();
+
+            // Check if user is admin
+            var isAdmin = User.IsInRole("Admin");
+            var jobPosts = isAdmin
+                ? await _jobPostService.GetAllJobPostsForAdminAsync()
+                : await _jobPostService.GetAllJobPostsAsync();
+
             return View(jobPosts);
         }
         catch (Exception ex)

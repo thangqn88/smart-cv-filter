@@ -2,26 +2,38 @@
 @model JobPostResponse
 @{
     ViewData["Title"] = "Job Post Details";
+    Layout = "_Layout";
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">@Model.Title</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
-                <i class="bi bi-pencil"></i>
-                Edit
-            </a>
-            <a href="@Url.Action("Index", "Applicants", new { jobPostId = Model.Id })" class="btn btn-info">
-                <i class="bi bi-people"></i>
-                View Applicants (@Model.ApplicantCount)
-            </a>
-        </div>
-        <div class="btn-group">
-            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i>
-                Back to List
-            </a>
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-briefcase text-primary me-2"></i>
+                    @Model.Title
+                </h1>
+                <p class="text-muted mb-0">Job Post Details & Management</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
+                        <i class="bi bi-pencil me-1"></i>
+                        Edit Job Post
+                    </a>
+                    <a href="@Url.Action("Index", "Applicants", new { jobPostId = Model.Id })" class="btn btn-info">
+                        <i class="bi bi-people me-1"></i>
+                        View Applicants (@Model.ApplicantCount)
+                    </a>
+                </div>
+                <div class="btn-group">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to List
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -29,97 +41,158 @@
 <div class="row">
     <div class="col-lg-8">
         <!-- Job Details -->
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-info-circle"></i>
+        <div class="card shadow-lg border-0 mb-4 hover-card">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-info-circle text-primary me-2"></i>
                     Job Details
                 </h5>
+                <p class="text-muted mb-0">Essential information about this position</p>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-4">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <strong>Location:</strong> @Model.Location
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Department:</strong> @Model.Department
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Employment Type:</strong> @Model.EmploymentType
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Experience Level:</strong> @Model.ExperienceLevel
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Status:</strong>
-                        <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">
-                            @Model.Status
-                        </span>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Posted Date:</strong> @Model.PostedDate.ToString("MMM dd, yyyy")
-                    </div>
-                </div>
-                @if (Model.ClosingDate.HasValue)
-                {
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Closing Date:</strong> @Model.ClosingDate.Value.ToString("MMM dd, yyyy")
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-geo-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Location</div>
+                                <div class="fw-bold text-dark">@Model.Location</div>
+                            </div>
                         </div>
                     </div>
-                }
-                @if (Model.SalaryMin.HasValue || Model.SalaryMax.HasValue)
-                {
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Salary Range:</strong>
-                            @if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
-                            {
-                                @($"${Model.SalaryMin:N0} - ${Model.SalaryMax:N0}")
-                            }
-                            else if (Model.SalaryMin.HasValue)
-                            {
-                                @($"From ${Model.SalaryMin:N0}")
-                            }
-                            else if (Model.SalaryMax.HasValue)
-                            {
-                                @($"Up to ${Model.SalaryMax:N0}")
-                            }
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-building text-success"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Department</div>
+                                <div class="fw-bold text-dark">@Model.Department</div>
+                            </div>
                         </div>
                     </div>
-                }
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-clock text-info"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Employment Type</div>
+                                <div class="fw-bold text-dark">@Model.EmploymentType</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-graph-up text-warning"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Experience Level</div>
+                                <div class="fw-bold text-dark">@Model.ExperienceLevel</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-check-circle text-success"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Status</div>
+                                <span
+                                    class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary") px-3 py-2">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                                    @Model.Status
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="bi bi-calendar text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs fw-bold text-muted text-uppercase mb-1">Posted Date</div>
+                                <div class="fw-bold text-dark">@Model.PostedDate.ToString("MMM dd, yyyy")</div>
+                            </div>
+                        </div>
+                    </div>
+                    @if (Model.ClosingDate.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="bi bi-calendar-x text-danger"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-muted text-uppercase mb-1">Closing Date</div>
+                                    <div class="fw-bold text-dark">@Model.ClosingDate.Value.ToString("MMM dd, yyyy")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.SalaryMin.HasValue || Model.SalaryMax.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                    <i class="bi bi-currency-dollar text-success"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-muted text-uppercase mb-1">Salary Range</div>
+                                    <div class="fw-bold text-dark">
+                                        @if (Model.SalaryMin.HasValue && Model.SalaryMax.HasValue)
+                                        {
+                                            @($"${Model.SalaryMin:N0} - ${Model.SalaryMax:N0}")
+                                        }
+                                        else if (Model.SalaryMin.HasValue)
+                                        {
+                                            @($"From ${Model.SalaryMin:N0}")
+                                        }
+                                        else if (Model.SalaryMax.HasValue)
+                                        {
+                                            @($"Up to ${Model.SalaryMax:N0}")
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
 
         <!-- Job Description -->
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-file-text"></i>
-                    Description
+        <div class="card shadow-lg border-0 mb-4 hover-card">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-file-text text-primary me-2"></i>
+                    Job Description
                 </h5>
+                <p class="text-muted mb-0">Detailed overview of the position</p>
             </div>
-            <div class="card-body">
-                <p>@Model.Description</p>
+            <div class="card-body p-4">
+                <div class="text-dark lh-lg">@Model.Description</div>
             </div>
         </div>
 
         <!-- Required Skills -->
         @if (!string.IsNullOrEmpty(Model.RequiredSkills))
         {
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-check-circle"></i>
+            <div class="card shadow-lg border-0 mb-4 hover-card">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-check-circle text-success me-2"></i>
                         Required Skills
                     </h5>
+                    <p class="text-muted mb-0">Essential qualifications for this role</p>
                 </div>
-                <div class="card-body">
-                    <p>@Model.RequiredSkills</p>
+                <div class="card-body p-4">
+                    <div class="text-dark lh-lg">@Model.RequiredSkills</div>
                 </div>
             </div>
         }
@@ -127,15 +200,16 @@
         <!-- Preferred Skills -->
         @if (!string.IsNullOrEmpty(Model.PreferredSkills))
         {
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-star"></i>
+            <div class="card shadow-lg border-0 mb-4 hover-card">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-star text-warning me-2"></i>
                         Preferred Skills
                     </h5>
+                    <p class="text-muted mb-0">Additional qualifications that would be beneficial</p>
                 </div>
-                <div class="card-body">
-                    <p>@Model.PreferredSkills</p>
+                <div class="card-body p-4">
+                    <div class="text-dark lh-lg">@Model.PreferredSkills</div>
                 </div>
             </div>
         }
@@ -143,15 +217,16 @@
         <!-- Responsibilities -->
         @if (!string.IsNullOrEmpty(Model.Responsibilities))
         {
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-list-task"></i>
-                        Responsibilities
+            <div class="card shadow-lg border-0 mb-4 hover-card">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-list-task text-info me-2"></i>
+                        Key Responsibilities
                     </h5>
+                    <p class="text-muted mb-0">Main duties and responsibilities for this position</p>
                 </div>
-                <div class="card-body">
-                    <p>@Model.Responsibilities</p>
+                <div class="card-body p-4">
+                    <div class="text-dark lh-lg">@Model.Responsibilities</div>
                 </div>
             </div>
         }
@@ -159,15 +234,16 @@
         <!-- Benefits -->
         @if (!string.IsNullOrEmpty(Model.Benefits))
         {
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-gift"></i>
-                        Benefits
+            <div class="card shadow-lg border-0 mb-4 hover-card">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-gift text-primary me-2"></i>
+                        Benefits & Perks
                     </h5>
+                    <p class="text-muted mb-0">What we offer to our employees</p>
                 </div>
-                <div class="card-body">
-                    <p>@Model.Benefits</p>
+                <div class="card-body p-4">
+                    <div class="text-dark lh-lg">@Model.Benefits</div>
                 </div>
             </div>
         }
@@ -175,75 +251,119 @@
 
     <div class="col-lg-4">
         <!-- Quick Stats -->
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-graph-up"></i>
+        <div class="card shadow-lg border-0 mb-4 hover-card">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-graph-up text-primary me-2"></i>
                     Quick Stats
                 </h5>
+                <p class="text-muted mb-0">Key metrics for this job post</p>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <div class="row text-center">
                     <div class="col-6">
                         <div class="border-end">
-                            <h3 class="text-primary">@Model.ApplicantCount</h3>
-                            <p class="text-muted mb-0">Total Applicants</p>
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                                style="width: 60px; height: 60px;">
+                                <i class="bi bi-people fs-2 text-primary"></i>
+                            </div>
+                            <h3 class="text-primary mb-1">@Model.ApplicantCount</h3>
+                            <p class="text-muted mb-0 small">Total Applicants</p>
                         </div>
                     </div>
                     <div class="col-6">
-                        <h3 class="text-success">@Model.Status</h3>
-                        <p class="text-muted mb-0">Status</p>
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="bi bi-check-circle fs-2 text-success"></i>
+                        </div>
+                        <h3 class="text-success mb-1">@Model.Status</h3>
+                        <p class="text-muted mb-0 small">Status</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-lightning"></i>
+        <!-- Quick Actions -->
+        <div class="card shadow-lg border-0 mb-4 hover-card">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-lightning text-warning me-2"></i>
                     Quick Actions
                 </h5>
+                <p class="text-muted mb-0">Common tasks for this job post</p>
             </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
+            <div class="card-body p-4">
+                <div class="d-grid gap-3">
                     <a href="@Url.Action("Index", "Applicants", new { jobPostId = Model.Id })" class="btn btn-primary">
-                        <i class="bi bi-people"></i>
+                        <i class="bi bi-people me-2"></i>
                         Manage Applicants
                     </a>
                     <a href="@Url.Action("Create", "Applicants", new { jobPostId = Model.Id })" class="btn btn-success">
-                        <i class="bi bi-person-plus"></i>
+                        <i class="bi bi-person-plus me-2"></i>
                         Add Applicant
                     </a>
                     <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning">
-                        <i class="bi bi-pencil"></i>
+                        <i class="bi bi-pencil me-2"></i>
                         Edit Job Post
                     </a>
                     <button type="button" class="btn btn-danger"
                         onclick="confirmDelete('@Model.Title', () => deleteJobPost(@Model.Id))">
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash me-2"></i>
                         Delete Job Post
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Job Post Info -->
-        <div class="card shadow">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-info"></i>
+        <!-- Job Post Information -->
+        <div class="card shadow-lg border-0 hover-card">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-info text-info me-2"></i>
                     Job Post Information
                 </h5>
+                <p class="text-muted mb-0">Details about this posting</p>
             </div>
-            <div class="card-body">
-                <p><strong>Created by:</strong> @Model.User.FirstName @Model.User.LastName</p>
-                <p><strong>Company:</strong> @Model.User.CompanyName</p>
-                <p><strong>Posted:</strong> @Model.PostedDate.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                        <i class="bi bi-person text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs fw-bold text-muted text-uppercase mb-1">Created by</div>
+                        <div class="fw-bold text-dark">@Model.User.FirstName @Model.User.LastName</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                        <i class="bi bi-building text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs fw-bold text-muted text-uppercase mb-1">Company</div>
+                        <div class="fw-bold text-dark">@Model.User.CompanyName</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                        <i class="bi bi-calendar text-info"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs fw-bold text-muted text-uppercase mb-1">Posted</div>
+                        <div class="fw-bold text-dark">@Model.PostedDate.ToString("MMM dd, yyyy 'at' h:mm tt")</div>
+                    </div>
+                </div>
                 @if (Model.ClosingDate.HasValue)
                 {
-                    <p><strong>Closes:</strong> @Model.ClosingDate.Value.ToString("MMM dd, yyyy 'at' h:mm tt")</p>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="bi bi-calendar-x text-danger"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs fw-bold text-muted text-uppercase mb-1">Closes</div>
+                            <div class="fw-bold text-dark">@Model.ClosingDate.Value.ToString("MMM dd, yyyy 'at' h:mm tt")
+                            </div>
+                        </div>
+                    </div>
                 }
             </div>
         </div>
@@ -262,5 +382,37 @@
             form.action = '@Url.Action("Delete")/' + id;
             form.submit();
         }
+
+        function confirmDelete(title, callback) {
+            if (confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+                callback();
+            }
+        }
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     </script>
 }
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .quick-action-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>

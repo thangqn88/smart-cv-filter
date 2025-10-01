@@ -46,12 +46,20 @@ public class JobPostService : IJobPostService
         return await GetJobPostByIdAsync(jobPost.Id, userId);
     }
 
-    public async Task<JobPostResponse?> GetJobPostByIdAsync(int id, string userId)
+    public async Task<JobPostResponse?> GetJobPostByIdAsync(int id, string userId, bool isAdmin = false)
     {
-        var jobPost = await _context.JobPosts
+        var query = _context.JobPosts
             .Include(j => j.User)
             .Include(j => j.Applicants)
-            .FirstOrDefaultAsync(j => j.Id == id && j.UserId == userId);
+            .AsQueryable();
+
+        // Admin users can see all job posts, regular users can only see their own
+        if (!isAdmin)
+        {
+            query = query.Where(j => j.UserId == userId);
+        }
+
+        var jobPost = await query.FirstOrDefaultAsync(j => j.Id == id);
 
         if (jobPost == null)
             return null;
@@ -184,5 +192,28 @@ public class JobPostService : IJobPostService
             ApplicantCount = jp.Applicants.Count
         });
     }
+
+    public async Task<IEnumerable<JobPostListResponse>> GetAllJobPostsForAdminAsync()
+    {
+        var jobPosts = await _context.JobPosts
+            .Include(j => j.Applicants)
+            .Include(j => j.User)
+            .OrderByDescending(j => j.PostedDate)
+            .ToListAsync();
+
+        return jobPosts.Select(jp => new JobPostListResponse
+        {
+            Id = jp.Id,
+            Title = jp.Title,
+            Location = jp.Location,
+            Department = jp.Department,
+            EmploymentType = jp.EmploymentType,
+            ExperienceLevel = jp.ExperienceLevel,
+            Status = jp.Status,
+            PostedDate = jp.PostedDate,
+            ApplicantCount = jp.Applicants.Count
+        });
+    }
+
 }
 

@@ -18,7 +18,7 @@ public class JobPostService : IJobPostService
         try
         {
             // Use ApiService to make the request with proper configuration
-            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("api/jobposts", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("jobposts", HttpMethod.Get);
             return response ?? new List<JobPostListResponse>();
         }
         catch (Exception ex)
@@ -32,7 +32,7 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("api/jobposts/all", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("jobposts/all", HttpMethod.Get);
             return response ?? new List<JobPostListResponse>();
         }
         catch (Exception ex)
@@ -42,11 +42,25 @@ public class JobPostService : IJobPostService
         }
     }
 
+    public async Task<List<JobPostListResponse>> GetAllJobPostsForAdminAsync()
+    {
+        try
+        {
+            var response = await _apiService.MakeRequestAsync<List<JobPostListResponse>>("jobposts/admin/all", HttpMethod.Get);
+            return response ?? new List<JobPostListResponse>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all job posts for admin");
+            return new List<JobPostListResponse>();
+        }
+    }
+
     public async Task<JobPostResponse?> GetJobPostAsync(int id)
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<JobPostResponse>($"api/jobposts/{id}", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<JobPostResponse>($"jobposts/{id}", HttpMethod.Get);
             return response;
         }
         catch (Exception ex)
@@ -60,7 +74,7 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<JobPostResponse>("api/jobposts", HttpMethod.Post, request);
+            var response = await _apiService.MakeRequestAsync<JobPostResponse>("jobposts", HttpMethod.Post, request);
             return response;
         }
         catch (Exception ex)
@@ -74,7 +88,7 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<JobPostResponse>($"api/jobposts/{id}", HttpMethod.Put, request);
+            var response = await _apiService.MakeRequestAsync<JobPostResponse>($"jobposts/{id}", HttpMethod.Put, request);
             return response;
         }
         catch (Exception ex)
@@ -88,7 +102,7 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<object>($"api/jobposts/{id}", HttpMethod.Delete);
+            var response = await _apiService.MakeRequestAsync<object>($"jobposts/{id}", HttpMethod.Delete);
             return response != null;
         }
         catch (Exception ex)
