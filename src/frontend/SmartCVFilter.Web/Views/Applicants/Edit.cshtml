@@ -61,6 +61,16 @@ else
 
 <form asp-controller="Applicants" asp-action="Edit" asp-route-jobPostId="@jobPostId" asp-route-id="@ViewData["ApplicantId"]" method="post" class="needs-validation" novalidate>
     @Html.AntiForgeryToken()
+    
+    <!-- Debug: Check if model is properly bound -->
+    @if (Model != null)
+    {
+        <input type="hidden" name="ModelBound" value="true" />
+    }
+    else
+    {
+        <input type="hidden" name="ModelBound" value="false" />
+    }
 
     <div class="row">
         <div class="col-lg-8">
@@ -81,7 +91,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="FirstName" class="form-control border-start-0"
+                                <input asp-for="FirstName" name="FirstName" class="form-control border-start-0"
                                     placeholder="Enter first name" value="@(Model?.FirstName ?? "")" required />
                             </div>
                             <span asp-validation-for="FirstName" class="text-danger small"></span>
@@ -93,7 +103,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="LastName" class="form-control border-start-0"
+                                <input asp-for="LastName" name="LastName" class="form-control border-start-0"
                                     placeholder="Enter last name" value="@(Model?.LastName ?? "")" required />
                             </div>
                             <span asp-validation-for="LastName" class="text-danger small"></span>
@@ -107,7 +117,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-envelope text-muted"></i>
                                 </span>
-                                <input asp-for="Email" type="email" class="form-control border-start-0"
+                                <input asp-for="Email" name="Email" type="email" class="form-control border-start-0"
                                     placeholder="Enter email address" value="@(Model?.Email ?? "")" required />
                             </div>
                             <span asp-validation-for="Email" class="text-danger small"></span>
@@ -119,7 +129,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-telephone text-muted"></i>
                                 </span>
-                                <input asp-for="PhoneNumber" class="form-control border-start-0"
+                                <input asp-for="PhoneNumber" name="PhoneNumber" class="form-control border-start-0"
                                     placeholder="Enter phone number" value="@(Model?.PhoneNumber ?? "")" />
                             </div>
                             <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
@@ -146,7 +156,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-linkedin text-muted"></i>
                                 </span>
-                                <input asp-for="LinkedInProfile" class="form-control border-start-0"
+                                <input asp-for="LinkedInProfile" name="LinkedInProfile" class="form-control border-start-0"
                                     placeholder="https://linkedin.com/in/username"
                                     value="@(Model?.LinkedInProfile ?? "")" />
                             </div>
@@ -159,7 +169,7 @@ else
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-globe text-muted"></i>
                                 </span>
-                                <input asp-for="PortfolioUrl" class="form-control border-start-0"
+                                <input asp-for="PortfolioUrl" name="PortfolioUrl" class="form-control border-start-0"
                                     placeholder="https://portfolio.com" value="@(Model?.PortfolioUrl ?? "")" />
                             </div>
                             <span asp-validation-for="PortfolioUrl" class="text-danger small"></span>
@@ -180,7 +190,7 @@ else
                 <div class="card-body p-4">
                     <div class="mb-4">
                         <label asp-for="CoverLetter" class="form-label fw-bold text-dark">Cover Letter</label>
-                        <textarea asp-for="CoverLetter" class="form-control" rows="6"
+                        <textarea asp-for="CoverLetter" name="CoverLetter" class="form-control" rows="6"
                             placeholder="Enter cover letter or additional notes about the applicant...">@(Model?.CoverLetter ?? "")</textarea>
                         <span asp-validation-for="CoverLetter" class="text-danger small"></span>
                     </div>
@@ -199,7 +209,7 @@ else
                 <div class="card-body p-4">
                     <div class="mb-4">
                         <label asp-for="Status" class="form-label fw-bold text-dark">Applicant Status</label>
-                        <select asp-for="Status" class="form-select">
+                        <select asp-for="Status" name="Status" class="form-select">
                             <option value="Pending" selected="@(Model?.Status == "Pending")">Pending</option>
                             <option value="Screened" selected="@(Model?.Status == "Screened")">Screened</option>
                             <option value="Rejected" selected="@(Model?.Status == "Rejected")">Rejected</option>

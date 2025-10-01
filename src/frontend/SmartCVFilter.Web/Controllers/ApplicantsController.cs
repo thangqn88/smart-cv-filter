@@ -179,8 +179,22 @@ public class ApplicantsController : Controller
     public async Task<IActionResult> Edit(int jobPostId, int id, UpdateApplicantRequest model)
     {
         _logger.LogInformation("Edit POST called with JobPostId: {JobPostId}, Id: {Id}", jobPostId, id);
-        _logger.LogInformation("Model data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
-            model?.FirstName, model?.LastName, model?.Email);
+        _logger.LogInformation("Model is null: {IsNull}", model == null);
+
+        if (model != null)
+        {
+            _logger.LogInformation("Model data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
+                model.FirstName, model.LastName, model.Email);
+        }
+        else
+        {
+            _logger.LogWarning("Model is null - checking form data manually");
+            _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
+            foreach (var key in Request.Form.Keys)
+            {
+                _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+            }
+        }
 
         if (!ModelState.IsValid)
         {
