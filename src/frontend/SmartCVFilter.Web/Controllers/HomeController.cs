@@ -4,7 +4,6 @@ using SmartCVFilter.Web.Services;
 
 namespace SmartCVFilter.Web.Controllers;
 
-[Authorize]
 public class HomeController : Controller
 {
     private readonly IJobPostService _jobPostService;

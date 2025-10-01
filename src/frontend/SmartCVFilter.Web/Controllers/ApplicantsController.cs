@@ -5,7 +5,6 @@ using SmartCVFilter.Web.Services;
 
 namespace SmartCVFilter.Web.Controllers;
 
-[Authorize]
 public class ApplicantsController : Controller
 {
     private readonly IApplicantService _applicantService;
@@ -85,6 +84,7 @@ public class ApplicantsController : Controller
         }
     }
 
+    [Authorize]
     public IActionResult Create(int jobPostId)
     {
         ViewData["Title"] = "Add New Applicant";
@@ -93,6 +93,7 @@ public class ApplicantsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int jobPostId, CreateApplicantRequest model)
     {
@@ -126,6 +127,7 @@ public class ApplicantsController : Controller
         }
     }
 
+    [Authorize]
     public async Task<IActionResult> Edit(int jobPostId, int id)
     {
         try
@@ -163,6 +165,7 @@ public class ApplicantsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int jobPostId, int id, UpdateApplicantRequest model)
     {
@@ -197,6 +200,7 @@ public class ApplicantsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int jobPostId, int id)
     {
@@ -222,6 +226,7 @@ public class ApplicantsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> StartScreening(int jobPostId, ScreeningRequest model)
     {

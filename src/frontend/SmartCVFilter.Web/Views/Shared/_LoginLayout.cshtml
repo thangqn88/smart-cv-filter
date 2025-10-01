@@ -36,7 +36,22 @@
     <!-- Bootstrap 5.3 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
+    <script src="~/js/utils.js"></script>
     <script src="~/js/site.js"></script>
+
+    <!-- Debug script to catch 404 errors -->
+    <script>
+        // Monitor for 404 errors on script tags
+        window.addEventListener('error', function (e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src) {
+                console.error('Script loading error:', e.target.src, e);
+                if (e.target.src.includes('utils.js')) {
+                    console.warn('utils.js 404 error detected. This might be from browser cache or external reference.');
+                }
+            }
+        }, true);
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 

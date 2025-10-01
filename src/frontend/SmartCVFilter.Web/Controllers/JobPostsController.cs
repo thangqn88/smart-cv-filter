@@ -5,7 +5,6 @@ using SmartCVFilter.Web.Services;
 
 namespace SmartCVFilter.Web.Controllers;
 
-[Authorize]
 public class JobPostsController : Controller
 {
     private readonly IJobPostService _jobPostService;
@@ -55,6 +54,7 @@ public class JobPostsController : Controller
         }
     }
 
+    [Authorize]
     public IActionResult Create()
     {
         ViewData["Title"] = "Create Job Post";
@@ -62,6 +62,7 @@ public class JobPostsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateJobPostRequest model)
     {
@@ -92,6 +93,7 @@ public class JobPostsController : Controller
         }
     }
 
+    [Authorize]
     public async Task<IActionResult> Edit(int id)
     {
         try
@@ -134,6 +136,7 @@ public class JobPostsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, UpdateJobPostRequest model)
     {
@@ -165,6 +168,7 @@ public class JobPostsController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {

@@ -38,11 +38,18 @@ function initializeFormValidation() {
   const forms = document.querySelectorAll(".needs-validation");
   forms.forEach((form) => {
     form.addEventListener("submit", function (event) {
+      // Check if form is valid
       if (!form.checkValidity()) {
         event.preventDefault();
         event.stopPropagation();
+        console.log("Form validation failed, preventing submission");
+        // Show validation feedback
+        form.classList.add("was-validated");
+      } else {
+        console.log("Form validation passed, allowing submission");
+        // Don't prevent submission for valid forms
+        // The form will submit normally to the server
       }
-      form.classList.add("was-validated");
     });
   });
 }
