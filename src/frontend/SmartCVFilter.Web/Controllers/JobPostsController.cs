@@ -16,15 +16,11 @@ public class JobPostsController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 10, string? search = null, string? status = null)
+    public async Task<IActionResult> Index()
     {
         try
         {
             ViewData["Title"] = "Job Posting Management";
-            ViewData["CurrentPage"] = page;
-            ViewData["PageSize"] = pageSize;
-            ViewData["Search"] = search;
-            ViewData["Status"] = status;
 
             // Check if user is admin
             var isAdmin = User.IsInRole("Admin");
@@ -32,32 +28,7 @@ public class JobPostsController : Controller
                 ? await _jobPostService.GetAllJobPostsForAdminAsync()
                 : await _jobPostService.GetAllJobPostsAsync();
 
-            // Apply client-side filtering for now (in a real app, this would be server-side)
-            var filteredJobPosts = jobPosts.AsQueryable();
-
-            if (!string.IsNullOrEmpty(search))
-            {
-                filteredJobPosts = filteredJobPosts.Where(jp =>
-                    jp.Title.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    jp.Location.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    jp.Department.Contains(search, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrEmpty(status) && status != "all")
-            {
-                filteredJobPosts = filteredJobPosts.Where(jp => jp.Status == status);
-            }
-
-            var totalRecords = filteredJobPosts.Count();
-            var paginatedJobPosts = filteredJobPosts
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            ViewData["TotalRecords"] = totalRecords;
-            ViewData["TotalPages"] = (int)Math.Ceiling((double)totalRecords / pageSize);
-
-            return View(paginatedJobPosts);
+            return View(jobPosts);
         }
         catch (Exception ex)
         {

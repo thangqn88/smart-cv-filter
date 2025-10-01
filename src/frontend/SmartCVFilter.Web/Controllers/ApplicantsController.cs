@@ -22,50 +22,18 @@ public class ApplicantsController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(int? jobPostId, int page = 1, int pageSize = 10, string? search = null, string? status = null)
+    public async Task<IActionResult> Index(int? jobPostId)
     {
         try
         {
             ViewData["Title"] = "Applicant Management";
-            ViewData["CurrentPage"] = page;
-            ViewData["PageSize"] = pageSize;
-            ViewData["Search"] = search;
-            ViewData["Status"] = status;
 
             List<ApplicantResponse> applicants = new();
             List<JobPostListResponse> jobPosts = new();
 
             if (jobPostId.HasValue)
             {
-                var allApplicants = await _applicantService.GetApplicantsAsync(jobPostId.Value);
-
-                // Apply filtering
-                var filteredApplicants = allApplicants.AsQueryable();
-
-                if (!string.IsNullOrEmpty(search))
-                {
-                    filteredApplicants = filteredApplicants.Where(a =>
-                        a.FirstName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        a.LastName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        a.Email.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        (a.PhoneNumber != null && a.PhoneNumber.Contains(search, StringComparison.OrdinalIgnoreCase)));
-                }
-
-                if (!string.IsNullOrEmpty(status) && status != "all")
-                {
-                    filteredApplicants = filteredApplicants.Where(a => a.Status == status);
-                }
-
-                // Apply pagination
-                var totalRecords = filteredApplicants.Count();
-                applicants = filteredApplicants
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                ViewData["TotalRecords"] = totalRecords;
-                ViewData["TotalPages"] = (int)Math.Ceiling((double)totalRecords / pageSize);
-
+                applicants = await _applicantService.GetApplicantsAsync(jobPostId.Value);
                 var jobPost = await _jobPostService.GetJobPostAsync(jobPostId.Value);
                 if (jobPost != null)
                 {
