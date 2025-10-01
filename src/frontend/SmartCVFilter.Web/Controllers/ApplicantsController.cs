@@ -43,7 +43,7 @@ public class ApplicantsController : Controller
             }
             else
             {
-                jobPosts = await _jobPostService.GetJobPostsAsync();
+                jobPosts = await _jobPostService.GetAllJobPostsAsync();
             }
 
             var viewModel = new ApplicantIndexViewModel

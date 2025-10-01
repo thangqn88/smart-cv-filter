@@ -1,29 +1,230 @@
+@using SmartCVFilter.Web.Models
+@model CreateUserRequest
 @{
     ViewData["Title"] = "Create User";
+    Layout = "_Layout";
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Create User</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i>
-            Back to List
-        </a>
-    </div>
-</div>
-
-<div class="row">
+<!-- Welcome Section -->
+<div class="row mb-4">
     <div class="col-12">
-        <div class="card shadow">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-person-plus display-1 text-muted"></i>
-                <h3 class="text-muted mt-3">Create User</h3>
-                <p class="text-muted">User creation functionality will be implemented in a future update.</p>
-                <a href="@Url.Action("Index")" class="btn btn-primary">
-                    <i class="bi bi-arrow-left"></i>
-                    Back to User Management
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-person-plus text-primary me-2"></i>
+                    Create User
+                </h1>
+                <p class="text-muted mb-0">Add a new user to the system</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to List
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<form asp-controller="Users" asp-action="Create" method="post" class="needs-validation" novalidate>
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-person text-primary me-2"></i>
+                        Personal Information
+                    </h5>
+                    <p class="text-muted mb-0">Basic user information</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="FirstName" class="form-label fw-bold text-dark">First Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input asp-for="FirstName" class="form-control border-start-0"
+                                    placeholder="Enter first name" required />
+                            </div>
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="LastName" class="form-label fw-bold text-dark">Last Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
+                                </span>
+                                <input asp-for="LastName" class="form-control border-start-0"
+                                    placeholder="Enter last name" required />
+                            </div>
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Email" class="form-label fw-bold text-dark">Email Address *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-envelope text-muted"></i>
+                                </span>
+                                <input asp-for="Email" type="email" class="form-control border-start-0"
+                                    placeholder="Enter email address" required />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="CompanyName" class="form-label fw-bold text-dark">Company Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-building text-muted"></i>
+                                </span>
+                                <input asp-for="CompanyName" class="form-control border-start-0"
+                                    placeholder="Enter company name" />
+                            </div>
+                            <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Settings -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-gear text-primary me-2"></i>
+                        Account Settings
+                    </h5>
+                    <p class="text-muted mb-0">User account configuration</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Password" class="form-label fw-bold text-dark">Password *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-lock text-muted"></i>
+                                </span>
+                                <input asp-for="Password" type="password" class="form-control border-start-0"
+                                    placeholder="Enter password" required />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <div class="form-text">Password must be at least 6 characters long.</div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Role" class="form-label fw-bold text-dark">Role *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-shield-check text-muted"></i>
+                                </span>
+                                <select asp-for="Role" class="form-select border-start-0" required>
+                                    <option value="">Select a role</option>
+                                    <option value="User">User</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Preview Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-eye text-primary me-2"></i>
+                        Live Preview
+                    </h5>
+                    <p class="text-muted mb-0">See how the user will appear</p>
+                </div>
+                <div class="card-body p-4">
+                    <div id="previewContent">
+                        <div class="text-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                                style="width: 60px; height: 60px;">
+                                <i class="bi bi-person text-primary fs-4"></i>
+                            </div>
+                            <h6 class="text-muted">User name will appear here</h6>
+                            <p class="text-muted small">Email address</p>
+                            <p class="text-muted small">Company name</p>
+                            <span class="badge bg-secondary">Role</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-lightning text-primary me-2"></i>
+                        Actions
+                    </h5>
+                    <p class="text-muted mb-0">Save or cancel the form</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Create User
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="alert alert-info border-0 shadow-sm">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Note:</strong> The user will receive an email notification with their login credentials once
+                created.
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Live preview functionality
+        function updatePreview() {
+            const firstName = document.querySelector('input[name="FirstName"]').value || 'First';
+            const lastName = document.querySelector('input[name="LastName"]').value || 'Last';
+            const email = document.querySelector('input[name="Email"]').value || 'email@example.com';
+            const company = document.querySelector('input[name="CompanyName"]').value || 'Company';
+            const role = document.querySelector('select[name="Role"]').value || 'Role';
+
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                    <div class="text-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-person text-primary fs-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark">${firstName} ${lastName}</h6>
+                        <p class="text-muted small">${email}</p>
+                        <p class="text-muted small">${company}</p>
+                        <span class="badge ${role === 'Admin' ? 'bg-danger' : role === 'Manager' ? 'bg-warning' : 'bg-secondary'}">${role}</span>
+                    </div>
+                `;
+        }
+
+        // Add event listeners for live preview
+        document.querySelectorAll('input[name="FirstName"], input[name="LastName"], input[name="Email"], input[name="CompanyName"], select[name="Role"]').forEach(element => {
+            element.addEventListener('input', updatePreview);
+            element.addEventListener('change', updatePreview);
+        });
+    </script>
+}

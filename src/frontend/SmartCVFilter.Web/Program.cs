@@ -20,29 +20,8 @@ builder.Services.AddSession(options =>
 });
 
 // Add HttpClient with configuration
-builder.Services.AddHttpClient<JobPostService>(client =>
-{
-    var configuration = builder.Configuration;
-    var baseUrl = configuration["ApiSettings:BaseUrl"];
-    client.BaseAddress = new Uri(baseUrl!);
-    client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("ApiSettings:Timeout"));
-});
 
-builder.Services.AddHttpClient<ApplicantService>(client =>
-{
-    var configuration = builder.Configuration;
-    var baseUrl = configuration["ApiSettings:BaseUrl"];
-    client.BaseAddress = new Uri(baseUrl!);
-    client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("ApiSettings:Timeout"));
-});
 
-builder.Services.AddHttpClient<ScreeningService>(client =>
-{
-    var configuration = builder.Configuration;
-    var baseUrl = configuration["ApiSettings:BaseUrl"];
-    client.BaseAddress = new Uri(baseUrl!);
-    client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("ApiSettings:Timeout"));
-});
 
 // Generic HttpClient for ApiService
 builder.Services.AddHttpClient();

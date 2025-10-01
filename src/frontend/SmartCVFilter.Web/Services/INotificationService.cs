@@ -15,3 +15,4 @@ public interface INotificationService
     void AddValidationErrors(Dictionary<string, string[]> errors);
     void AddApiError(string message, int? statusCode = null);
 }
+

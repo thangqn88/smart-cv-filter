@@ -35,3 +35,4 @@ public class NotificationOptions
     public string? ActionText { get; set; }
     public string? ActionUrl { get; set; }
 }
+

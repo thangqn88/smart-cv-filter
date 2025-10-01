@@ -2,16 +2,28 @@
 @model UpdateApplicantRequest
 @{
     ViewData["Title"] = "Edit Applicant";
+    Layout = "_Layout";
     var jobPostId = ViewData["JobPostId"];
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Edit Applicant</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <a href="@Url.Action("Index", new { jobPostId = jobPostId })" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i>
-            Back to List
-        </a>
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-pencil text-primary me-2"></i>
+                    Edit Applicant
+                </h1>
+                <p class="text-muted mb-0">Update candidate information and details</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <a href="@Url.Action("Index", new { jobPostId = jobPostId })" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Back to List
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -21,139 +33,146 @@
     <div class="row">
         <div class="col-lg-8">
             <!-- Personal Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-person"></i>
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-person text-primary me-2"></i>
                         Personal Information
                     </h5>
+                    <p class="text-muted mb-0">Basic candidate information</p>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="FirstName" class="form-label">First Name *</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="FirstName" class="form-label fw-bold text-dark">First Name *</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-person"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="FirstName" class="form-control" placeholder="Enter first name"
-                                    required />
+                                <input asp-for="FirstName" class="form-control border-start-0"
+                                    placeholder="Enter first name" required />
                             </div>
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="LastName" class="form-label">Last Name *</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="LastName" class="form-label fw-bold text-dark">Last Name *</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-person"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="LastName" class="form-control" placeholder="Enter last name" required />
+                                <input asp-for="LastName" class="form-control border-start-0"
+                                    placeholder="Enter last name" required />
                             </div>
-                            <span asp-validation-for="LastName" class="text-danger"></span>
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Email" class="form-label">Email Address *</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Email" class="form-label fw-bold text-dark">Email Address *</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-envelope"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-envelope text-muted"></i>
                                 </span>
-                                <input asp-for="Email" type="email" class="form-control"
+                                <input asp-for="Email" type="email" class="form-control border-start-0"
                                     placeholder="Enter email address" required />
                             </div>
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="PhoneNumber" class="form-label fw-bold text-dark">Phone Number</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-telephone"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-telephone text-muted"></i>
                                 </span>
-                                <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" />
+                                <input asp-for="PhoneNumber" class="form-control border-start-0"
+                                    placeholder="Enter phone number" />
                             </div>
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Professional Links -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-link-45deg"></i>
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-link-45deg text-primary me-2"></i>
                         Professional Links
                     </h5>
+                    <p class="text-muted mb-0">Optional professional profiles and portfolios</p>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="LinkedInProfile" class="form-label">LinkedIn Profile</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="LinkedInProfile" class="form-label fw-bold text-dark">LinkedIn
+                                Profile</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-linkedin"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-linkedin text-muted"></i>
                                 </span>
-                                <input asp-for="LinkedInProfile" class="form-control"
+                                <input asp-for="LinkedInProfile" class="form-control border-start-0"
                                     placeholder="https://linkedin.com/in/username" />
                             </div>
-                            <span asp-validation-for="LinkedInProfile" class="text-danger"></span>
+                            <span asp-validation-for="LinkedInProfile" class="text-danger small"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="PortfolioUrl" class="form-label">Portfolio URL</label>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="PortfolioUrl" class="form-label fw-bold text-dark">Portfolio URL</label>
                             <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-globe"></i>
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-globe text-muted"></i>
                                 </span>
-                                <input asp-for="PortfolioUrl" class="form-control"
+                                <input asp-for="PortfolioUrl" class="form-control border-start-0"
                                     placeholder="https://portfolio.com" />
                             </div>
-                            <span asp-validation-for="PortfolioUrl" class="text-danger"></span>
+                            <span asp-validation-for="PortfolioUrl" class="text-danger small"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Cover Letter -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-file-text"></i>
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-file-text text-primary me-2"></i>
                         Cover Letter
                     </h5>
+                    <p class="text-muted mb-0">Optional cover letter content</p>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label asp-for="CoverLetter" class="form-label">Cover Letter</label>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label asp-for="CoverLetter" class="form-label fw-bold text-dark">Cover Letter</label>
                         <textarea asp-for="CoverLetter" class="form-control" rows="6"
                             placeholder="Enter cover letter or additional notes about the applicant..."></textarea>
-                        <span asp-validation-for="CoverLetter" class="text-danger"></span>
+                        <span asp-validation-for="CoverLetter" class="text-danger small"></span>
                     </div>
                 </div>
             </div>
 
             <!-- Status -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-gear"></i>
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-gear text-primary me-2"></i>
                         Status
                     </h5>
+                    <p class="text-muted mb-0">Update applicant status</p>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label asp-for="Status" class="form-label">Applicant Status</label>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label asp-for="Status" class="form-label fw-bold text-dark">Applicant Status</label>
                         <select asp-for="Status" class="form-select">
                             <option value="Pending">Pending</option>
                             <option value="Screened">Screened</option>
                             <option value="Rejected">Rejected</option>
                             <option value="Hired">Hired</option>
                         </select>
-                        <span asp-validation-for="Status" class="text-danger"></span>
+                        <span asp-validation-for="Status" class="text-danger small"></span>
                     </div>
                 </div>
             </div>
@@ -161,14 +180,15 @@
 
         <div class="col-lg-4">
             <!-- Preview Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-eye"></i>
-                        Preview
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-eye text-primary me-2"></i>
+                        Live Preview
                     </h5>
+                    <p class="text-muted mb-0">See how the applicant will appear</p>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div id="previewContent">
                         <h6 class="text-muted">Applicant name will appear here</h6>
                         <p class="text-muted">Email address</p>
@@ -178,21 +198,23 @@
             </div>
 
             <!-- Actions -->
-            <div class="card shadow">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="bi bi-lightning"></i>
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-lightning text-primary me-2"></i>
                         Actions
                     </h5>
+                    <p class="text-muted mb-0">Save or cancel the form</p>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>
                             Update Applicant
                         </button>
-                        <a href="@Url.Action("Index", new { jobPostId = jobPostId })" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle"></i>
+                        <a href="@Url.Action("Index", new { jobPostId = jobPostId })"
+                            class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-circle me-1"></i>
                             Cancel
                         </a>
                     </div>
@@ -214,10 +236,10 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                                <h6>${firstName} ${lastName}</h6>
-                                <p class="text-muted">${email}</p>
-                                <p class="text-muted">${phone}</p>
-                            `;
+                                    <h6>${firstName} ${lastName}</h6>
+                                    <p class="text-muted">${email}</p>
+                                    <p class="text-muted">${phone}</p>
+                                `;
         }
 
         // Add event listeners for live preview

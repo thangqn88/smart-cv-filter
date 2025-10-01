@@ -1,18 +1,14 @@
-using Microsoft.AspNetCore.Authentication;
-using Newtonsoft.Json;
 using SmartCVFilter.Web.Models;
 
 namespace SmartCVFilter.Web.Services;
 
 public class ScreeningService : IScreeningService
 {
-    private readonly HttpClient _httpClient;
     private readonly IApiService _apiService;
     private readonly ILogger<ScreeningService> _logger;
 
-    public ScreeningService(HttpClient httpClient, IApiService apiService, ILogger<ScreeningService> logger)
+    public ScreeningService(IApiService apiService, ILogger<ScreeningService> logger)
     {
-        _httpClient = httpClient;
         _apiService = apiService;
         _logger = logger;
     }
@@ -21,16 +17,8 @@ public class ScreeningService : IScreeningService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
-            var response = await _httpClient.GetAsync($"screening/results/{resultId}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ScreeningResultResponse>(content);
-            }
-
-            return null;
+            var response = await _apiService.MakeRequestAsync<ScreeningResultResponse>($"api/screening/results/{resultId}", HttpMethod.Get);
+            return response;
         }
         catch (Exception ex)
         {
@@ -43,16 +31,8 @@ public class ScreeningService : IScreeningService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
-            var response = await _httpClient.GetAsync($"screening/applicants/{applicantId}/results");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<List<ScreeningResultResponse>>(content) ?? new List<ScreeningResultResponse>();
-            }
-
-            return new List<ScreeningResultResponse>();
+            var response = await _apiService.MakeRequestAsync<List<ScreeningResultResponse>>($"api/screening/applicants/{applicantId}/results", HttpMethod.Get);
+            return response ?? new List<ScreeningResultResponse>();
         }
         catch (Exception ex)
         {
@@ -61,12 +41,4 @@ public class ScreeningService : IScreeningService
         }
     }
 
-    private async Task EnsureAuthenticatedAsync()
-    {
-        var token = _apiService.GetToken();
-        if (!string.IsNullOrEmpty(token))
-        {
-            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        }
-    }
 }

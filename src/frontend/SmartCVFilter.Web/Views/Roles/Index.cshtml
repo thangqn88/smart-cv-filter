@@ -1,38 +1,324 @@
+@using SmartCVFilter.Web.Models
+@model RoleIndexViewModel
 @{
     ViewData["Title"] = "Role Management";
+    Layout = "_Layout";
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Role Management</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="@Url.Action("Create")" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i>
-                Create Role
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="row">
+<!-- Welcome Section -->
+<div class="row mb-4">
     <div class="col-12">
-        <div class="card shadow">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-shield-check display-1 text-muted"></i>
-                <h3 class="text-muted mt-3">Role Management</h3>
-                <p class="text-muted">Role management functionality will be implemented in a future update.</p>
-                <p class="text-muted">This feature will include:</p>
-                <ul class="list-unstyled text-muted">
-                    <li><i class="bi bi-check"></i> Role creation and management</li>
-                    <li><i class="bi bi-check"></i> Permission assignment</li>
-                    <li><i class="bi bi-check"></i> Role-based access control</li>
-                    <li><i class="bi bi-check"></i> User role assignment</li>
-                </ul>
-                <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
-                    <i class="bi bi-house"></i>
-                    Go to Dashboard
-                </a>
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div>
+                <h1 class="h2 mb-1 text-dark">
+                    <i class="bi bi-shield-check text-primary me-2"></i>
+                    Role Management
+                </h1>
+                <p class="text-muted mb-0">Manage user roles and permissions</p>
+            </div>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="@Url.Action("Create")" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Create Role
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary">
+                        <i class="bi bi-download me-1"></i>
+                        Export
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-primary border-4 shadow-lg h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="row g-0 align-items-center">
+                    <div class="col me-3">
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-2">
+                            <i class="bi bi-shield-check me-1"></i>
+                            Total Roles
+                        </div>
+                        <div class="h3 mb-0 fw-bold text-dark">@Model.TotalRoles</div>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up me-1"></i>
+                            +2 this month
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-shield-check fs-1 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-success border-4 shadow-lg h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="row g-0 align-items-center">
+                    <div class="col me-3">
+                        <div class="text-xs fw-bold text-success text-uppercase mb-2">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Active Roles
+                        </div>
+                        <div class="h3 mb-0 fw-bold text-dark">@Model.ActiveRoles</div>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up me-1"></i>
+                            +1 this month
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-check-circle fs-1 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-warning border-4 shadow-lg h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="row g-0 align-items-center">
+                    <div class="col me-3">
+                        <div class="text-xs fw-bold text-warning text-uppercase mb-2">
+                            <i class="bi bi-pause-circle me-1"></i>
+                            Inactive Roles
+                        </div>
+                        <div class="h3 mb-0 fw-bold text-dark">@Model.InactiveRoles</div>
+                        <small class="text-warning">
+                            <i class="bi bi-arrow-down me-1"></i>
+                            -1 this month
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-pause-circle fs-1 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-info border-4 shadow-lg h-100 hover-card">
+            <div class="card-body p-4">
+                <div class="row g-0 align-items-center">
+                    <div class="col me-3">
+                        <div class="text-xs fw-bold text-info text-uppercase mb-2">
+                            <i class="bi bi-people me-1"></i>
+                            Total Users
+                        </div>
+                        <div class="h3 mb-0 fw-bold text-dark">@(Model.Roles.Sum(r => r.UserCount))</div>
+                        <small class="text-info">
+                            <i class="bi bi-arrow-up me-1"></i>
+                            +5 this month
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-people fs-1 text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" class="form-control border-start-0 table-search" placeholder="Search roles by name or description...">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="statusFilter" id="all" value="all" checked>
+            <label class="btn btn-outline-secondary" for="all">
+                <i class="bi bi-list me-1"></i>All
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="active" value="active">
+            <label class="btn btn-outline-success" for="active">
+                <i class="bi bi-check-circle me-1"></i>Active
+            </label>
+
+            <input type="radio" class="btn-check" name="statusFilter" id="inactive" value="inactive">
+            <label class="btn btn-outline-warning" for="inactive">
+                <i class="bi bi-pause-circle me-1"></i>Inactive
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Roles Table -->
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-white border-0 py-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-shield-check text-primary me-2"></i>
+                    Roles
+                </h5>
+                <p class="text-muted mb-0">Manage system roles and their permissions</p>
+            </div>
+            <div class="text-muted">
+                <small>Total: <span class="fw-bold text-dark">@Model.Roles.Count</span> roles</small>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Roles.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="rolesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Role Name</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Description</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Permissions</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Users</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Status</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark">Created</th>
+                            <th class="border-0 px-4 py-3 fw-bold text-dark text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var role in Model.Roles)
+                        {
+                            <tr class="border-bottom">
+                                <td class="px-4 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-shield-check text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@role.Name</div>
+                                            <small class="text-muted">ID: @role.Id</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="text-muted">@(string.IsNullOrEmpty(role.Description) ? "No description" : role.Description)</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge bg-info px-3 py-2">
+                                        <i class="bi bi-key me-1"></i>
+                                        @role.Permissions.Count permissions
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge bg-secondary px-3 py-2">
+                                        <i class="bi bi-people me-1"></i>
+                                        @role.UserCount users
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="badge @(role.IsActive ? "bg-success" : "bg-warning") px-3 py-2">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                                        @(role.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    @role.CreatedAt.ToString("MMM dd, yyyy")
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Edit", new { id = role.Id })"
+                                            class="btn btn-outline-warning btn-sm me-1" data-bs-toggle="tooltip"
+                                            title="Edit Role">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip"
+                                            title="Delete Role"
+                                            onclick="confirmDelete('@role.Name', () => deleteRole('@role.Id'))">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-shield-check display-1 text-muted opacity-50"></i>
+                </div>
+                <h5 class="text-muted mb-3">No roles found</h5>
+                <p class="text-muted mb-4">Get started by creating your first role.</p>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Create First Role
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Delete Form -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        // Filter by status
+        document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const status = this.value;
+                const rows = document.querySelectorAll('#rolesTable tbody tr');
+
+                rows.forEach(row => {
+                    if (status === 'all') {
+                        row.style.display = '';
+                    } else if (status === 'active') {
+                        const statusCell = row.querySelector('td:nth-child(5) .badge');
+                        const isActive = statusCell ? statusCell.textContent.includes('Active') : false;
+                        row.style.display = isActive ? '' : 'none';
+                    } else if (status === 'inactive') {
+                        const statusCell = row.querySelector('td:nth-child(5) .badge');
+                        const isInactive = statusCell ? statusCell.textContent.includes('Inactive') : false;
+                        row.style.display = isInactive ? '' : 'none';
+                    }
+                });
+            });
+        });
+
+        function deleteRole(roleId) {
+            const form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete")/' + roleId;
+            form.submit();
+        }
+
+        function confirmDelete(name, callback) {
+            if (confirm(`Are you sure you want to delete the role "${name}"? This action cannot be undone.`)) {
+                callback();
+            }
+        }
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}
