@@ -276,3 +276,238 @@ main {
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* Dashboard specific styles */
+.hover-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.quick-action-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced table styles */
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Badge enhancements */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Card header enhancements */
+.card-header h5 {
+    font-size: 1.1rem;
+}
+
+/* Statistics card enhancements */
+.text-xs {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* Button enhancements */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Pulse animation for statistics */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Enhanced form styling */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Enhanced table styling */
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Enhanced badge styling */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Enhanced button styling */
+.btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Enhanced card styling */
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+/* Enhanced modal styling */
+.modal-content {
+    border-radius: 0.5rem;
+}
+
+.modal-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Enhanced progress bar styling */
+.progress {
+    border-radius: 0.375rem;
+}
+
+.progress-bar {
+    border-radius: 0.375rem;
+}
+
+/* Enhanced alert styling */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+/* Enhanced tooltip styling */
+.tooltip {
+    font-size: 0.875rem;
+}
+
+/* Enhanced empty state styling */
+.display-1 {
+    font-size: 4rem;
+    opacity: 0.3;
+}
+
+/* Enhanced search input styling */
+.table-search:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Enhanced filter button styling */
+.btn-check:checked + .btn {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Enhanced statistics card styling */
+.text-xs {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* Enhanced icon styling */
+.bi {
+    font-size: 1rem;
+}
+
+.fs-1 {
+    font-size: 2.5rem !important;
+}
+
+.fs-2 {
+    font-size: 2rem !important;
+}
+
+/* Enhanced spacing */
+.px-4 {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+.py-3 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+.py-4 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+/* Enhanced text styling */
+.fw-bold {
+    font-weight: 700 !important;
+}
+
+/* Enhanced border styling */
+.border-0 {
+    border: 0 !important;
+}
+
+/* Enhanced shadow styling */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
