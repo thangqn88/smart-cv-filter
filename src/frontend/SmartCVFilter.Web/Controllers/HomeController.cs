@@ -9,17 +9,20 @@ public class HomeController : Controller
     private readonly IJobPostService _jobPostService;
     private readonly IApplicantService _applicantService;
     private readonly IScreeningService _screeningService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<HomeController> _logger;
 
     public HomeController(
         IJobPostService jobPostService,
         IApplicantService applicantService,
         IScreeningService screeningService,
+        INotificationService notificationService,
         ILogger<HomeController> logger)
     {
         _jobPostService = jobPostService;
         _applicantService = applicantService;
         _screeningService = screeningService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -52,11 +55,11 @@ public class HomeController : Controller
             // If it's a connection error, show a more user-friendly message
             if (ex.Message.Contains("BaseAddress") || ex.Message.Contains("connection"))
             {
-                TempData["Warning"] = "Unable to connect to the backend API. Please ensure the backend service is running.";
+                _notificationService.AddWarning("Unable to connect to the backend API. Please ensure the backend service is running.", "Connection Issue");
             }
             else
             {
-                TempData["Error"] = "An error occurred while loading the dashboard.";
+                _notificationService.AddError("An error occurred while loading the dashboard.", "Dashboard Error");
             }
 
             // Return empty dashboard data
@@ -76,5 +79,21 @@ public class HomeController : Controller
     {
         ViewData["Title"] = "Error";
         return View();
+    }
+
+    public IActionResult NotificationDemo()
+    {
+        ViewData["Title"] = "Notification Demo";
+        return View();
+    }
+
+    public IActionResult TestNotification()
+    {
+        _notificationService.AddError("This is a test error notification!", "Test Error");
+        _notificationService.AddSuccess("This is a test success notification!", "Test Success");
+        _notificationService.AddWarning("This is a test warning notification!", "Test Warning");
+        _notificationService.AddInfo("This is a test info notification!", "Test Info");
+
+        return RedirectToAction("Index");
     }
 }

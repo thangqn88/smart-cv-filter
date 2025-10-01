@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartCVFilter.Web.Models;
 using SmartCVFilter.Web.Services;
+using SmartCVFilter.Web.ViewModels;
 
 namespace SmartCVFilter.Web.Controllers;
 
@@ -45,7 +46,7 @@ public class ApplicantsController : Controller
                 jobPosts = await _jobPostService.GetJobPostsAsync();
             }
 
-            var viewModel = new
+            var viewModel = new ApplicantIndexViewModel
             {
                 Applicants = applicants,
                 JobPosts = jobPosts,
@@ -58,7 +59,12 @@ public class ApplicantsController : Controller
         {
             _logger.LogError(ex, "Error loading applicants");
             TempData["Error"] = "An error occurred while loading applicants.";
-            return View(new { Applicants = new List<ApplicantResponse>(), JobPosts = new List<JobPostListResponse>(), SelectedJobPostId = (int?)null });
+            return View(new ApplicantIndexViewModel
+            {
+                Applicants = new List<ApplicantResponse>(),
+                JobPosts = new List<JobPostListResponse>(),
+                SelectedJobPostId = null
+            });
         }
     }
 

@@ -14,7 +14,7 @@
             <span class="input-group-text">
                 <i class="bi bi-envelope"></i>
             </span>
-            <input asp-for="Email" class="form-control" placeholder="Enter your email" required />
+            <input asp-for="Email" name="Email" class="form-control" placeholder="Enter your email" required />
         </div>
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
@@ -25,7 +25,8 @@
             <span class="input-group-text">
                 <i class="bi bi-lock"></i>
             </span>
-            <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" required />
+            <input asp-for="Password" name="Password" type="password" class="form-control"
+                placeholder="Enter your password" required />
         </div>
         <span asp-validation-for="Password" class="text-danger"></span>
     </div>
@@ -50,6 +51,32 @@
             <a asp-action="Register" class="text-decoration-none">Sign up here</a>
         </p>
     </div>
+
+    <!-- Test Notifications (for development) -->
+    <div class="mt-4 pt-3 border-top">
+        <h6 class="text-muted mb-3">Test Notifications:</h6>
+        <div class="d-grid gap-2">
+            <button type="button" class="btn btn-outline-success btn-sm"
+                onclick="showSuccess('Login successful!', 'Success', 3000)">
+                <i class="bi bi-check-circle me-1"></i> Test Success
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm"
+                onclick="showError('Invalid credentials!', 'Login Failed', 0)">
+                <i class="bi bi-exclamation-triangle me-1"></i> Test Error
+            </button>
+            <button type="button" class="btn btn-outline-warning btn-sm"
+                onclick="showWarning('Please check your input!', 'Warning', 5000)">
+                <i class="bi bi-exclamation-circle me-1"></i> Test Warning
+            </button>
+            <button type="button" class="btn btn-outline-info btn-sm"
+                onclick="showInfo('This is a test notification!', 'Info', 4000)">
+                <i class="bi bi-info-circle me-1"></i> Test Info
+            </button>
+            <a href="/Home/TestNotification" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-server me-1"></i> Test Server Notifications
+            </a>
+        </div>
+    </div>
 </form>
 
 @section Scripts {
@@ -63,7 +90,32 @@
                 form.addEventListener('submit', function (e) {
                     console.log('Form submit event triggered');
                     console.log('Form valid:', form.checkValidity());
-                    console.log('Form data:', new FormData(form));
+
+                    // Log form data for debugging
+                    const formData = new FormData(form);
+                    console.log('Form data entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(key + ': ' + value);
+                    }
+
+                    // Check if email and password fields have values
+                    const emailField = form.querySelector('input[name="Email"]');
+                    const passwordField = form.querySelector('input[name="Password"]');
+                    console.log('Email field value:', emailField ? emailField.value : 'NOT FOUND');
+                    console.log('Password field value:', passwordField ? (passwordField.value ? '***' : 'EMPTY') : 'NOT FOUND');
+
+                    // Also check by asp-for attributes
+                    const emailFieldAsp = form.querySelector('input[asp-for="Email"]');
+                    const passwordFieldAsp = form.querySelector('input[asp-for="Password"]');
+                    console.log('Email field (asp-for) value:', emailFieldAsp ? emailFieldAsp.value : 'NOT FOUND');
+                    console.log('Password field (asp-for) value:', passwordFieldAsp ? (passwordFieldAsp.value ? '***' : 'EMPTY') : 'NOT FOUND');
+
+                    // Check all input fields
+                    const allInputs = form.querySelectorAll('input');
+                    console.log('All input fields:');
+                    allInputs.forEach((input, index) => {
+                        console.log(`Input ${index}: name="${input.name}", value="${input.value}", type="${input.type}"`);
+                    });
                 });
             }
 

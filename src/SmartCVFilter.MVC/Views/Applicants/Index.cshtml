@@ -18,7 +18,7 @@
                 <p class="text-muted mb-0">Manage and review candidate applications</p>
             </div>
             <div class="btn-toolbar mb-2 mb-md-0">
-                @if (Model?.SelectedJobPostId.HasValue == true)
+                @if (Model != null && Model.SelectedJobPostId.HasValue)
                 {
                     <div class="btn-group me-2">
                         <a href="@Url.Action("Create", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId })"
@@ -39,7 +39,7 @@
 </div>
 
 <!-- Job Post Selection -->
-@if (Model?.SelectedJobPostId.HasValue != true)
+@if (Model == null || !Model.SelectedJobPostId.HasValue)
 {
     <div class="row mb-5">
         <div class="col-12">
@@ -52,7 +52,7 @@
                     <p class="text-muted mb-0">Choose a job post to manage its applicants</p>
                 </div>
                 <div class="card-body p-4">
-                    @if (Model?.JobPosts != null && Model.JobPosts.Count > 0)
+                    @if (Model != null && Model.JobPosts != null && Model.JobPosts.Count > 0)
                     {
                         <div class="row g-4">
                             @foreach (var jobPost in Model.JobPosts)
@@ -164,20 +164,20 @@ else
                                 <i class="bi bi-people text-primary me-2"></i>
                                 Applicants
                             </h5>
-                            <p class="text-muted mb-0">@(Model?.Applicants?.Count ?? 0) applicant(s) found</p>
+                            <p class="text-muted mb-0">@(Model != null && Model.Applicants != null ? Model.Applicants.Count : 0) applicant(s) found</p>
                         </div>
                         <div class="d-flex align-items-center">
-                            <span class="badge bg-warning me-2">@(Model?.Applicants?.Count(x => x.Status == "Pending") ?? 0)
+                            <span class="badge bg-warning me-2">@(Model != null && Model.Applicants != null ? Model.Applicants.Count(x => x.Status == "Pending") : 0)
                                 Pending</span>
-                            <span class="badge bg-info me-2">@(Model?.Applicants?.Count(x => x.Status == "Screened") ?? 0)
+                            <span class="badge bg-info me-2">@(Model != null && Model.Applicants != null ? Model.Applicants.Count(x => x.Status == "Screened") : 0)
                                 Screened</span>
-                            <span class="badge bg-danger">@(Model?.Applicants?.Count(x => x.Status == "Rejected") ?? 0)
+                            <span class="badge bg-danger">@(Model != null && Model.Applicants != null ? Model.Applicants.Count(x => x.Status == "Rejected") : 0)
                                 Rejected</span>
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    @if (Model?.Applicants != null && Model.Applicants.Count > 0)
+                    @if (Model != null && Model.Applicants != null && Model.Applicants.Count > 0)
                     {
                         <div class="table-responsive">
                             <table class="table table-hover mb-0" id="applicantsTable">
@@ -250,19 +250,19 @@ else
                                             </td>
                                             <td class="px-4 py-3 text-center">
                                                 <div class="btn-group" role="group">
-                                                    <a href="@Url.Action("Details", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId, id = applicant.Id })"
+                                                    <a href="@Url.Action("Details", "ApplicantsMvc", new { jobPostId = Model?.SelectedJobPostId, id = applicant.Id })"
                                                         class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="tooltip"
                                                         title="View Details">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
-                                                    <a href="@Url.Action("Edit", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId, id = applicant.Id })"
+                                                    <a href="@Url.Action("Edit", "ApplicantsMvc", new { jobPostId = Model?.SelectedJobPostId, id = applicant.Id })"
                                                         class="btn btn-outline-warning btn-sm me-1" data-bs-toggle="tooltip"
                                                         title="Edit">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                     <button type="button" class="btn btn-outline-danger btn-sm"
                                                         data-bs-toggle="tooltip" title="Delete"
-                                                        onclick="confirmDelete('@applicant.FirstName @applicant.LastName', () => deleteApplicant(@Model.SelectedJobPostId, @applicant.Id))">
+                                                        onclick="confirmDelete('@applicant.FirstName @applicant.LastName', () => deleteApplicant(@(Model?.SelectedJobPostId ?? 0), @applicant.Id))">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </div>
@@ -281,7 +281,7 @@ else
                             </div>
                             <h5 class="text-muted mb-3">No Applicants Found</h5>
                             <p class="text-muted mb-4">No applicants have applied for this job post yet.</p>
-                            <a href="@Url.Action("Create", "ApplicantsMvc", new { jobPostId = Model.SelectedJobPostId })"
+                            <a href="@Url.Action("Create", "ApplicantsMvc", new { jobPostId = Model?.SelectedJobPostId })"
                                 class="btn btn-primary">
                                 <i class="bi bi-person-plus me-2"></i>
                                 Add First Applicant
@@ -306,7 +306,7 @@ else
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-controller="Applicants" asp-action="StartScreening" method="post">
-                <input type="hidden" name="jobPostId" value="@Model.SelectedJobPostId" />
+                <input type="hidden" name="jobPostId" value="@(Model?.SelectedJobPostId ?? 0)" />
                 <div class="modal-body p-4">
                     <div class="alert alert-info border-0 mb-4">
                         <i class="bi bi-info-circle me-2"></i>

@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Newtonsoft.Json;
 using SmartCVFilter.Web.Models;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
@@ -24,7 +22,12 @@ public class ApiService : IApiService
         _logger = logger;
 
         var baseUrl = _configuration["ApiSettings:BaseUrl"];
-        _httpClient.BaseAddress = new Uri(baseUrl!);
+        // Ensure BaseAddress ends with a slash for proper URL combination
+        if (!baseUrl!.EndsWith("/"))
+        {
+            baseUrl += "/";
+        }
+        _httpClient.BaseAddress = new Uri(baseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_configuration.GetValue<int>("ApiSettings:Timeout"));
     }
 
@@ -35,8 +38,10 @@ public class ApiService : IApiService
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Calling backend API: {BaseUrl}/auth/login", _httpClient.BaseAddress);
-            var response = await _httpClient.PostAsync("auth/login", content);
+            var fullUrl = new Uri(_httpClient.BaseAddress!, "Auth/login");
+            _logger.LogInformation("BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
+            _logger.LogInformation("Calling backend API: {FullUrl}", fullUrl);
+            var response = await _httpClient.PostAsync(fullUrl, content);
 
             _logger.LogInformation("Backend API response status: {StatusCode}", response.StatusCode);
 
@@ -78,7 +83,8 @@ public class ApiService : IApiService
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("auth/register", content);
+            var fullUrl = new Uri(_httpClient.BaseAddress!, "Auth/register");
+            var response = await _httpClient.PostAsync(fullUrl, content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -112,7 +118,8 @@ public class ApiService : IApiService
                 return false;
 
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            var response = await _httpClient.PostAsync("auth/validate", null);
+            var fullUrl = new Uri(_httpClient.BaseAddress!, "Auth/validate");
+            var response = await _httpClient.PostAsync(fullUrl, null);
 
             return response.IsSuccessStatusCode;
         }

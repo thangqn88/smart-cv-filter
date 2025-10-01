@@ -8,6 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add session support for notifications
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.None; // Allow HTTP
+    options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+});
+
 // Add HttpClient with configuration
 builder.Services.AddHttpClient<JobPostService>(client =>
 {
@@ -44,6 +55,7 @@ builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddScoped<IJobPostService, JobPostService>();
 builder.Services.AddScoped<IApplicantService, ApplicantService>();
 builder.Services.AddScoped<IScreeningService, ScreeningService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Add authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -60,9 +72,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Add authorization
 builder.Services.AddAuthorization();
 
-// Add session
-builder.Services.AddSession();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,12 +84,11 @@ if (!app.Environment.IsDevelopment())
 // HTTP only - no HTTPS redirection
 app.UseStaticFiles();
 
+app.UseSession();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

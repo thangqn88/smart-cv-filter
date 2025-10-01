@@ -9,11 +9,13 @@ namespace SmartCVFilter.Web.Controllers;
 public class AuthController : Controller
 {
     private readonly IApiService _apiService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IApiService apiService, ILogger<AuthController> logger)
+    public AuthController(IApiService apiService, INotificationService notificationService, ILogger<AuthController> logger)
     {
         _apiService = apiService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -33,10 +35,39 @@ public class AuthController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginRequest model, string? returnUrl = null)
+    public async Task<IActionResult> Login([FromForm] LoginRequest model, string? returnUrl = null)
     {
+        // Debug logging
+        _logger.LogInformation("Login POST received - Model is null: {IsNull}, Email: {Email}, Password: {Password}, ModelState.IsValid: {IsValid}",
+            model == null,
+            model?.Email ?? "NULL",
+            string.IsNullOrEmpty(model?.Password) ? "EMPTY" : "***",
+            ModelState.IsValid);
+
+        // Log all form values
+        foreach (var key in Request.Form.Keys)
+        {
+            _logger.LogInformation("Form key: {Key} = {Value}", key, Request.Form[key]);
+        }
+
+        // If model is null, create a new one
+        if (model == null)
+        {
+            _logger.LogWarning("Model is null, creating new LoginRequest");
+            model = new LoginRequest();
+        }
+
         if (!ModelState.IsValid)
         {
+            _logger.LogWarning("ModelState is invalid. Errors: {Errors}",
+                string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+
+            // Add validation errors to notifications
+            var errors = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+            _notificationService.AddValidationErrors(errors);
+
             ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on validation errors
             return View(model);
         }
@@ -48,7 +79,7 @@ public class AuthController : Controller
             if (result != null)
             {
                 _logger.LogInformation("Login successful for user: {Email}", model.Email);
-                TempData["Success"] = "Login successful!";
+                _notificationService.AddSuccess($"Welcome back, {result.User.FirstName}!", "Login Successful");
 
                 // Redirect to returnUrl if provided and valid, otherwise go to Home
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -63,7 +94,7 @@ public class AuthController : Controller
             else
             {
                 _logger.LogWarning("Login failed for user: {Email}", model.Email);
-                ModelState.AddModelError("", "Invalid email or password.");
+                _notificationService.AddError("Invalid email or password. Please check your credentials and try again.", "Login Failed");
                 ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on login failure
                 return View(model);
             }
@@ -71,7 +102,7 @@ public class AuthController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during login");
-            ModelState.AddModelError("", "An error occurred during login. Please try again.");
+            _notificationService.AddError("An error occurred during login. Please try again.", "Login Error");
             ViewData["ReturnUrl"] = returnUrl; // Preserve ReturnUrl on error
             return View(model);
         }
@@ -95,6 +126,12 @@ public class AuthController : Controller
     {
         if (!ModelState.IsValid)
         {
+            // Add validation errors to notifications
+            var errors = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+            _notificationService.AddValidationErrors(errors);
+
             return View(model);
         }
 
@@ -103,19 +140,19 @@ public class AuthController : Controller
             var result = await _apiService.RegisterAsync(model);
             if (result != null)
             {
-                TempData["Success"] = "Registration successful! You are now logged in.";
+                _notificationService.AddSuccess($"Welcome, {result.User.FirstName}! Your account has been created successfully.", "Registration Successful");
                 return RedirectToAction("Index", "Home");
             }
             else
             {
-                ModelState.AddModelError("", "Registration failed. Please try again.");
+                _notificationService.AddError("Registration failed. Please try again.", "Registration Failed");
                 return View(model);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during registration");
-            ModelState.AddModelError("", "An error occurred during registration. Please try again.");
+            _notificationService.AddError("An error occurred during registration. Please try again.", "Registration Error");
             return View(model);
         }
     }
@@ -127,13 +164,13 @@ public class AuthController : Controller
         try
         {
             await _apiService.LogoutAsync();
-            TempData["Success"] = "You have been logged out successfully.";
+            _notificationService.AddInfo("You have been logged out successfully.", "Logout");
             return RedirectToAction("Login");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during logout");
-            TempData["Error"] = "An error occurred during logout.";
+            _notificationService.AddError("An error occurred during logout.", "Logout Error");
             return RedirectToAction("Index", "Home");
         }
     }

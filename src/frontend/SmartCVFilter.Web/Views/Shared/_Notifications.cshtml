@@ -1,0 +1,161 @@
+@using SmartCVFilter.Web.Models
+@using SmartCVFilter.Web.Services
+@inject INotificationService NotificationService
+
+@{
+    var notifications = NotificationService.GetNotifications();
+    // Debug: Log notification count
+    System.Diagnostics.Debug.WriteLine($"Notifications count: {notifications.Count}");
+}
+
+@if (notifications.Any())
+{
+    <div id="notification-container" class="notification-container">
+        @foreach (var notification in notifications)
+        {
+            <div class="notification notification-@notification.Type.ToString().ToLower() @(notification.IsDismissible ? "dismissible" : "")"
+                data-notification-id="@notification.Id" data-duration="@notification.Duration">
+                <div class="notification-content">
+                    <div class="notification-icon">
+                        <i class="@notification.Icon"></i>
+                    </div>
+                    <div class="notification-body">
+                        <div class="notification-title">@notification.Title</div>
+                        <div class="notification-message">@notification.Message</div>
+                        @if (!string.IsNullOrEmpty(notification.ActionText) && !string.IsNullOrEmpty(notification.ActionUrl))
+                        {
+                            <div class="notification-actions">
+                                <a href="@notification.ActionUrl" class="btn btn-sm btn-outline-light">
+                                    @notification.ActionText
+                                </a>
+                            </div>
+                        }
+                    </div>
+                    @if (notification.IsDismissible)
+                    {
+                        <button type="button" class="notification-close" onclick="dismissNotification('@notification.Id')">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
+                </div>
+                @if (notification.Duration > 0)
+                {
+                    <div class="notification-progress">
+                        <div class="notification-progress-bar"></div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeNotifications();
+    });
+
+    function initializeNotifications() {
+        const notifications = document.querySelectorAll('.notification[data-duration]');
+
+        notifications.forEach(notification => {
+            const duration = parseInt(notification.dataset.duration);
+            if (duration > 0) {
+                // Auto-dismiss after duration
+                setTimeout(() => {
+                    dismissNotification(notification.dataset.notificationId);
+                }, duration);
+
+                // Start progress bar animation
+                const progressBar = notification.querySelector('.notification-progress-bar');
+                if (progressBar) {
+                    progressBar.style.animation = `notification-progress ${duration}ms linear forwards`;
+                }
+            }
+        });
+    }
+
+    function dismissNotification(notificationId) {
+        const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (notification) {
+            notification.classList.add('notification-dismissing');
+
+            setTimeout(() => {
+                notification.remove();
+
+                // Remove from server-side session
+                fetch('/api/notifications/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({ id: notificationId })
+                }).catch(error => {
+                    console.warn('Failed to remove notification from server:', error);
+                });
+            }, 300);
+        }
+    }
+
+    function showNotification(type, title, message, duration = 5000) {
+        const container = document.getElementById('notification-container') || createNotificationContainer();
+
+        const notificationId = 'temp-' + Date.now();
+        const icon = getNotificationIcon(type);
+
+        const notificationHtml = `
+            <div class="notification notification-${type.toLowerCase()} dismissible" 
+                 data-notification-id="${notificationId}" 
+                 data-duration="${duration}">
+                <div class="notification-content">
+                    <div class="notification-icon">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="notification-body">
+                        <div class="notification-title">${title}</div>
+                        <div class="notification-message">${message}</div>
+                    </div>
+                    <button type="button" class="notification-close" onclick="dismissNotification('${notificationId}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                ${duration > 0 ? '<div class="notification-progress"><div class="notification-progress-bar"></div></div>' : ''}
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', notificationHtml);
+
+        // Trigger animation
+        const newNotification = container.lastElementChild;
+        setTimeout(() => newNotification.classList.add('notification-show'), 10);
+
+        // Auto-dismiss
+        if (duration > 0) {
+            setTimeout(() => dismissNotification(notificationId), duration);
+        }
+    }
+
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function getNotificationIcon(type) {
+        const icons = {
+            'success': 'bi-check-circle-fill',
+            'error': 'bi-exclamation-triangle-fill',
+            'warning': 'bi-exclamation-circle-fill',
+            'info': 'bi-info-circle-fill'
+        };
+        return icons[type.toLowerCase()] || icons.info;
+    }
+
+    // Global notification functions
+    window.showSuccess = (message, title = 'Success', duration = 5000) => showNotification('success', title, message, duration);
+    window.showError = (message, title = 'Error', duration = 0) => showNotification('error', title, message, duration);
+    window.showWarning = (message, title = 'Warning', duration = 7000) => showNotification('warning', title, message, duration);
+    window.showInfo = (message, title = 'Information', duration = 5000) => showNotification('info', title, message, duration);
+</script>
