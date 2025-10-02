@@ -44,9 +44,7 @@ public class JobPostsController : BaseController
 
             // Get paged data
             var isAdmin = IsCurrentUserAdmin();
-            var response = isAdmin
-                ? await _jobPostService.GetJobPostsPagedAsync(request)
-                : await _jobPostService.GetAllJobPostsPagedAsync(request);
+            var response = await _jobPostService.GetJobPostsPagedAsync(request);
 
             if (response == null)
             {

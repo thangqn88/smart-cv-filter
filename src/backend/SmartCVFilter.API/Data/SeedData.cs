@@ -42,7 +42,7 @@ public static class SeedData
         var recruiters = await CreateRecruiters(userManager);
 
         // Create sample job posts
-        if (!context.JobPosts.Any() || true) // Force re-seeding
+        if (!context.JobPosts.Any())
         {
             var jobPosts = CreateJobPosts(recruiters);
             context.JobPosts.AddRange(jobPosts);
@@ -109,13 +109,13 @@ public static class SeedData
             new JobPost
             {
                 Title = "Senior .NET Developer",
-                Description = "We are looking for an experienced .NET developer to join our team. The ideal candidate will have strong experience with .NET 8, C#, and modern web development practices. You'll work on cutting-edge projects and collaborate with a talented team of developers.",
+                Description = "We are looking for an experienced .NET developer to join our team. The ideal candidate will have strong experience with .NET 8, C#, and modern web development practices.",
                 Location = "Ho Chi Minh City",
                 Department = "Engineering",
                 EmploymentType = "Full-time",
                 ExperienceLevel = "Senior",
                 RequiredSkills = "C#, .NET 8, ASP.NET Core, Entity Framework, SQL Server, REST APIs, Microservices, Git, Docker, Azure",
-                PreferredSkills = "Vue.js, Docker, Kubernetes, Redis, RabbitMQ, AWS, CI/CD, TypeScript, React",
+                PreferredSkills = "Vue.js, Kubernetes, Redis, RabbitMQ, AWS, CI/CD, TypeScript, React",
                 Responsibilities = "Develop and maintain web applications, Design and implement APIs, Collaborate with cross-functional teams, Mentor junior developers, Lead technical discussions, Code reviews, Performance optimization",
                 Benefits = "Competitive salary, Health insurance, Flexible working hours, Professional development opportunities, Stock options, Remote work, Learning budget",
                 SalaryMin = 25000000,
@@ -411,10 +411,14 @@ public static class SeedData
         var applicants = new List<Applicant>();
         var random = new Random();
 
-        // Vietnamese names for more realistic data
+        // Vietnamese names for display (with accents)
         var firstNames = new[] { "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý" };
         var lastNames = new[] { "Văn", "Thị", "Minh", "Hồng", "Thanh", "Thu", "Linh", "Anh", "Hương", "Lan", "Phương", "Hạnh", "Nga", "Tuyết", "Mai" };
         var middleNames = new[] { "Văn", "Thị", "Minh", "Hồng", "Thanh", "Thu", "Linh", "Anh", "Hương", "Lan", "Phương", "Hạnh", "Nga", "Tuyết", "Mai" };
+
+        // Latin versions for email and LinkedIn (without accents)
+        var firstNamesLatin = new[] { "Nguyen", "Tran", "Le", "Pham", "Hoang", "Phan", "Vu", "Vo", "Dang", "Bui", "Do", "Ho", "Ngo", "Duong", "Ly" };
+        var lastNamesLatin = new[] { "Van", "Thi", "Minh", "Hong", "Thanh", "Thu", "Linh", "Anh", "Huong", "Lan", "Phuong", "Hanh", "Nga", "Tuyet", "Mai" };
         var domains = new[] { "gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "company.com", "tech.com", "dev.com" };
         var statuses = new[] { "Applied", "Under Review", "Shortlisted", "Rejected", "Hired" };
         var linkedInProfiles = new[] { "linkedin.com/in/", "linkedin.com/in/", "linkedin.com/in/" };
@@ -428,9 +432,14 @@ public static class SeedData
                 var firstName = firstNames[random.Next(firstNames.Length)];
                 var lastName = lastNames[random.Next(lastNames.Length)];
                 var middleName = middleNames[random.Next(middleNames.Length)];
-                var email = $"{firstName.ToLower()}{lastName.ToLower()}{i}{random.Next(100)}@{domains[random.Next(domains.Length)]}";
+
+                // Use Latin versions for email and LinkedIn
+                var firstNameLatin = firstNamesLatin[random.Next(firstNamesLatin.Length)];
+                var lastNameLatin = lastNamesLatin[random.Next(lastNamesLatin.Length)];
+
+                var email = $"{firstNameLatin.ToLower()}{lastNameLatin.ToLower()}{i}{random.Next(100)}@{domains[random.Next(domains.Length)]}";
                 var phoneNumber = $"0{random.Next(100000000, 999999999)}";
-                var linkedInProfile = $"{linkedInProfiles[random.Next(linkedInProfiles.Length)]}{firstName.ToLower()}{lastName.ToLower()}{i}";
+                var linkedInProfile = $"{linkedInProfiles[random.Next(linkedInProfiles.Length)]}{firstNameLatin.ToLower()}{lastNameLatin.ToLower()}{i}";
                 var status = statuses[random.Next(statuses.Length)];
                 var appliedDate = DateTime.UtcNow.AddDays(-random.Next(1, 30));
 
@@ -452,7 +461,7 @@ public static class SeedData
                     Email = email,
                     PhoneNumber = phoneNumber,
                     LinkedInProfile = linkedInProfile,
-                    PortfolioUrl = random.Next(2) == 0 ? $"https://portfolio.{firstName.ToLower()}{lastName.ToLower()}.com" : null,
+                    PortfolioUrl = random.Next(2) == 0 ? $"https://portfolio.{firstNameLatin.ToLower()}{lastNameLatin.ToLower()}.com" : null,
                     CoverLetter = coverLetter,
                     JobPostId = jobPost.Id,
                     AppliedDate = appliedDate,
@@ -481,7 +490,10 @@ public static class SeedData
             {
                 var extension = fileExtensions[random.Next(fileExtensions.Length)];
                 var contentType = contentTypes[random.Next(contentTypes.Length)];
-                var fileName = $"CV_{applicant.FirstName}_{applicant.LastName}_{i + 1}.{extension}";
+                // Convert names to Latin for file names
+                var firstNameLatin = ConvertToLatin(applicant.FirstName);
+                var lastNameLatin = ConvertToLatin(applicant.LastName);
+                var fileName = $"CV_{firstNameLatin}_{lastNameLatin}_{i + 1}.{extension}";
                 var filePath = $"/uploads/cv/{applicant.Id}/{fileName}";
                 var fileSize = random.Next(500000, 5000000); // 500KB to 5MB
                 var status = statuses[random.Next(statuses.Length)];
@@ -675,5 +687,50 @@ NEXT STEPS:
             return text;
 
         return text.Substring(0, maxLength - 3) + "...";
+    }
+
+    private static string ConvertToLatin(string vietnameseName)
+    {
+        if (string.IsNullOrEmpty(vietnameseName))
+            return string.Empty;
+
+        // Dictionary mapping Vietnamese characters to Latin equivalents
+        var vietnameseToLatin = new Dictionary<string, string>
+        {
+            // Vowels with diacritics
+            { "à", "a" }, { "á", "a" }, { "ả", "a" }, { "ã", "a" }, { "ạ", "a" },
+            { "ă", "a" }, { "ằ", "a" }, { "ắ", "a" }, { "ẳ", "a" }, { "ẵ", "a" }, { "ặ", "a" },
+            { "â", "a" }, { "ầ", "a" }, { "ấ", "a" }, { "ẩ", "a" }, { "ẫ", "a" }, { "ậ", "a" },
+            { "è", "e" }, { "é", "e" }, { "ẻ", "e" }, { "ẽ", "e" }, { "ẹ", "e" },
+            { "ê", "e" }, { "ề", "e" }, { "ế", "e" }, { "ể", "e" }, { "ễ", "e" }, { "ệ", "e" },
+            { "ì", "i" }, { "í", "i" }, { "ỉ", "i" }, { "ĩ", "i" }, { "ị", "i" },
+            { "ò", "o" }, { "ó", "o" }, { "ỏ", "o" }, { "õ", "o" }, { "ọ", "o" },
+            { "ô", "o" }, { "ồ", "o" }, { "ố", "o" }, { "ổ", "o" }, { "ỗ", "o" }, { "ộ", "o" },
+            { "ơ", "o" }, { "ờ", "o" }, { "ớ", "o" }, { "ở", "o" }, { "ỡ", "o" }, { "ợ", "o" },
+            { "ù", "u" }, { "ú", "u" }, { "ủ", "u" }, { "ũ", "u" }, { "ụ", "u" },
+            { "ư", "u" }, { "ừ", "u" }, { "ứ", "u" }, { "ử", "u" }, { "ữ", "u" }, { "ự", "u" },
+            { "ỳ", "y" }, { "ý", "y" }, { "ỷ", "y" }, { "ỹ", "y" }, { "ỵ", "y" },
+            
+            // Consonants with diacritics
+            { "đ", "d" }, { "Đ", "D" },
+            
+            // Common Vietnamese names
+            { "Nguyễn", "Nguyen" }, { "Trần", "Tran" }, { "Lê", "Le" }, { "Phạm", "Pham" },
+            { "Hoàng", "Hoang" }, { "Phan", "Phan" }, { "Vũ", "Vu" }, { "Võ", "Vo" },
+            { "Đặng", "Dang" }, { "Bùi", "Bui" }, { "Đỗ", "Do" }, { "Hồ", "Ho" },
+            { "Ngô", "Ngo" }, { "Dương", "Duong" }, { "Lý", "Ly" },
+            { "Văn", "Van" }, { "Thị", "Thi" }, { "Minh", "Minh" }, { "Hồng", "Hong" },
+            { "Thanh", "Thanh" }, { "Thu", "Thu" }, { "Linh", "Linh" }, { "Anh", "Anh" },
+            { "Hương", "Huong" }, { "Lan", "Lan" }, { "Phương", "Phuong" },
+            { "Hạnh", "Hanh" }, { "Nga", "Nga" }, { "Tuyết", "Tuyet" }, { "Mai", "Mai" }
+        };
+
+        var result = vietnameseName;
+        foreach (var mapping in vietnameseToLatin)
+        {
+            result = result.Replace(mapping.Key, mapping.Value);
+        }
+
+        return result;
     }
 }

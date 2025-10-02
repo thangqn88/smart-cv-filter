@@ -51,32 +51,6 @@
             <a asp-action="Register" class="text-decoration-none">Sign up here</a>
         </p>
     </div>
-
-    <!-- Test Notifications (for development) -->
-    <div class="mt-4 pt-3 border-top">
-        <h6 class="text-muted mb-3">Test Notifications:</h6>
-        <div class="d-grid gap-2">
-            <button type="button" class="btn btn-outline-success btn-sm"
-                onclick="showSuccess('Login successful!', 'Success', 3000)">
-                <i class="bi bi-check-circle me-1"></i> Test Success
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm"
-                onclick="showError('Invalid credentials!', 'Login Failed', 0)">
-                <i class="bi bi-exclamation-triangle me-1"></i> Test Error
-            </button>
-            <button type="button" class="btn btn-outline-warning btn-sm"
-                onclick="showWarning('Please check your input!', 'Warning', 5000)">
-                <i class="bi bi-exclamation-circle me-1"></i> Test Warning
-            </button>
-            <button type="button" class="btn btn-outline-info btn-sm"
-                onclick="showInfo('This is a test notification!', 'Info', 4000)">
-                <i class="bi bi-info-circle me-1"></i> Test Info
-            </button>
-            <a href="/Home/TestNotification" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-server me-1"></i> Test Server Notifications
-            </a>
-        </div>
-    </div>
 </form>
 
 @section Scripts {
