@@ -915,10 +915,10 @@
             const updateElement = document.createElement('div');
             updateElement.className = 'alert alert-info alert-dismissible fade show';
             updateElement.innerHTML = `
-                    <i class="bi bi-info-circle me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
+                        <i class="bi bi-info-circle me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
 
             statusList.insertBefore(updateElement, statusList.firstChild);
 
@@ -999,7 +999,7 @@
                         modal.show();
                     </text>
             }
-            }
+                }
 
         function showNotification(message, type = 'info') {
             // Create notification element
@@ -1007,9 +1007,9 @@
             notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
             notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             notification.innerHTML = `
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
 
             document.body.appendChild(notification);
 
