@@ -22,6 +22,10 @@ public interface IJobPostService
     Task<JobPostResponse?> CreateJobPostAsync(CreateJobPostRequest request);
     Task<JobPostResponse?> UpdateJobPostAsync(int id, UpdateJobPostRequest request);
     Task<bool> DeleteJobPostAsync(int id);
+
+    // Paged methods
+    Task<JobPostPagedResponse?> GetJobPostsPagedAsync(JobPostPagedRequest request);
+    Task<JobPostPagedResponse?> GetAllJobPostsPagedAsync(JobPostPagedRequest request);
 }
 
 public interface IApplicantService
@@ -32,6 +36,9 @@ public interface IApplicantService
     Task<ApplicantResponse?> UpdateApplicantAsync(int jobPostId, int id, UpdateApplicantRequest request);
     Task<bool> DeleteApplicantAsync(int jobPostId, int id);
     Task<bool> StartScreeningAsync(int jobPostId, ScreeningRequest request);
+
+    // Paged methods
+    Task<ApplicantPagedResponse?> GetApplicantsPagedAsync(ApplicantPagedRequest request);
 }
 
 public interface ICVUploadService

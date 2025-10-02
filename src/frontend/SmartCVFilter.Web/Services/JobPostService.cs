@@ -114,4 +114,76 @@ public class JobPostService : IJobPostService
         }
     }
 
+    public async Task<JobPostPagedResponse?> GetJobPostsPagedAsync(JobPostPagedRequest request)
+    {
+        try
+        {
+            var queryParams = new List<string>();
+
+            queryParams.Add($"page={request.Page}");
+            queryParams.Add($"pageSize={request.PageSize}");
+
+            if (!string.IsNullOrEmpty(request.Search))
+                queryParams.Add($"search={Uri.EscapeDataString(request.Search)}");
+            if (!string.IsNullOrEmpty(request.SortBy))
+                queryParams.Add($"sortBy={Uri.EscapeDataString(request.SortBy)}");
+            if (!string.IsNullOrEmpty(request.SortDirection))
+                queryParams.Add($"sortDirection={Uri.EscapeDataString(request.SortDirection)}");
+            if (!string.IsNullOrEmpty(request.Status))
+                queryParams.Add($"status={Uri.EscapeDataString(request.Status)}");
+            if (!string.IsNullOrEmpty(request.Department))
+                queryParams.Add($"department={Uri.EscapeDataString(request.Department)}");
+            if (!string.IsNullOrEmpty(request.Location))
+                queryParams.Add($"location={Uri.EscapeDataString(request.Location)}");
+            if (!string.IsNullOrEmpty(request.EmploymentType))
+                queryParams.Add($"employmentType={Uri.EscapeDataString(request.EmploymentType)}");
+            if (!string.IsNullOrEmpty(request.ExperienceLevel))
+                queryParams.Add($"experienceLevel={Uri.EscapeDataString(request.ExperienceLevel)}");
+
+            var endpoint = $"jobposts/paged?{string.Join("&", queryParams)}";
+            var response = await _apiService.MakeRequestAsync<JobPostPagedResponse>(endpoint, HttpMethod.Get);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting paged job posts");
+            return null;
+        }
+    }
+
+    public async Task<JobPostPagedResponse?> GetAllJobPostsPagedAsync(JobPostPagedRequest request)
+    {
+        try
+        {
+            var queryParams = new List<string>();
+
+            queryParams.Add($"page={request.Page}");
+            queryParams.Add($"pageSize={request.PageSize}");
+
+            if (!string.IsNullOrEmpty(request.Search))
+                queryParams.Add($"search={Uri.EscapeDataString(request.Search)}");
+            if (!string.IsNullOrEmpty(request.SortBy))
+                queryParams.Add($"sortBy={Uri.EscapeDataString(request.SortBy)}");
+            if (!string.IsNullOrEmpty(request.SortDirection))
+                queryParams.Add($"sortDirection={Uri.EscapeDataString(request.SortDirection)}");
+            if (!string.IsNullOrEmpty(request.Department))
+                queryParams.Add($"department={Uri.EscapeDataString(request.Department)}");
+            if (!string.IsNullOrEmpty(request.Location))
+                queryParams.Add($"location={Uri.EscapeDataString(request.Location)}");
+            if (!string.IsNullOrEmpty(request.EmploymentType))
+                queryParams.Add($"employmentType={Uri.EscapeDataString(request.EmploymentType)}");
+            if (!string.IsNullOrEmpty(request.ExperienceLevel))
+                queryParams.Add($"experienceLevel={Uri.EscapeDataString(request.ExperienceLevel)}");
+
+            var endpoint = $"jobposts/paged/all?{string.Join("&", queryParams)}";
+            var response = await _apiService.MakeRequestAsync<JobPostPagedResponse>(endpoint, HttpMethod.Get);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all paged job posts");
+            return null;
+        }
+    }
+
 }

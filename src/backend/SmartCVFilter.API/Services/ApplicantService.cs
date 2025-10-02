@@ -231,5 +231,129 @@ public class ApplicantService : IApplicantService
 
         return true;
     }
+
+    public async Task<ApplicantPagedResponse> GetApplicantsPagedAsync(ApplicantPagedRequest request, string userId, bool isAdmin = false)
+    {
+        var query = _context.Applicants
+            .Include(a => a.JobPost)
+            .Include(a => a.CVFiles)
+            .AsQueryable();
+
+        // Apply job post filter
+        query = query.Where(a => a.JobPostId == request.JobPostId);
+
+        // Apply user filter (admin can see all, regular users see only their own job post's applicants)
+        if (!isAdmin)
+        {
+            query = query.Where(a => a.JobPost.UserId == userId);
+        }
+
+        // Apply filters
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            query = query.Where(a => a.Status == request.Status);
+        }
+
+        if (request.AppliedFrom.HasValue)
+        {
+            query = query.Where(a => a.AppliedDate >= request.AppliedFrom.Value);
+        }
+
+        if (request.AppliedTo.HasValue)
+        {
+            query = query.Where(a => a.AppliedDate <= request.AppliedTo.Value);
+        }
+
+        // Apply search
+        if (!string.IsNullOrEmpty(request.Search))
+        {
+            query = query.Where(a =>
+                a.FirstName.Contains(request.Search) ||
+                a.LastName.Contains(request.Search) ||
+                a.Email.Contains(request.Search) ||
+                a.PhoneNumber.Contains(request.Search));
+        }
+
+        // Apply sorting
+        query = ApplyApplicantSorting(query, request.SortBy, request.SortDirection);
+
+        // Get total count
+        var totalItems = await query.CountAsync();
+
+        // Apply pagination
+        var applicants = await query
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToListAsync();
+
+        // Map to response
+        var items = applicants.Select(a => new ApplicantResponse
+        {
+            Id = a.Id,
+            FirstName = a.FirstName,
+            LastName = a.LastName,
+            Email = a.Email,
+            PhoneNumber = a.PhoneNumber,
+            Status = a.Status,
+            AppliedDate = a.AppliedDate,
+            JobPostId = a.JobPostId,
+            CVFiles = a.CVFiles.Select(cf => new CVFileResponse
+            {
+                Id = cf.Id,
+                FileName = cf.FileName,
+                ContentType = cf.ContentType,
+                FileSize = cf.FileSize,
+                FileExtension = cf.FileExtension,
+                Status = cf.Status,
+                UploadedDate = cf.UploadedDate
+            }).ToList()
+        }).ToList();
+
+        // Calculate statistics
+        var allApplicants = await _context.Applicants
+            .Where(a => a.JobPostId == request.JobPostId)
+            .ToListAsync();
+
+        var pendingApplicants = allApplicants.Count(a => a.Status == "Pending");
+        var screenedApplicants = allApplicants.Count(a => a.Status == "Screened");
+        var rejectedApplicants = allApplicants.Count(a => a.Status == "Rejected");
+
+        var totalCVFiles = await _context.CVFiles
+            .Where(cf => cf.Applicant.JobPostId == request.JobPostId)
+            .CountAsync();
+
+        return new ApplicantPagedResponse
+        {
+            Items = items,
+            TotalItems = totalItems,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalPages = (int)Math.Ceiling((double)totalItems / request.PageSize),
+            PendingApplicants = pendingApplicants,
+            ScreenedApplicants = screenedApplicants,
+            RejectedApplicants = rejectedApplicants,
+            TotalCVFiles = totalCVFiles
+        };
+    }
+
+    private IQueryable<Applicant> ApplyApplicantSorting(IQueryable<Applicant> query, string? sortBy, string? sortDirection)
+    {
+        if (string.IsNullOrEmpty(sortBy))
+        {
+            return query.OrderByDescending(a => a.AppliedDate);
+        }
+
+        var isDescending = sortDirection?.ToLower() == "desc";
+
+        return sortBy.ToLower() switch
+        {
+            "firstname" => isDescending ? query.OrderByDescending(a => a.FirstName) : query.OrderBy(a => a.FirstName),
+            "lastname" => isDescending ? query.OrderByDescending(a => a.LastName) : query.OrderBy(a => a.LastName),
+            "email" => isDescending ? query.OrderByDescending(a => a.Email) : query.OrderBy(a => a.Email),
+            "status" => isDescending ? query.OrderByDescending(a => a.Status) : query.OrderBy(a => a.Status),
+            "applieddate" => isDescending ? query.OrderByDescending(a => a.AppliedDate) : query.OrderBy(a => a.AppliedDate),
+            _ => query.OrderByDescending(a => a.AppliedDate)
+        };
+    }
 }
 

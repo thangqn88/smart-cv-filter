@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using SmartCVFilter.API.Configuration;
 using SmartCVFilter.API.DTOs;
 using SmartCVFilter.API.Services.Interfaces;
 
@@ -8,12 +10,13 @@ namespace SmartCVFilter.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class JobPostsController : ControllerBase
+public class JobPostsController : BaseController
 {
     private readonly IJobPostService _jobPostService;
     private readonly ILogger<JobPostsController> _logger;
 
-    public JobPostsController(IJobPostService jobPostService, ILogger<JobPostsController> logger)
+    public JobPostsController(IJobPostService jobPostService, ILogger<JobPostsController> logger, IOptions<PaginationSettings> paginationSettings)
+        : base(logger, paginationSettings)
     {
         _jobPostService = jobPostService;
         _logger = logger;
@@ -82,6 +85,58 @@ public class JobPostsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting all job posts for admin");
             return StatusCode(500, new { message = "An error occurred while retrieving job posts." });
+        }
+    }
+
+    /// <summary>
+    /// Get job posts with pagination and filtering
+    /// </summary>
+    [HttpGet("paged")]
+    public async Task<ActionResult<JobPostPagedResponse>> GetJobPostsPaged([FromQuery] JobPostPagedRequest request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var isAdmin = IsCurrentUserAdmin();
+            // Set defaults and validate pagination parameters
+            request.SetDefaults(GetDefaultPageSize());
+            var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+            request.Page = page;
+            request.PageSize = pageSize;
+
+            var result = await _jobPostService.GetJobPostsPagedAsync(request, userId, isAdmin);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, "getting job posts");
+        }
+    }
+
+    /// <summary>
+    /// Get all active job posts with pagination and filtering (public endpoint)
+    /// </summary>
+    [HttpGet("paged/all")]
+    [AllowAnonymous]
+    public async Task<ActionResult<JobPostPagedResponse>> GetAllJobPostsPaged([FromQuery] JobPostPagedRequest request)
+    {
+        try
+        {
+            // Set defaults and validate pagination parameters
+            request.SetDefaults(GetDefaultPageSize());
+            var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+            request.Page = page;
+            request.PageSize = pageSize;
+
+            var result = await _jobPostService.GetAllJobPostsPagedAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, "getting all job posts");
         }
     }
 

@@ -126,6 +126,9 @@ builder.Services.AddHttpClient<IGeminiAIService, GeminiAIService>();
 // File upload configuration
 builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUpload"));
 
+// Pagination configuration
+builder.Services.Configure<PaginationSettings>(builder.Configuration.GetSection(PaginationSettings.SectionName));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

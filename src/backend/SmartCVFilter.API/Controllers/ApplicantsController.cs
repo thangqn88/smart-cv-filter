@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using SmartCVFilter.API.Configuration;
 using SmartCVFilter.API.DTOs;
 using SmartCVFilter.API.Services.Interfaces;
 
@@ -8,12 +10,13 @@ namespace SmartCVFilter.API.Controllers;
 [ApiController]
 [Route("api/jobposts/{jobPostId}/[controller]")]
 [Authorize]
-public class ApplicantsController : ControllerBase
+public class ApplicantsController : BaseController
 {
     private readonly IApplicantService _applicantService;
     private readonly ILogger<ApplicantsController> _logger;
 
-    public ApplicantsController(IApplicantService applicantService, ILogger<ApplicantsController> logger)
+    public ApplicantsController(IApplicantService applicantService, ILogger<ApplicantsController> logger, IOptions<PaginationSettings> paginationSettings)
+        : base(logger, paginationSettings)
     {
         _applicantService = applicantService;
         _logger = logger;
@@ -42,6 +45,35 @@ public class ApplicantsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting applicants for job post {JobPostId}", jobPostId);
             return StatusCode(500, new { message = "An error occurred while retrieving applicants." });
+        }
+    }
+
+    /// <summary>
+    /// Get applicants with pagination and filtering
+    /// </summary>
+    [HttpGet("paged")]
+    public async Task<ActionResult<ApplicantPagedResponse>> GetApplicantsPaged(int jobPostId, [FromQuery] ApplicantPagedRequest request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var isAdmin = IsCurrentUserAdmin();
+            // Set defaults and validate pagination parameters
+            request.SetDefaults(GetDefaultPageSize());
+            var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+            request.Page = page;
+            request.PageSize = pageSize;
+            request.JobPostId = jobPostId;
+
+            var result = await _applicantService.GetApplicantsPagedAsync(request, userId, isAdmin);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex, "getting applicants", jobPostId);
         }
     }
 

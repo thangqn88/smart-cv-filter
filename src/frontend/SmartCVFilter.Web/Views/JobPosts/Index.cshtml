@@ -1,5 +1,5 @@
 @using SmartCVFilter.Web.Models
-@model List<JobPostListResponse>
+@model JobPostPagedViewModel
 @{
     ViewData["Title"] = "Job Posting Management";
     Layout = "_Layout";
@@ -37,35 +37,79 @@
     <div class="col-12">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0 table-search"
-                                placeholder="Search job posts by title, location, or department...">
+                <form id="filterForm" method="get" action="@Url.Action("Index")">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" id="search" name="search" 
+                                       value="@Model.Filters.Search" placeholder="Search job posts...">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="Active" @(Model.Filters.Status == "Active" ? "selected" : "")>Active</option>
+                                <option value="Inactive" @(Model.Filters.Status == "Inactive" ? "selected" : "")>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">All Departments</option>
+                                @foreach (var dept in Model.Departments)
+                                {
+                                    <option value="@dept" @(Model.Filters.Department == dept ? "selected" : "")>@dept</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="location" class="form-label">Location</label>
+                            <select class="form-select" id="location" name="location">
+                                <option value="">All Locations</option>
+                                @foreach (var loc in Model.Locations)
+                                {
+                                    <option value="@loc" @(Model.Filters.Location == loc ? "selected" : "")>@loc</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="employmentType" class="form-label">Type</label>
+                            <select class="form-select" id="employmentType" name="employmentType">
+                                <option value="">All Types</option>
+                                @foreach (var type in Model.EmploymentTypes)
+                                {
+                                    <option value="@type" @(Model.Filters.EmploymentType == type ? "selected" : "")>@type</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label for="pageSize" class="form-label">Per Page</label>
+                            <select class="form-select" id="pageSize" name="pageSize">
+                                @foreach (var size in new int[] { 5, 10, 25, 50, 100 })
+                                {
+                                    <option value="@size" @(Model.Filters.PageSize == size ? "selected" : "")>@size</option>
+                                }
+                            </select>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="statusFilter" id="all" value="all" checked>
-                            <label class="btn btn-outline-secondary" for="all">
-                                <i class="bi bi-list me-1"></i>All
-                            </label>
-
-                            <input type="radio" class="btn-check" name="statusFilter" id="active" value="Active">
-                            <label class="btn btn-outline-success" for="active">
-                                <i class="bi bi-check-circle me-1"></i>Active
-                            </label>
-
-                            <input type="radio" class="btn-check" name="statusFilter" id="inactive" value="Inactive">
-                            <label class="btn btn-outline-secondary" for="inactive">
-                                <i class="bi bi-pause-circle me-1"></i>Inactive
-                            </label>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search me-1"></i>
+                                Apply Filters
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Clear Filters
+                            </a>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -82,36 +126,93 @@
                             <i class="bi bi-briefcase text-primary me-2"></i>
                             Job Posts
                         </h5>
-                        <p class="text-muted mb-0">@(Model?.Count ?? 0) job posting(s) found</p>
+                        <p class="text-muted mb-0">
+                            Showing @Model.Pagination.StartItem-@Model.Pagination.EndItem of @Model.Pagination.TotalItems job posting(s)
+                        </p>
                     </div>
                     <div class="d-flex align-items-center">
-                        <span class="badge bg-primary me-2">@(Model?.Count(x => x.Status == "Active") ?? 0)
-                            Active</span>
-                        <span class="badge bg-secondary">@(Model?.Count(x => x.Status == "Inactive") ?? 0)
-                            Inactive</span>
+                        <span class="badge bg-primary me-2">@Model.Data.ActiveJobPosts Active</span>
+                        <span class="badge bg-secondary me-2">@Model.Data.InactiveJobPosts Inactive</span>
+                        <span class="badge bg-info">@Model.Data.TotalApplicants Total Applicants</span>
                     </div>
                 </div>
             </div>
             <div class="card-body p-0">
-                @if (Model != null && Model.Count > 0)
+                @if (Model.Data.Items != null && Model.Data.Items.Count > 0)
                 {
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" id="jobPostsTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Job Title</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Location</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Department</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Type</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Level</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Status</th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("title")" class="text-decoration-none text-dark">
+                                            Job Title
+                                            @if (Model.Filters.SortBy == "title")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("location")" class="text-decoration-none text-dark">
+                                            Location
+                                            @if (Model.Filters.SortBy == "location")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("department")" class="text-decoration-none text-dark">
+                                            Department
+                                            @if (Model.Filters.SortBy == "department")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("employmenttype")" class="text-decoration-none text-dark">
+                                            Type
+                                            @if (Model.Filters.SortBy == "employmenttype")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("experiencelevel")" class="text-decoration-none text-dark">
+                                            Level
+                                            @if (Model.Filters.SortBy == "experiencelevel")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("status")" class="text-decoration-none text-dark">
+                                            Status
+                                            @if (Model.Filters.SortBy == "status")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
+                                    <th class="border-0 px-4 py-3 fw-bold text-dark">
+                                        <a href="?@GetSortUrl("posteddate")" class="text-decoration-none text-dark">
+                                            Posted Date
+                                            @if (Model.Filters.SortBy == "posteddate")
+                                            {
+                                                <i class="bi bi-arrow-@(Model.Filters.SortDirection == "asc" ? "up" : "down") ms-1"></i>
+                                            }
+                                        </a>
+                                    </th>
                                     <th class="border-0 px-4 py-3 fw-bold text-dark">Applicants</th>
-                                    <th class="border-0 px-4 py-3 fw-bold text-dark">Posted Date</th>
                                     <th class="border-0 px-4 py-3 fw-bold text-dark text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var jobPost in Model)
+                                @foreach (var jobPost in Model.Data.Items)
                                 {
                                     <tr class="border-bottom">
                                         <td class="px-4 py-3">
@@ -176,6 +277,93 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    @if (Model.Pagination.TotalPages > 1)
+                    {
+                        <div class="card-footer bg-white border-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted">
+                                    Showing @Model.Pagination.StartItem-@Model.Pagination.EndItem of @Model.Pagination.TotalItems results
+                                </div>
+                                <nav aria-label="Job posts pagination">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        @if (Model.Pagination.HasPreviousPage)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="?@GetPageUrl(Model.Pagination.PreviousPage.Value)">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </span>
+                                            </li>
+                                        }
+
+                                        @{
+                                            var startPage = Math.Max(1, Model.Pagination.CurrentPage - 2);
+                                            var endPage = Math.Min(Model.Pagination.TotalPages, Model.Pagination.CurrentPage + 2);
+                                        }
+
+                                        @if (startPage > 1)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="?@GetPageUrl(1)">1</a>
+                                            </li>
+                                            @if (startPage > 2)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                        }
+
+                                        @for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == Model.Pagination.CurrentPage ? "active" : "")">
+                                                <a class="page-link" href="?@GetPageUrl(i)">@i</a>
+                                            </li>
+                                        }
+
+                                        @if (endPage < Model.Pagination.TotalPages)
+                                        {
+                                            @if (endPage < Model.Pagination.TotalPages - 1)
+                                            {
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            }
+                                            <li class="page-item">
+                                                <a class="page-link" href="?@GetPageUrl(Model.Pagination.TotalPages)">@Model.Pagination.TotalPages</a>
+                                            </li>
+                                        }
+
+                                        @if (Model.Pagination.HasNextPage)
+                                        {
+                                            <li class="page-item">
+                                                <a class="page-link" href="?@GetPageUrl(Model.Pagination.NextPage.Value)">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    }
                 }
                 else
                 {
@@ -184,8 +372,7 @@
                             <i class="bi bi-briefcase display-1 text-muted opacity-50"></i>
                         </div>
                         <h5 class="text-muted mb-3">No Job Posts Found</h5>
-                        <p class="text-muted mb-4">Get started by creating your first job posting to attract qualified
-                            candidates.</p>
+                        <p class="text-muted mb-4">Get started by creating your first job posting to attract qualified candidates.</p>
                         <a href="@Url.Action("Create")" class="btn btn-primary">
                             <i class="bi bi-plus-circle me-2"></i>
                             Create Your First Job Post
@@ -202,6 +389,44 @@
     @Html.AntiForgeryToken()
 </form>
 
+@functions {
+    string GetPageUrl(int page)
+    {
+        var queryParams = new List<string>
+        {
+            $"page={page}",
+            $"pageSize={Model.Filters.PageSize}",
+            $"search={Model.Filters.Search}",
+            $"status={Model.Filters.Status}",
+            $"department={Model.Filters.Department}",
+            $"location={Model.Filters.Location}",
+            $"employmentType={Model.Filters.EmploymentType}",
+            $"experienceLevel={Model.Filters.ExperienceLevel}",
+            $"sortBy={Model.Filters.SortBy}",
+            $"sortDirection={Model.Filters.SortDirection}"
+        };
+        return string.Join("&", queryParams.Where(p => !p.EndsWith("=") && !p.EndsWith("&")));
+    }
+
+    string GetSortUrl(string sortBy)
+    {
+        var queryParams = new List<string>
+        {
+            $"page=1",
+            $"pageSize={Model.Filters.PageSize}",
+            $"search={Model.Filters.Search}",
+            $"status={Model.Filters.Status}",
+            $"department={Model.Filters.Department}",
+            $"location={Model.Filters.Location}",
+            $"employmentType={Model.Filters.EmploymentType}",
+            $"experienceLevel={Model.Filters.ExperienceLevel}",
+            $"sortBy={sortBy}",
+            $"sortDirection={(Model.Filters.SortBy == sortBy && Model.Filters.SortDirection == "asc" ? "desc" : "asc")}"
+        };
+        return string.Join("&", queryParams.Where(p => !p.EndsWith("=") && !p.EndsWith("&")));
+    }
+}
+
 @section Scripts {
     <script>
         function deleteJobPost(id) {
@@ -210,28 +435,15 @@
             form.submit();
         }
 
-        // Filter by status
-        document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
-            radio.addEventListener('change', function () {
-                const status = this.value;
-                const rows = document.querySelectorAll('#jobPostsTable tbody tr');
-
-                rows.forEach(row => {
-                    if (status === 'all') {
-                        row.style.display = '';
-                    } else {
-                        const statusCell = row.querySelector('td:nth-child(6) .badge');
-                        const cellStatus = statusCell ? statusCell.textContent.trim() : '';
-                        row.style.display = cellStatus === status ? '' : 'none';
-                    }
-                });
-            });
-        });
-
         // Initialize tooltips
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Auto-submit form on filter change
+        document.getElementById('pageSize').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
         });
     </script>
 }

@@ -11,5 +11,9 @@ public interface IJobPostService
     Task<bool> DeleteJobPostAsync(int id, string userId);
     Task<IEnumerable<JobPostListResponse>> GetAllJobPostsAsync();
     Task<IEnumerable<JobPostListResponse>> GetAllJobPostsForAdminAsync();
+
+    // Paged methods
+    Task<JobPostPagedResponse> GetJobPostsPagedAsync(JobPostPagedRequest request, string userId, bool isAdmin = false);
+    Task<JobPostPagedResponse> GetAllJobPostsPagedAsync(JobPostPagedRequest request);
 }
 

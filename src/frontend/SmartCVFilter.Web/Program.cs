@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using SmartCVFilter.Web.Configuration;
 using SmartCVFilter.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 // Add authorization
 builder.Services.AddAuthorization();
+
+// Pagination configuration
+builder.Services.Configure<PaginationSettings>(builder.Configuration.GetSection(PaginationSettings.SectionName));
 
 var app = builder.Build();
 

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using SmartCVFilter.Web.Configuration;
 using SmartCVFilter.Web.Models;
 using SmartCVFilter.Web.Services;
 using SmartCVFilter.Web.ViewModels;
 
 namespace SmartCVFilter.Web.Controllers;
 
-public class ApplicantsController : Controller
+public class ApplicantsController : BaseController
 {
     private readonly IApplicantService _applicantService;
     private readonly IJobPostService _jobPostService;
@@ -17,7 +19,9 @@ public class ApplicantsController : Controller
         IApplicantService applicantService,
         IJobPostService jobPostService,
         ICVUploadService cvUploadService,
-        ILogger<ApplicantsController> logger)
+        ILogger<ApplicantsController> logger,
+        IOptions<PaginationSettings> paginationSettings)
+        : base(logger, paginationSettings)
     {
         _applicantService = applicantService;
         _jobPostService = jobPostService;
@@ -25,49 +29,175 @@ public class ApplicantsController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(int? jobPostId)
+    public async Task<IActionResult> Index(int? jobPostId, ApplicantPagedRequest request)
+    {
+        if (jobPostId.HasValue)
+        {
+            // Set defaults for the request
+            request.JobPostId = jobPostId.Value;
+            request.SetDefaults(GetDefaultPageSize());
+            if (string.IsNullOrEmpty(request.SortBy)) request.SortBy = "applieddate";
+            if (string.IsNullOrEmpty(request.SortDirection)) request.SortDirection = "desc";
+
+            // Use the same logic as Paged action
+            try
+            {
+                ViewData["Title"] = "Applicant Management";
+
+                // Set defaults and validate pagination parameters
+                request.SetDefaults(GetDefaultPageSize());
+                var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+                request.Page = page;
+                request.PageSize = pageSize;
+                request.JobPostId = jobPostId.Value;
+
+                // Get job post info
+                var jobPost = await _jobPostService.GetJobPostAsync(jobPostId.Value);
+                if (jobPost == null)
+                {
+                    TempData["Error"] = "Job post not found.";
+                    return RedirectToAction("Index");
+                }
+
+                // Get paged data
+                var response = await _applicantService.GetApplicantsPagedAsync(request);
+                if (response == null)
+                {
+                    TempData["Error"] = "An error occurred while loading applicants.";
+                    return View(new ApplicantPagedViewModel());
+                }
+
+                // Create view model
+                var viewModel = new ApplicantPagedViewModel
+                {
+                    Data = response,
+                    Pagination = CreatePaginationInfo(response),
+                    Filters = request,
+                    Statuses = GetApplicantStatuses(),
+                    JobPostTitle = jobPost.Title,
+                    JobPostId = jobPostId.Value
+                };
+
+                // Debug information
+                _logger.LogInformation("Applicants pagination - Page: {Page}, PageSize: {PageSize}, TotalItems: {TotalItems}, TotalPages: {TotalPages}",
+                    response.Page, response.PageSize, response.TotalItems, response.TotalPages);
+
+                return View("Index", viewModel);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, "loading applicants", jobPostId);
+            }
+        }
+        else
+        {
+            // Show job post selection (existing logic)
+            try
+            {
+                ViewData["Title"] = "Applicant Management";
+                var jobPosts = await _jobPostService.GetAllJobPostsAsync();
+
+                var viewModel = new ApplicantIndexViewModel
+                {
+                    Applicants = new List<ApplicantResponse>(),
+                    JobPosts = jobPosts,
+                    SelectedJobPostId = null
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading job posts for applicant selection");
+                TempData["Error"] = "An error occurred while loading job posts.";
+                return View(new ApplicantIndexViewModel
+                {
+                    Applicants = new List<ApplicantResponse>(),
+                    JobPosts = new List<JobPostListResponse>(),
+                    SelectedJobPostId = null
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Paged applicants with filtering and sorting
+    /// </summary>
+    public async Task<IActionResult> Paged(int jobPostId, ApplicantPagedRequest request)
     {
         try
         {
             ViewData["Title"] = "Applicant Management";
 
-            List<ApplicantResponse> applicants = new();
-            List<JobPostListResponse> jobPosts = new();
+            // Set defaults and validate pagination parameters
+            request.SetDefaults(GetDefaultPageSize());
+            var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+            request.Page = page;
+            request.PageSize = pageSize;
+            request.JobPostId = jobPostId;
 
-            if (jobPostId.HasValue)
+            // Get job post info
+            var jobPost = await _jobPostService.GetJobPostAsync(jobPostId);
+            if (jobPost == null)
             {
-                applicants = await _applicantService.GetApplicantsAsync(jobPostId.Value);
-                var jobPost = await _jobPostService.GetJobPostAsync(jobPostId.Value);
-                if (jobPost != null)
-                {
-                    ViewData["JobPostTitle"] = jobPost.Title;
-                    ViewData["JobPostId"] = jobPostId.Value;
-                }
-            }
-            else
-            {
-                jobPosts = await _jobPostService.GetAllJobPostsAsync();
+                TempData["Error"] = "Job post not found.";
+                return RedirectToAction("Index");
             }
 
-            var viewModel = new ApplicantIndexViewModel
+            // Get paged data
+            var response = await _applicantService.GetApplicantsPagedAsync(request);
+            if (response == null)
             {
-                Applicants = applicants,
-                JobPosts = jobPosts,
-                SelectedJobPostId = jobPostId
+                TempData["Error"] = "An error occurred while loading applicants.";
+                return View(new ApplicantPagedViewModel());
+            }
+
+            // Create view model
+            var viewModel = new ApplicantPagedViewModel
+            {
+                Data = response,
+                Pagination = CreatePaginationInfo(response),
+                Filters = request,
+                Statuses = GetApplicantStatuses(),
+                JobPostTitle = jobPost.Title,
+                JobPostId = jobPostId
             };
 
-            return View(viewModel);
+            return View("Index", viewModel);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading applicants");
-            TempData["Error"] = "An error occurred while loading applicants.";
-            return View(new ApplicantIndexViewModel
+            return HandleException(ex, "loading applicants", jobPostId);
+        }
+    }
+
+    /// <summary>
+    /// AJAX endpoint for paged applicants
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetPaged(int jobPostId, ApplicantPagedRequest request)
+    {
+        try
+        {
+            // Set defaults and validate pagination parameters
+            request.SetDefaults(GetDefaultPageSize());
+            var (page, pageSize) = ValidatePaginationParameters(request.Page, request.PageSize);
+            request.Page = page;
+            request.PageSize = pageSize;
+            request.JobPostId = jobPostId;
+
+            // Get paged data
+            var response = await _applicantService.GetApplicantsPagedAsync(request);
+            if (response == null)
             {
-                Applicants = new List<ApplicantResponse>(),
-                JobPosts = new List<JobPostListResponse>(),
-                SelectedJobPostId = null
-            });
+                return CreateErrorResponse("An error occurred while loading applicants.");
+            }
+
+            return CreateSuccessResponse(response);
+        }
+        catch (Exception ex)
+        {
+            return CreateErrorResponse($"An error occurred while loading applicants: {ex.Message}");
         }
     }
 
@@ -417,5 +547,10 @@ public class ApplicantsController : Controller
             _logger.LogError(ex, "Error getting CV statuses for applicant {ApplicantId}", applicantId);
             return Json(new List<object>());
         }
+    }
+
+    private List<string> GetApplicantStatuses()
+    {
+        return new List<string> { "Pending", "Screened", "Rejected", "Accepted" };
     }
 }

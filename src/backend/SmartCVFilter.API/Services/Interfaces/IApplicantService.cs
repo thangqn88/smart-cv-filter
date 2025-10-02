@@ -10,5 +10,8 @@ public interface IApplicantService
     Task<ApplicantResponse> UpdateApplicantAsync(int id, UpdateApplicantRequest request);
     Task<bool> DeleteApplicantAsync(int id);
     Task<bool> StartScreeningAsync(int jobPostId, ScreeningRequest request, string userId, bool isAdmin = false);
+
+    // Paged methods
+    Task<ApplicantPagedResponse> GetApplicantsPagedAsync(ApplicantPagedRequest request, string userId, bool isAdmin = false);
 }
 
