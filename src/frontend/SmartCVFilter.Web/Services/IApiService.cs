@@ -34,6 +34,14 @@ public interface IApplicantService
     Task<bool> StartScreeningAsync(int jobPostId, ScreeningRequest request);
 }
 
+public interface ICVUploadService
+{
+    Task<bool> UploadCVAsync(int applicantId, IFormFile file);
+    Task<bool> DeleteCVAsync(int applicantId, int cvFileId);
+    Task<byte[]> DownloadCVAsync(int applicantId, int cvFileId);
+    Task<string> ExtractTextFromCVAsync(int applicantId, int cvFileId);
+}
+
 public interface IScreeningService
 {
     Task<ScreeningResultResponse?> GetScreeningResultAsync(int resultId);

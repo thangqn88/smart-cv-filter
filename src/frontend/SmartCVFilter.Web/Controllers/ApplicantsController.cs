@@ -10,15 +10,18 @@ public class ApplicantsController : Controller
 {
     private readonly IApplicantService _applicantService;
     private readonly IJobPostService _jobPostService;
+    private readonly ICVUploadService _cvUploadService;
     private readonly ILogger<ApplicantsController> _logger;
 
     public ApplicantsController(
         IApplicantService applicantService,
         IJobPostService jobPostService,
+        ICVUploadService cvUploadService,
         ILogger<ApplicantsController> logger)
     {
         _applicantService = applicantService;
         _jobPostService = jobPostService;
+        _cvUploadService = cvUploadService;
         _logger = logger;
     }
 
@@ -281,5 +284,122 @@ public class ApplicantsController : Controller
         }
 
         return RedirectToAction("Index", new { jobPostId });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadCV(int jobPostId, int id, IFormFile cvFile)
+    {
+        try
+        {
+            if (cvFile == null || cvFile.Length == 0)
+            {
+                TempData["Error"] = "Please select a file to upload.";
+                return RedirectToAction("Details", new { jobPostId, id });
+            }
+
+            // Validate file type and size
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".txt" };
+            var fileExtension = Path.GetExtension(cvFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                TempData["Error"] = "Invalid file format. Please upload PDF, DOC, DOCX, or TXT files.";
+                return RedirectToAction("Details", new { jobPostId, id });
+            }
+
+            var maxSize = 10 * 1024 * 1024; // 10MB
+            if (cvFile.Length > maxSize)
+            {
+                TempData["Error"] = "File size too large. Maximum size is 10MB.";
+                return RedirectToAction("Details", new { jobPostId, id });
+            }
+
+            var result = await _cvUploadService.UploadCVAsync(id, cvFile);
+            if (result)
+            {
+                TempData["Success"] = "CV uploaded successfully!";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to upload CV. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading CV for applicant {ApplicantId}", id);
+            TempData["Error"] = "An error occurred while uploading the CV.";
+        }
+
+        return RedirectToAction("Details", new { jobPostId, id });
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> DownloadCV(int jobPostId, int id, int cvFileId)
+    {
+        try
+        {
+            var fileBytes = await _cvUploadService.DownloadCVAsync(id, cvFileId);
+
+            // Get the CV file info to determine the correct filename
+            var applicant = await _applicantService.GetApplicantAsync(jobPostId, id);
+            var cvFile = applicant?.CVFiles.FirstOrDefault(f => f.Id == cvFileId);
+            var fileName = cvFile?.FileName ?? $"cv_{cvFileId}";
+
+            return File(fileBytes, "application/octet-stream", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading CV {CvFileId} for applicant {ApplicantId}", cvFileId, id);
+            TempData["Error"] = "An error occurred while downloading the CV.";
+            return RedirectToAction("Details", new { jobPostId, id });
+        }
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteCV(int jobPostId, int id, int cvFileId)
+    {
+        try
+        {
+            var result = await _cvUploadService.DeleteCVAsync(id, cvFileId);
+            if (result)
+            {
+                TempData["Success"] = "CV deleted successfully!";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to delete CV.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting CV {CvFileId} for applicant {ApplicantId}", cvFileId, id);
+            TempData["Error"] = "An error occurred while deleting the CV.";
+        }
+
+        return RedirectToAction("Details", new { jobPostId, id });
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExtractText(int jobPostId, int id, int cvFileId)
+    {
+        try
+        {
+            var extractedText = await _cvUploadService.ExtractTextFromCVAsync(id, cvFileId);
+            TempData["ExtractedText"] = extractedText;
+            TempData["CvFileId"] = cvFileId;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting text from CV {CvFileId} for applicant {ApplicantId}", cvFileId, id);
+            TempData["Error"] = "An error occurred while extracting text from the CV.";
+        }
+
+        return RedirectToAction("Details", new { jobPostId, id });
     }
 }

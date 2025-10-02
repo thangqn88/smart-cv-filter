@@ -181,17 +181,37 @@
         }
 
         <!-- CV Files -->
-        @if (Model.CVFiles.Any())
-        {
-            <div class="card shadow-lg border-0 mb-4">
-                <div class="card-header bg-white border-0 py-4">
-                    <h5 class="mb-1 fw-bold text-dark">
-                        <i class="bi bi-file-earmark-pdf text-primary me-2"></i>
-                        CV Files (@Model.CVFiles.Count)
-                    </h5>
-                    <p class="text-muted mb-0">Uploaded candidate documents</p>
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-file-earmark-pdf text-primary me-2"></i>
+                    CV Files (@Model.CVFiles.Count)
+                </h5>
+                <p class="text-muted mb-0">Uploaded candidate documents</p>
+            </div>
+            <div class="card-body p-4">
+                <!-- CV Upload Form -->
+                <div class="mb-4">
+                    <form asp-action="UploadCV" asp-route-jobPostId="@Model.JobPostId" asp-route-id="@Model.Id"
+                        method="post" enctype="multipart/form-data" class="row g-3">
+                        @Html.AntiForgeryToken()
+                        <div class="col-md-8">
+                            <label for="cvFile" class="form-label fw-bold">Upload New CV</label>
+                            <input type="file" class="form-control" id="cvFile" name="cvFile"
+                                accept=".pdf,.doc,.docx,.txt" required>
+                            <div class="form-text">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload me-1"></i>
+                                Upload CV
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="card-body p-0">
+
+                @if (Model.CVFiles.Any())
+                {
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
@@ -210,38 +230,57 @@
                                     <tr class="border-bottom">
                                         <td class="px-4 py-3">
                                             <div class="d-flex align-items-center">
-                                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                <i
+                                                    class="bi @(file.FileExtension == ".pdf" ? "bi-file-earmark-pdf text-danger" : file.FileExtension == ".doc" || file.FileExtension == ".docx" ? "bi-file-earmark-word text-primary" : "bi-file-earmark-text text-info") me-2"></i>
                                                 <span class="fw-bold text-dark">@file.FileName</span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="badge bg-light text-dark">@file.FileExtension</span>
                                         </td>
-                                        <td class="px-4 py-3 text-muted">@file.FileSize bytes</td>
+                                        <td class="px-4 py-3 text-muted">@(file.FileSize / 1024) KB</td>
                                         <td class="px-4 py-3 text-muted">
                                             <i class="bi bi-calendar me-1"></i>
                                             @file.UploadedDate.ToString("MMM dd, yyyy")
                                         </td>
                                         <td class="px-4 py-3">
                                             <span
-                                                class="badge @(file.Status == "Processed" ? "bg-success" : "bg-warning") px-3 py-2">
+                                                class="badge @(file.Status == "Processed" ? "bg-success" : file.Status == "Processing" ? "bg-info" : file.Status == "Error" ? "bg-danger" : "bg-warning") px-3 py-2">
                                                 <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
                                                 @file.Status
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-center">
-                                            <button class="btn btn-outline-primary btn-sm" onclick="downloadFile(@file.Id)">
-                                                <i class="bi bi-download"></i>
-                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <a href="@Url.Action("DownloadCV", new { jobPostId = Model.JobPostId, id = Model.Id, cvFileId = file.Id })"
+                                                    class="btn btn-outline-primary btn-sm" title="Download">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-info btn-sm"
+                                                    onclick="extractText(@file.Id)" title="Extract Text">
+                                                    <i class="bi bi-file-text"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                    onclick="confirmDeleteCV('@file.FileName', @file.Id)" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-file-earmark-pdf text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No CV files uploaded yet</p>
+                    </div>
+                }
             </div>
-        }
+        </div>
 
         <!-- AI Screening Results -->
         @if (Model.ScreeningResults.Any())
@@ -418,6 +457,40 @@
     @Html.AntiForgeryToken()
 </form>
 
+<!-- CV Delete Form -->
+<form id="deleteCVForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<!-- Extracted Text Modal -->
+<div class="modal fade" id="extractedTextModal" tabindex="-1" aria-labelledby="extractedTextModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extractedTextModalLabel">
+                    <i class="bi bi-file-text text-primary me-2"></i>
+                    Extracted Text
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="extractedTextContent" class="bg-light p-3 rounded"
+                    style="max-height: 400px; overflow-y: auto;">
+                    <!-- Extracted text will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">
+                    <i class="bi bi-clipboard me-1"></i>
+                    Copy Text
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         function deleteApplicant(jobPostId, applicantId) {
@@ -426,9 +499,69 @@
             form.submit();
         }
 
-        function downloadFile(fileId) {
-            // TODO: Implement file download functionality
-            alert('File download functionality will be implemented in a future update.');
+        function confirmDeleteCV(fileName, cvFileId) {
+            if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+                deleteCV(cvFileId);
+            }
+        }
+
+        function deleteCV(cvFileId) {
+            const form = document.getElementById('deleteCVForm');
+            form.action = '@Url.Action("DeleteCV")/' + @Model.JobPostId + '/' + @Model.Id + '/' + cvFileId;
+            form.submit();
+        }
+
+        function extractText(cvFileId) {
+            // Show loading state
+            const modal = new bootstrap.Modal(document.getElementById('extractedTextModal'));
+            document.getElementById('extractedTextContent').innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Extracting text...</p></div>';
+            modal.show();
+
+            // Submit form to extract text
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("ExtractText")/' + @Model.JobPostId + '/' + @Model.Id + '/' + cvFileId;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = token;
+            form.appendChild(tokenInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function copyToClipboard() {
+            const textContent = document.getElementById('extractedTextContent').textContent;
+            navigator.clipboard.writeText(textContent).then(function () {
+                // Show success message
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-success');
+
+                setTimeout(function () {
+                    button.innerHTML = originalText;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-primary');
+                }, 2000);
+            });
+        }
+
+        // Check for extracted text in TempData and display it
+        @if (TempData["ExtractedText"] != null)
+            {
+                <text>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const extractedText = '@Html.Raw(TempData["ExtractedText"])';
+                    document.getElementById('extractedTextContent').innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit;">' + extractedText + '</pre>';
+                    const modal = new bootstrap.Modal(document.getElementById('extractedTextModal'));
+                    modal.show();
+                    });
+                </text>
         }
     </script>
 }

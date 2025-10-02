@@ -176,7 +176,7 @@ public class JobPostService : IJobPostService
         var jobPosts = await _context.JobPosts
             .Where(j => j.Status == "Active")
             .Include(j => j.Applicants)
-            .OrderByDescending(j => j.PostedDate)
+            .OrderByDescending(j => j.Id)
             .ToListAsync();
 
         return jobPosts.Select(jp => new JobPostListResponse
@@ -198,7 +198,7 @@ public class JobPostService : IJobPostService
         var jobPosts = await _context.JobPosts
             .Include(j => j.Applicants)
             .Include(j => j.User)
-            .OrderByDescending(j => j.PostedDate)
+            .OrderByDescending(j => j.Id)
             .ToListAsync();
 
         return jobPosts.Select(jp => new JobPostListResponse
