@@ -157,9 +157,26 @@ public class AuthController : Controller
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            await _apiService.LogoutAsync();
+            _notificationService.AddInfo("You have been logged out successfully.", "Logout");
+            return RedirectToAction("Login");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during logout");
+            _notificationService.AddError("An error occurred during logout.", "Logout Error");
+            return RedirectToAction("Index", "Home");
+        }
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> LogoutPost()
     {
         try
         {
