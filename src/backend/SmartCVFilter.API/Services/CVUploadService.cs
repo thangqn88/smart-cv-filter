@@ -193,5 +193,30 @@ public class CVUploadService : ICVUploadService
         await Task.Delay(100); // Simulate processing time
         return "Word document text extraction not implemented yet. Please use text files for now.";
     }
+
+    public async Task<List<CVFileStatusDto>> GetCVFileStatusesAsync(int applicantId)
+    {
+        try
+        {
+            var cvFiles = await _context.CVFiles
+                .Where(cf => cf.ApplicantId == applicantId)
+                .Select(cf => new CVFileStatusDto
+                {
+                    Id = cf.Id,
+                    FileName = cf.FileName,
+                    Status = cf.Status,
+                    UploadedDate = cf.UploadedDate,
+                    LastUpdated = cf.UploadedDate // In a real app, you'd have a LastUpdated field
+                })
+                .ToListAsync();
+
+            return cvFiles;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting CV file statuses for applicant {ApplicantId}", applicantId);
+            return new List<CVFileStatusDto>();
+        }
+    }
 }
 

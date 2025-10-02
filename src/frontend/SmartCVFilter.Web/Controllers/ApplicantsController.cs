@@ -402,4 +402,20 @@ public class ApplicantsController : Controller
 
         return RedirectToAction("Details", new { jobPostId, id });
     }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetCVStatuses(int applicantId)
+    {
+        try
+        {
+            var statuses = await _cvUploadService.GetCVFileStatusesAsync(applicantId);
+            return Json(statuses);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting CV statuses for applicant {ApplicantId}", applicantId);
+            return Json(new List<object>());
+        }
+    }
 }

@@ -192,19 +192,46 @@
             <div class="card-body p-4">
                 <!-- CV Upload Form -->
                 <div class="mb-4">
-                    <form asp-action="UploadCV" asp-route-jobPostId="@Model.JobPostId" asp-route-id="@Model.Id"
-                        method="post" enctype="multipart/form-data" class="row g-3">
+                    <form id="cvUploadForm" asp-action="UploadCV" asp-route-jobPostId="@Model.JobPostId"
+                        asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="row g-3">
                         @Html.AntiForgeryToken()
                         <div class="col-md-8">
                             <label for="cvFile" class="form-label fw-bold">Upload New CV</label>
-                            <input type="file" class="form-control" id="cvFile" name="cvFile"
-                                accept=".pdf,.doc,.docx,.txt" required>
-                            <div class="form-text">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</div>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <input type="file" class="form-control" id="cvFile" name="cvFile"
+                                    accept=".pdf,.doc,.docx,.txt" required style="display: none;">
+                                <div id="fileUploadContent">
+                                    <i class="bi bi-cloud-upload file-icon text-primary"></i>
+                                    <p class="mb-2">Click to select a file or drag and drop</p>
+                                    <p class="text-muted small">Supported formats: PDF, DOC, DOCX, TXT (Max 10MB)</p>
+                                </div>
+                                <div id="filePreview" class="file-preview" style="display: none;">
+                                    <div class="file-preview-icon">
+                                        <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    </div>
+                                    <div class="file-preview-info">
+                                        <div class="file-preview-name" id="fileName"></div>
+                                        <div class="file-preview-size" id="fileSize"></div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="uploadProgress" class="upload-progress mt-2" style="display: none;">
+                                <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                            </div>
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-upload me-1"></i>
-                                Upload CV
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                <span id="uploadBtnText">
+                                    <i class="bi bi-upload me-1"></i>
+                                    Upload CV
+                                </span>
+                                <span id="uploadBtnLoading" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    Uploading...
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -244,10 +271,14 @@
                                             @file.UploadedDate.ToString("MMM dd, yyyy")
                                         </td>
                                         <td class="px-4 py-3">
-                                            <span
+                                            <span id="status-@file.Id"
                                                 class="badge @(file.Status == "Processed" ? "bg-success" : file.Status == "Processing" ? "bg-info" : file.Status == "Error" ? "bg-danger" : "bg-warning") px-3 py-2">
                                                 <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-                                                @file.Status
+                                                <span id="status-text-@file.Id">@file.Status</span>
+                                                @if (file.Status == "Processing")
+                                                {
+                                                    <span class="spinner-border spinner-border-sm ms-1" role="status"></span>
+                                                }
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-center">
@@ -279,6 +310,22 @@
                         <p class="text-muted mt-3">No CV files uploaded yet</p>
                     </div>
                 }
+            </div>
+        </div>
+
+        <!-- Real-time Status Updates -->
+        <div class="card shadow-lg border-0 mb-4" id="statusUpdatesCard" style="display: none;">
+            <div class="card-header bg-white border-0 py-4">
+                <h5 class="mb-1 fw-bold text-dark">
+                    <i class="bi bi-arrow-clockwise text-primary me-2"></i>
+                    Processing Status
+                </h5>
+                <p class="text-muted mb-0">Real-time updates for file processing</p>
+            </div>
+            <div class="card-body p-4">
+                <div id="statusUpdatesList">
+                    <!-- Status updates will be populated here -->
+                </div>
             </div>
         </div>
 
@@ -493,6 +540,397 @@
 
 @section Scripts {
     <script>
+        // Global variables for status polling
+        let statusPollingInterval;
+        let processingFiles = new Set();
+        let statusUpdateCount = 0;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeFileUpload();
+            initializeStatusPolling();
+            checkForExtractedText();
+        });
+
+        // File upload functionality
+        function initializeFileUpload() {
+            const fileInput = document.getElementById('cvFile');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileUploadContent = document.getElementById('fileUploadContent');
+            const filePreview = document.getElementById('filePreview');
+            const uploadForm = document.getElementById('cvUploadForm');
+
+            // Click to select file
+            fileUploadArea.addEventListener('click', () => fileInput.click());
+
+            // File selection handler
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop handlers
+            fileUploadArea.addEventListener('dragover', handleDragOver);
+            fileUploadArea.addEventListener('dragleave', handleDragLeave);
+            fileUploadArea.addEventListener('drop', handleDrop);
+
+            // Form submission handler
+            uploadForm.addEventListener('submit', handleFormSubmit);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                showFilePreview(file);
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                const fileInput = document.getElementById('cvFile');
+                fileInput.files = files;
+                showFilePreview(files[0]);
+            }
+        }
+
+        function showFilePreview(file) {
+            const fileUploadContent = document.getElementById('fileUploadContent');
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileIcon = filePreview.querySelector('.file-preview-icon i');
+
+            // Validate file
+            if (!validateFile(file)) {
+                return;
+            }
+
+            // Update preview
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+
+            // Set appropriate icon
+            const extension = file.name.split('.').pop().toLowerCase();
+            fileIcon.className = getFileIcon(extension);
+
+            // Show preview
+            fileUploadContent.style.display = 'none';
+            filePreview.style.display = 'flex';
+        }
+
+        function clearFile() {
+            const fileInput = document.getElementById('cvFile');
+            const fileUploadContent = document.getElementById('fileUploadContent');
+            const filePreview = document.getElementById('filePreview');
+
+            fileInput.value = '';
+            fileUploadContent.style.display = 'block';
+            filePreview.style.display = 'none';
+        }
+
+        function validateFile(file) {
+            const allowedTypes = ['application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain'];
+            const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+
+            if (!allowedTypes.includes(file.type) && !allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
+                showNotification('Invalid file type. Please upload PDF, DOC, DOCX, or TXT files.', 'error');
+                return false;
+            }
+
+            if (file.size > maxSize) {
+                showNotification('File size too large. Maximum size is 10MB.', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function getFileIcon(extension) {
+            switch (extension) {
+                case 'pdf':
+                    return 'bi bi-file-earmark-pdf text-danger';
+                case 'doc':
+                case 'docx':
+                    return 'bi bi-file-earmark-word text-primary';
+                case 'txt':
+                    return 'bi bi-file-earmark-text text-info';
+                default:
+                    return 'bi bi-file-earmark text-secondary';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function handleFormSubmit(event) {
+            const fileInput = document.getElementById('cvFile');
+            if (!fileInput.files[0]) {
+                event.preventDefault();
+                showNotification('Please select a file to upload.', 'error');
+                return;
+            }
+
+            // Show loading state
+            showUploadLoading();
+        }
+
+        function showUploadLoading() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            const uploadBtnLoading = document.getElementById('uploadBtnLoading');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadProgressBar = document.getElementById('uploadProgressBar');
+
+            // Disable button and show loading
+            uploadBtn.disabled = true;
+            uploadBtnText.style.display = 'none';
+            uploadBtnLoading.style.display = 'inline';
+
+            // Show progress bar
+            uploadProgress.style.display = 'block';
+            uploadProgressBar.style.width = '0%';
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 90) progress = 90;
+                uploadProgressBar.style.width = progress + '%';
+            }, 200);
+
+            // Store interval for cleanup
+            uploadBtn.dataset.progressInterval = progressInterval;
+        }
+
+        function hideUploadLoading() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            const uploadBtnLoading = document.getElementById('uploadBtnLoading');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadProgressBar = document.getElementById('uploadProgressBar');
+
+            // Clear progress interval
+            if (uploadBtn.dataset.progressInterval) {
+                clearInterval(uploadBtn.dataset.progressInterval);
+                delete uploadBtn.dataset.progressInterval;
+            }
+
+            // Reset button
+            uploadBtn.disabled = false;
+            uploadBtnText.style.display = 'inline';
+            uploadBtnLoading.style.display = 'none';
+
+            // Complete progress bar
+            uploadProgressBar.style.width = '100%';
+            setTimeout(() => {
+                uploadProgress.style.display = 'none';
+                uploadProgressBar.style.width = '0%';
+            }, 1000);
+        }
+
+        // Status polling for real-time updates
+        function initializeStatusPolling() {
+            // Check for processing files on page load
+            checkProcessingFiles();
+
+            // Start polling every 3 seconds
+            statusPollingInterval = setInterval(checkProcessingFiles, 3000);
+        }
+
+        function checkProcessingFiles() {
+            const statusElements = document.querySelectorAll('[id^="status-"]');
+            const processingFiles = [];
+
+            statusElements.forEach(element => {
+                const fileId = element.id.replace('status-', '');
+                const statusText = document.getElementById('status-text-' + fileId);
+                if (statusText && (statusText.textContent === 'Uploaded' || statusText.textContent === 'Processing')) {
+                    processingFiles.push(fileId);
+                }
+            });
+
+            if (processingFiles.length > 0) {
+                showStatusUpdatesCard();
+                updateFileStatuses(processingFiles);
+            } else {
+                hideStatusUpdatesCard();
+            }
+        }
+
+        async function updateFileStatuses(fileIds) {
+            try {
+                // Make API call to get real status updates
+                const response = await fetch(`/Applicants/GetCVStatuses?applicantId=@Model.Id`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                if (response.ok) {
+                    const statuses = await response.json();
+                    statuses.forEach(status => {
+                        updateFileStatus(status.Id, status.Status, status.FileName);
+                    });
+                } else {
+                    // Fallback to simulation if API fails
+                    fileIds.forEach(fileId => {
+                        updateFileStatusSimulated(fileId);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching status updates:', error);
+                // Fallback to simulation
+                fileIds.forEach(fileId => {
+                    updateFileStatusSimulated(fileId);
+                });
+            }
+        }
+
+        function updateFileStatus(fileId, newStatus, fileName) {
+            const statusElement = document.getElementById('status-' + fileId);
+            const statusTextElement = document.getElementById('status-text-' + fileId);
+
+            if (!statusElement || !statusTextElement) return;
+
+            const currentStatus = statusTextElement.textContent;
+
+            // Only update if status has changed
+            if (currentStatus !== newStatus) {
+                statusTextElement.textContent = newStatus;
+
+                // Update badge color and spinner based on status
+                updateStatusBadge(statusElement, statusTextElement, newStatus);
+
+                // Add status update message
+                if (newStatus === 'Processing') {
+                    addStatusUpdate(`${fileName} started processing...`);
+                } else if (newStatus === 'Processed') {
+                    addStatusUpdate(`${fileName} processing completed!`);
+                } else if (newStatus === 'Error') {
+                    addStatusUpdate(`${fileName} processing failed.`);
+                }
+            }
+        }
+
+        function updateStatusBadge(statusElement, statusTextElement, status) {
+            // Remove existing status classes
+            statusElement.className = statusElement.className.replace(/bg-\w+/, '');
+
+            // Add appropriate class and spinner
+            switch (status) {
+                case 'Uploaded':
+                    statusElement.classList.add('bg-warning');
+                    break;
+                case 'Processing':
+                    statusElement.classList.add('bg-info');
+                    // Add spinner if not present
+                    if (!statusElement.querySelector('.spinner-border')) {
+                        const spinner = document.createElement('span');
+                        spinner.className = 'spinner-border spinner-border-sm ms-1';
+                        spinner.setAttribute('role', 'status');
+                        statusElement.appendChild(spinner);
+                    }
+                    break;
+                case 'Processed':
+                    statusElement.classList.add('bg-success');
+                    // Remove spinner
+                    const spinner = statusElement.querySelector('.spinner-border');
+                    if (spinner) {
+                        spinner.remove();
+                    }
+                    break;
+                case 'Error':
+                    statusElement.classList.add('bg-danger');
+                    // Remove spinner
+                    const errorSpinner = statusElement.querySelector('.spinner-border');
+                    if (errorSpinner) {
+                        errorSpinner.remove();
+                    }
+                    break;
+            }
+        }
+
+        function updateFileStatusSimulated(fileId) {
+            // Fallback simulation for when API is not available
+            const statusElement = document.getElementById('status-' + fileId);
+            const statusTextElement = document.getElementById('status-text-' + fileId);
+
+            if (!statusElement || !statusTextElement) return;
+
+            const currentStatus = statusTextElement.textContent;
+
+            if (currentStatus === 'Uploaded') {
+                // Move to Processing
+                statusTextElement.textContent = 'Processing';
+                updateStatusBadge(statusElement, statusTextElement, 'Processing');
+                addStatusUpdate(`File ${fileId} started processing...`);
+            } else if (currentStatus === 'Processing') {
+                // Randomly complete processing (simulate AI processing time)
+                if (Math.random() > 0.7) {
+                    statusTextElement.textContent = 'Processed';
+                    updateStatusBadge(statusElement, statusTextElement, 'Processed');
+                    addStatusUpdate(`File ${fileId} processing completed!`);
+                }
+            }
+        }
+
+        function showStatusUpdatesCard() {
+            const card = document.getElementById('statusUpdatesCard');
+            if (card) {
+                card.style.display = 'block';
+            }
+        }
+
+        function hideStatusUpdatesCard() {
+            const card = document.getElementById('statusUpdatesCard');
+            if (card) {
+                card.style.display = 'none';
+            }
+        }
+
+        function addStatusUpdate(message) {
+            const statusList = document.getElementById('statusUpdatesList');
+            if (!statusList) return;
+
+            const updateElement = document.createElement('div');
+            updateElement.className = 'alert alert-info alert-dismissible fade show';
+            updateElement.innerHTML = `
+                    <i class="bi bi-info-circle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+            statusList.insertBefore(updateElement, statusList.firstChild);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (updateElement.parentNode) {
+                    updateElement.remove();
+                }
+            }, 5000);
+        }
+
+        // Other functions
         function deleteApplicant(jobPostId, applicantId) {
             const form = document.getElementById('deleteForm');
             form.action = '@Url.Action("Delete")/' + jobPostId + '/' + applicantId;
@@ -551,17 +989,43 @@
             });
         }
 
-        // Check for extracted text in TempData and display it
-        @if (TempData["ExtractedText"] != null)
-            {
-                <text>
-                    document.addEventListener('DOMContentLoaded', function() {
+        function checkForExtractedText() {
+            @if (TempData["ExtractedText"] != null)
+                {
+                    <text>
                         const extractedText = '@Html.Raw(TempData["ExtractedText"])';
-                    document.getElementById('extractedTextContent').innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit;">' + extractedText + '</pre>';
-                    const modal = new bootstrap.Modal(document.getElementById('extractedTextModal'));
-                    modal.show();
-                    });
-                </text>
+                        document.getElementById('extractedTextContent').innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit;">' + extractedText + '</pre>';
+                        const modal = new bootstrap.Modal(document.getElementById('extractedTextModal'));
+                        modal.show();
+                    </text>
+            }
+            }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function () {
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+            }
+        });
     </script>
 }

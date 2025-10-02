@@ -92,4 +92,18 @@ public class CVUploadService : ICVUploadService
             return string.Empty;
         }
     }
+
+    public async Task<List<CVFileStatusResponse>> GetCVFileStatusesAsync(int applicantId)
+    {
+        try
+        {
+            var response = await _apiService.MakeRequestAsync<List<CVFileStatusResponse>>($"applicants/{applicantId}/cvupload/status", HttpMethod.Get);
+            return response ?? new List<CVFileStatusResponse>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting CV file statuses for applicant {ApplicantId}", applicantId);
+            return new List<CVFileStatusResponse>();
+        }
+    }
 }

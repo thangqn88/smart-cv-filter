@@ -94,5 +94,20 @@ public class CVUploadController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while extracting text from the file." });
         }
     }
+
+    [HttpGet("status")]
+    public async Task<ActionResult> GetCVFileStatuses(int applicantId)
+    {
+        try
+        {
+            var statuses = await _cvUploadService.GetCVFileStatusesAsync(applicantId);
+            return Ok(statuses);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting CV file statuses for applicant {ApplicantId}", applicantId);
+            return StatusCode(500, new { message = "An error occurred while getting file statuses." });
+        }
+    }
 }
 

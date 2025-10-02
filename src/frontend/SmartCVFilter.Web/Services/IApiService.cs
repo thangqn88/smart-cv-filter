@@ -40,6 +40,16 @@ public interface ICVUploadService
     Task<bool> DeleteCVAsync(int applicantId, int cvFileId);
     Task<byte[]> DownloadCVAsync(int applicantId, int cvFileId);
     Task<string> ExtractTextFromCVAsync(int applicantId, int cvFileId);
+    Task<List<CVFileStatusResponse>> GetCVFileStatusesAsync(int applicantId);
+}
+
+public class CVFileStatusResponse
+{
+    public int Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime UploadedDate { get; set; }
+    public DateTime? LastUpdated { get; set; }
 }
 
 public interface IScreeningService
