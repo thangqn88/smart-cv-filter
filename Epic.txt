@@ -83,10 +83,14 @@ mkdir -p src/backend/{controllers,models,routes,middleware,services,config}
 6. **Implement real-time updates** for AI processing
 
 #### **Phase 3: AI Integration (Priority 3)**
-1. **Set up Gemini AI API** credentials
-2. **Implement CV parsing** service
-3. **Create AI prompt templates** for different job types
-4. **Add result caching** and optimization
+1. **Create AI prompt templates** for different job types
+2. **Implement CV parsing** service. 
+  When user at http://localhost:5002/Applicants?jobPostId=15, click Add Applicants.
+  - User should upload CV related to JobPostId
+  - backend will process upload and auto create new Applicant if not exists.
+  - Backend will create AI prompt to screning applicant infor with JobPost
+  - Read result from Gemini API and update to Screning result.
+
 
 #### **Phase 4: Testing & Deployment (Priority 4)**
 1. **Write comprehensive tests** for all components

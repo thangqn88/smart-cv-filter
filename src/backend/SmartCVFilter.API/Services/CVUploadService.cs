@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SmartCVFilter.API.Data;
 using SmartCVFilter.API.Models;
@@ -13,17 +12,20 @@ public class CVUploadService : ICVUploadService
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<CVUploadService> _logger;
+    private readonly IScreeningService _screeningService;
 
     public CVUploadService(
         ApplicationDbContext context,
         IConfiguration configuration,
         IWebHostEnvironment environment,
-        ILogger<CVUploadService> logger)
+        ILogger<CVUploadService> logger,
+        IScreeningService screeningService)
     {
         _context = context;
         _configuration = configuration;
         _environment = environment;
         _logger = logger;
+        _screeningService = screeningService;
     }
 
     public async Task<string> UploadCVAsync(IFormFile file, int applicantId)
@@ -126,6 +128,29 @@ public class CVUploadService : ICVUploadService
             cvFile.Status = "Processed";
             await _context.SaveChangesAsync();
 
+            // Automatically trigger AI screening after successful text extraction
+            int applicantId = cvFile.ApplicantId; // FIX: Get applicantId from cvFile
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // Get the applicant with job post information
+                    var applicant = await _context.Applicants
+                        .Include(a => a.JobPost)
+                        .FirstOrDefaultAsync(a => a.Id == applicantId);
+
+                    if (applicant != null)
+                    {
+                        await _screeningService.ProcessScreeningAsync(applicantId, applicant.JobPostId);
+                        _logger.LogInformation("Automatic screening triggered for applicant {ApplicantId} after CV processing", applicantId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error triggering automatic screening for applicant {ApplicantId}", applicantId);
+                }
+            });
+
             return extractedText;
         }
         catch (Exception ex)
@@ -180,18 +205,71 @@ public class CVUploadService : ICVUploadService
 
     private async Task<string> ExtractTextFromPdfAsync(string filePath)
     {
-        // For now, return a placeholder. In production, you would use a PDF library like iTextSharp
-        // or a cloud service for PDF text extraction
-        await Task.Delay(100); // Simulate processing time
-        return "PDF text extraction not implemented yet. Please use text files for now.";
+        try
+        {
+            // Using iText7 for PDF text extraction
+            using var pdfReader = new iText.Kernel.Pdf.PdfReader(filePath);
+            using var pdfDocument = new iText.Kernel.Pdf.PdfDocument(pdfReader);
+            var text = new StringBuilder();
+
+            for (int pageNum = 1; pageNum <= pdfDocument.GetNumberOfPages(); pageNum++)
+            {
+                var page = pdfDocument.GetPage(pageNum);
+                var strategy = new iText.Kernel.Pdf.Canvas.Parser.Listener.SimpleTextExtractionStrategy();
+                var currentText = iText.Kernel.Pdf.Canvas.Parser.PdfTextExtractor.GetTextFromPage(page, strategy);
+                text.AppendLine(currentText);
+            }
+
+            return text.ToString().Trim();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting text from PDF: {FilePath}", filePath);
+            return "Error extracting text from PDF file. Please ensure the file is not corrupted.";
+        }
     }
 
     private async Task<string> ExtractTextFromWordAsync(string filePath)
     {
-        // For now, return a placeholder. In production, you would use a library like DocumentFormat.OpenXml
-        // or a cloud service for Word document text extraction
-        await Task.Delay(100); // Simulate processing time
-        return "Word document text extraction not implemented yet. Please use text files for now.";
+        try
+        {
+            // Using DocumentFormat.OpenXml for Word document text extraction
+            using var wordDocument = DocumentFormat.OpenXml.Packaging.WordprocessingDocument.Open(filePath, false);
+            var body = wordDocument.MainDocumentPart?.Document?.Body;
+
+            if (body == null)
+                return string.Empty;
+
+            var text = new StringBuilder();
+            ExtractTextFromElement(body, text);
+
+            return text.ToString().Trim();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting text from Word document: {FilePath}", filePath);
+            return "Error extracting text from Word document. Please ensure the file is not corrupted.";
+        }
+    }
+
+    private void ExtractTextFromElement(DocumentFormat.OpenXml.OpenXmlElement element, StringBuilder text)
+    {
+        foreach (var child in element.Elements())
+        {
+            if (child is DocumentFormat.OpenXml.Wordprocessing.Text textElement)
+            {
+                text.Append(textElement.Text);
+            }
+            else if (child is DocumentFormat.OpenXml.Wordprocessing.Paragraph)
+            {
+                ExtractTextFromElement(child, text);
+                text.AppendLine();
+            }
+            else
+            {
+                ExtractTextFromElement(child, text);
+            }
+        }
     }
 
     public async Task<List<CVFileStatusDto>> GetCVFileStatusesAsync(int applicantId)

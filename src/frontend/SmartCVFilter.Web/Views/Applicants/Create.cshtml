@@ -1,5 +1,4 @@
-@using SmartCVFilter.Web.Models
-@model CreateApplicantRequest
+@model SmartCVFilter.Web.Models.CreateApplicantRequest
 @{
     ViewData["Title"] = "Add New Applicant";
     Layout = "_Layout";
@@ -28,6 +27,7 @@
 </div>
 
 <form asp-controller="Applicants" asp-action="Create" method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
     <input type="hidden" name="jobPostId" value="@jobPostId" />
 
     <div class="row">
@@ -220,15 +220,60 @@
 
             const previewContent = document.getElementById('previewContent');
             previewContent.innerHTML = `
-                                    <h6>${firstName} ${lastName}</h6>
-                                    <p class="text-muted">${email}</p>
-                                    <p class="text-muted">${phone}</p>
-                                `;
+                                                <h6>${firstName} ${lastName}</h6>
+                                                <p class="text-muted">${email}</p>
+                                                <p class="text-muted">${phone}</p>
+                                            `;
         }
 
         // Add event listeners for live preview
         document.querySelectorAll('input[name="FirstName"], input[name="LastName"], input[name="Email"], input[name="PhoneNumber"]').forEach(element => {
             element.addEventListener('input', updatePreview);
+        });
+
+        // Form validation debugging
+        document.querySelector('form').addEventListener('submit', function (e) {
+            console.log('Form submission started');
+
+            // Check form data
+            const formData = new FormData(this);
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+
+            // Check required fields
+            const firstName = document.querySelector('input[name="FirstName"]').value;
+            const lastName = document.querySelector('input[name="LastName"]').value;
+            const email = document.querySelector('input[name="Email"]').value;
+
+            console.log('Required fields check:');
+            console.log('FirstName:', firstName, 'Length:', firstName.length);
+            console.log('LastName:', lastName, 'Length:', lastName.length);
+            console.log('Email:', email, 'Length:', email.length);
+
+            if (!firstName || firstName.trim() === '') {
+                console.error('FirstName is empty');
+                e.preventDefault();
+                alert('First Name is required');
+                return false;
+            }
+
+            if (!lastName || lastName.trim() === '') {
+                console.error('LastName is empty');
+                e.preventDefault();
+                alert('Last Name is required');
+                return false;
+            }
+
+            if (!email || email.trim() === '') {
+                console.error('Email is empty');
+                e.preventDefault();
+                alert('Email is required');
+                return false;
+            }
+
+            console.log('Form validation passed, submitting...');
         });
 
         // Initialize preview

@@ -226,9 +226,56 @@ public class ApplicantsController : BaseController
     [Authorize]
     public IActionResult Create(int jobPostId)
     {
+        _logger.LogInformation("Create GET called with JobPostId: {JobPostId}", jobPostId);
         ViewData["Title"] = "Add New Applicant";
         ViewData["JobPostId"] = jobPostId;
-        return View();
+
+        // Initialize the model to ensure proper binding
+        var model = new CreateApplicantRequest();
+        return View(model);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public IActionResult TestCreate(int jobPostId)
+    {
+        _logger.LogInformation("TestCreate GET called with JobPostId: {JobPostId}", jobPostId);
+        ViewData["Title"] = "Test Create Applicant";
+        ViewData["JobPostId"] = jobPostId;
+
+        // Initialize the model
+        var model = new CreateApplicantRequest();
+        return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public IActionResult TestCreate(int jobPostId, CreateApplicantRequest model)
+    {
+        _logger.LogInformation("TestCreate POST called with JobPostId: {JobPostId}", jobPostId);
+        _logger.LogInformation("Model is null: {IsNull}", model == null);
+
+        // Log all form data
+        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
+        foreach (var key in Request.Form.Keys)
+        {
+            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+        }
+
+        if (model != null)
+        {
+            _logger.LogInformation("Model data - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
+                model.FirstName, model.LastName, model.Email);
+        }
+
+        return Json(new
+        {
+            success = true,
+            message = "Test form submitted successfully",
+            modelData = model,
+            formData = Request.Form.ToDictionary(k => k.Key, v => v.Value.ToString())
+        });
     }
 
     [HttpPost]
@@ -236,8 +283,61 @@ public class ApplicantsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int jobPostId, CreateApplicantRequest model)
     {
+        _logger.LogInformation("Create POST called with JobPostId: {JobPostId}", jobPostId);
+        _logger.LogInformation("Model is null: {IsNull}", model == null);
+
+        // Log all form data
+        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
+        foreach (var key in Request.Form.Keys)
+        {
+            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+        }
+
+        // Always create model from form data to ensure binding works
+        if (model == null || string.IsNullOrEmpty(model.FirstName))
+        {
+            _logger.LogWarning("Model binding failed - creating manually from form data");
+            model = new CreateApplicantRequest();
+        }
+
+        // Manually bind form data to model
+        if (Request.Form.ContainsKey("FirstName"))
+            model.FirstName = Request.Form["FirstName"].ToString() ?? string.Empty;
+        if (Request.Form.ContainsKey("LastName"))
+            model.LastName = Request.Form["LastName"].ToString() ?? string.Empty;
+        if (Request.Form.ContainsKey("Email"))
+            model.Email = Request.Form["Email"].ToString() ?? string.Empty;
+        if (Request.Form.ContainsKey("PhoneNumber"))
+            model.PhoneNumber = Request.Form["PhoneNumber"].ToString();
+        if (Request.Form.ContainsKey("LinkedInProfile"))
+            model.LinkedInProfile = Request.Form["LinkedInProfile"].ToString();
+        if (Request.Form.ContainsKey("PortfolioUrl"))
+            model.PortfolioUrl = Request.Form["PortfolioUrl"].ToString();
+        if (Request.Form.ContainsKey("CoverLetter"))
+            model.CoverLetter = Request.Form["CoverLetter"].ToString();
+
+        _logger.LogInformation("Model data - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
+            model.FirstName, model.LastName, model.Email);
+
+        // Clear ModelState and re-validate manually
+        ModelState.Clear();
+        TryValidateModel(model);
+
         if (!ModelState.IsValid)
         {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            _logger.LogWarning("ModelState is invalid. Errors: {Errors}", string.Join(", ", errors));
+
+            // Log specific field errors
+            foreach (var key in ModelState.Keys)
+            {
+                var state = ModelState[key];
+                if (state.Errors.Any())
+                {
+                    _logger.LogWarning("Field '{Key}' has errors: {Errors}", key, string.Join(", ", state.Errors.Select(e => e.ErrorMessage)));
+                }
+            }
+
             ViewData["JobPostId"] = jobPostId;
             return View(model);
         }
@@ -247,11 +347,13 @@ public class ApplicantsController : BaseController
             var result = await _applicantService.CreateApplicantAsync(jobPostId, model);
             if (result != null)
             {
+                _logger.LogInformation("Successfully created applicant {ApplicantId} for job post {JobPostId}", result.Id, jobPostId);
                 TempData["Success"] = "Applicant added successfully!";
                 return RedirectToAction("Details", new { jobPostId, id = result.Id });
             }
             else
             {
+                _logger.LogWarning("Failed to create applicant for job post {JobPostId}", jobPostId);
                 ModelState.AddModelError("", "Failed to add applicant. Please try again.");
                 ViewData["JobPostId"] = jobPostId;
                 return View(model);

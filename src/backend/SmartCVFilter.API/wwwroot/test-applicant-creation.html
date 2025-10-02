@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Applicant Creation API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .required {
+            color: red;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .example {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .example h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .example pre {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Applicant Creation API</h1>
+        
+        <div class="example">
+            <h3>API Endpoint Information</h3>
+            <p><strong>URL:</strong> <code>POST http://localhost:5002/api/jobposts/{jobPostId}/applicants</code></p>
+            <p><strong>Content-Type:</strong> <code>application/json</code></p>
+            <p><strong>Authentication:</strong> Required (JWT Bearer Token)</p>
+        </div>
+
+        <div class="example">
+            <h3>Example Request Body</h3>
+            <pre>{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phoneNumber": "+1234567890",
+  "linkedInProfile": "https://linkedin.com/in/johndoe",
+  "portfolioUrl": "https://johndoe.dev",
+  "coverLetter": "I am interested in this position..."
+}</pre>
+        </div>
+
+        <form id="applicantForm">
+            <div class="form-group">
+                <label for="jobPostId">Job Post ID <span class="required">*</span></label>
+                <input type="number" id="jobPostId" name="jobPostId" value="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name <span class="required">*</span></label>
+                <input type="text" id="firstName" name="firstName" value="John" required>
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name <span class="required">*</span></label>
+                <input type="text" id="lastName" name="lastName" value="Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" value="john.doe@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" value="+1234567890">
+            </div>
+
+            <div class="form-group">
+                <label for="linkedInProfile">LinkedIn Profile</label>
+                <input type="url" id="linkedInProfile" name="linkedInProfile" value="https://linkedin.com/in/johndoe">
+            </div>
+
+            <div class="form-group">
+                <label for="portfolioUrl">Portfolio URL</label>
+                <input type="url" id="portfolioUrl" name="portfolioUrl" value="https://johndoe.dev">
+            </div>
+
+            <div class="form-group">
+                <label for="coverLetter">Cover Letter</label>
+                <textarea id="coverLetter" name="coverLetter" rows="4" placeholder="I am interested in this position...">I am interested in this position and believe my skills align well with your requirements.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="authToken">Authorization Token (Optional - for testing with auth)</label>
+                <input type="text" id="authToken" name="authToken" placeholder="Bearer your-jwt-token-here">
+            </div>
+
+            <button type="submit" id="submitBtn">Create Applicant</button>
+        </form>
+
+        <div id="response" class="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('applicantForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const responseDiv = document.getElementById('response');
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+            
+            // Clear previous response
+            responseDiv.style.display = 'none';
+            
+            try {
+                const formData = new FormData(e.target);
+                const jobPostId = formData.get('jobPostId');
+                const authToken = formData.get('authToken');
+                
+                const requestBody = {
+                    firstName: formData.get('firstName'),
+                    lastName: formData.get('lastName'),
+                    email: formData.get('email'),
+                    phoneNumber: formData.get('phoneNumber') || null,
+                    linkedInProfile: formData.get('linkedInProfile') || null,
+                    portfolioUrl: formData.get('portfolioUrl') || null,
+                    coverLetter: formData.get('coverLetter') || null
+                };
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (authToken) {
+                    headers['Authorization'] = authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
+                }
+                
+                console.log('Sending request to:', `http://localhost:5002/api/jobposts/${jobPostId}/applicants`);
+                console.log('Request body:', requestBody);
+                console.log('Headers:', headers);
+                
+                const response = await fetch(`http://localhost:5002/api/jobposts/${jobPostId}/applicants`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const responseText = await response.text();
+                let responseData;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    responseData = { rawResponse: responseText };
+                }
+                
+                responseDiv.className = response.ok ? 'response success' : 'response error';
+                responseDiv.innerHTML = `Status: ${response.status} ${response.statusText}\n\nResponse:\n${JSON.stringify(responseData, null, 2)}`;
+                responseDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    console.log('Success:', responseData);
+                } else {
+                    console.error('Error:', responseData);
+                }
+                
+            } catch (error) {
+                console.error('Network error:', error);
+                responseDiv.className = 'response error';
+                responseDiv.innerHTML = `Network Error:\n${error.message}`;
+                responseDiv.style.display = 'block';
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Applicant';
+            }
+        });
+        
+        // Test the example endpoint
+        async function testExampleEndpoint() {
+            try {
+                const response = await fetch('http://localhost:5002/api/jobposts/1/applicants/create-example');
+                const data = await response.json();
+                console.log('Example endpoint response:', data);
+            } catch (error) {
+                console.error('Error testing example endpoint:', error);
+            }
+        }
+        
+        // Test example endpoint on page load
+        testExampleEndpoint();
+    </script>
+</body>
+</html>

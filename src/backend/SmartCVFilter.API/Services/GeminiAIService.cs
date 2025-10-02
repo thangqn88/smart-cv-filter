@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCVFilter.API.Data;
-using SmartCVFilter.API.Models;
 using SmartCVFilter.API.Services.Interfaces;
-using System.Text.Json;
 using System.Text;
+using System.Text.Json;
 
 namespace SmartCVFilter.API.Services;
 
@@ -37,29 +36,18 @@ public class GeminiAIService : IGeminiAIService
                 return await GetMockAnalysisAsync(cvText, jobDescription, requiredSkills);
             }
 
-            var prompt = $@"
-                Analyze this CV against the job requirements:
-                
-                Job Description: {jobDescription}
-                Required Skills: {requiredSkills}
-                
-                CV Content: {cvText}
-                
-                Please provide a detailed analysis including:
-                1. Overall match score (0-100)
-                2. Key strengths
-                3. Areas for improvement
-                4. Detailed assessment
-                
-                Return the response as a JSON object with the following structure:
-                {{
-                    ""OverallScore"": number,
-                    ""Summary"": ""string"",
-                    ""Strengths"": [""string1"", ""string2""],
-                    ""Weaknesses"": [""string1"", ""string2""],
-                    ""DetailedAnalysis"": ""string""
-                }}
-            ";
+            // Use the enhanced prompt template
+            var prompt = AIPromptTemplates.GetPromptTemplate(
+                "Software Development", // Default job type - can be enhanced to detect from job description
+                "Mid Level", // Default experience level - can be enhanced to detect from job description
+                jobDescription,
+                requiredSkills,
+                "", // Preferred skills - can be enhanced
+                "" // Responsibilities - can be enhanced
+            );
+
+            // Add CV content to the prompt
+            prompt += $"\n\nCV CONTENT TO ANALYZE:\n{cvText}";
 
             var requestBody = new
             {
@@ -72,6 +60,13 @@ public class GeminiAIService : IGeminiAIService
                             new { text = prompt }
                         }
                     }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.3, // Lower temperature for more consistent results
+                    topK = 40,
+                    topP = 0.95,
+                    maxOutputTokens = 2048
                 }
             };
 
@@ -136,12 +131,24 @@ public class GeminiAIService : IGeminiAIService
             if (latestCV == null)
                 throw new InvalidOperationException("No processed CV found for this applicant.");
 
-            var analysis = await AnalyzeCVAsync(
-                latestCV.ExtractedText ?? throw new InvalidOperationException("CV extracted text is null"),
+            // Detect job type and experience level from job post
+            var jobType = DetectJobType(jobPost.Description, jobPost.RequiredSkills);
+            var experienceLevel = DetectExperienceLevel(jobPost.ExperienceLevel, jobPost.Description);
+
+            // Use enhanced prompt template with job-specific information
+            var prompt = AIPromptTemplates.GetPromptTemplate(
+                jobType,
+                experienceLevel,
                 jobPost.Description,
-                jobPost.RequiredSkills
+                jobPost.RequiredSkills,
+                jobPost.PreferredSkills,
+                jobPost.Responsibilities
             );
 
+            // Add CV content to the prompt
+            prompt += $"\n\nCV CONTENT TO ANALYZE:\n{latestCV.ExtractedText}";
+
+            var analysis = await AnalyzeCVWithPromptAsync(prompt);
             return ParseAnalysisResult(analysis);
         }
         catch (Exception ex)
@@ -189,24 +196,187 @@ public class GeminiAIService : IGeminiAIService
         });
     }
 
-    private ScreeningAnalysisResult ParseAnalysisResult(string analysisJson)
+    private async Task<string> AnalyzeCVWithPromptAsync(string prompt)
     {
         try
         {
+            var apiKey = _configuration["GeminiAI:ApiKey"];
+            if (string.IsNullOrEmpty(apiKey) || apiKey == "YourGeminiAIApiKeyHere")
+            {
+                _logger.LogWarning("Gemini AI API key not configured, using mock analysis");
+                return await GetMockAnalysisAsync("", "", "");
+            }
+
+            var requestBody = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new { text = prompt }
+                        }
+                    }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.3,
+                    topK = 40,
+                    topP = 0.95,
+                    maxOutputTokens = 2048
+                }
+            };
+
+            var json = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(
+                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}",
+                content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var geminiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                if (geminiResponse.TryGetProperty("candidates", out var candidates) &&
+                    candidates.GetArrayLength() > 0)
+                {
+                    var candidate = candidates[0];
+                    if (candidate.TryGetProperty("content", out var contentObj) &&
+                        contentObj.TryGetProperty("parts", out var parts) &&
+                        parts.GetArrayLength() > 0)
+                    {
+                        var text = parts[0].GetProperty("text").GetString();
+                        return text ?? await GetMockAnalysisAsync("", "", "");
+                    }
+                }
+            }
+
+            _logger.LogWarning("Gemini AI API call failed, using mock analysis");
+            return await GetMockAnalysisAsync("", "", "");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error analyzing CV with Gemini AI, using mock analysis");
+            return await GetMockAnalysisAsync("", "", "");
+        }
+    }
+
+    private string DetectJobType(string jobDescription, string requiredSkills)
+    {
+        var description = $"{jobDescription} {requiredSkills}".ToLowerInvariant();
+
+        if (description.Contains("software") || description.Contains("developer") || description.Contains("programming") ||
+            description.Contains("coding") || description.Contains("api") || description.Contains("database"))
+            return AIPromptTemplates.JobTypes.Software;
+
+        if (description.Contains("marketing") || description.Contains("seo") || description.Contains("social media") ||
+            description.Contains("campaign") || description.Contains("brand"))
+            return AIPromptTemplates.JobTypes.Marketing;
+
+        if (description.Contains("sales") || description.Contains("revenue") || description.Contains("client") ||
+            description.Contains("account") || description.Contains("business development"))
+            return AIPromptTemplates.JobTypes.Sales;
+
+        if (description.Contains("finance") || description.Contains("accounting") || description.Contains("budget") ||
+            description.Contains("financial") || description.Contains("cpa"))
+            return AIPromptTemplates.JobTypes.Finance;
+
+        if (description.Contains("hr") || description.Contains("human resources") || description.Contains("recruitment") ||
+            description.Contains("talent") || description.Contains("employee"))
+            return AIPromptTemplates.JobTypes.HR;
+
+        if (description.Contains("design") || description.Contains("ui") || description.Contains("ux") ||
+            description.Contains("graphic") || description.Contains("creative"))
+            return AIPromptTemplates.JobTypes.Design;
+
+        if (description.Contains("data") || description.Contains("analytics") || description.Contains("machine learning") ||
+            description.Contains("ai") || description.Contains("statistics"))
+            return AIPromptTemplates.JobTypes.Data;
+
+        if (description.Contains("manager") || description.Contains("director") || description.Contains("lead") ||
+            description.Contains("supervisor") || description.Contains("executive"))
+            return AIPromptTemplates.JobTypes.Management;
+
+        if (description.Contains("operations") || description.Contains("process") || description.Contains("supply chain") ||
+            description.Contains("logistics") || description.Contains("quality"))
+            return AIPromptTemplates.JobTypes.Operations;
+
+        if (description.Contains("customer service") || description.Contains("support") || description.Contains("help desk") ||
+            description.Contains("client service"))
+            return AIPromptTemplates.JobTypes.CustomerService;
+
+        return AIPromptTemplates.JobTypes.Software; // Default fallback
+    }
+
+    private string DetectExperienceLevel(string experienceLevel, string jobDescription)
+    {
+        if (!string.IsNullOrEmpty(experienceLevel))
+        {
+            return experienceLevel switch
+            {
+                "Entry" => AIPromptTemplates.ExperienceLevels.Entry,
+                "Mid" => AIPromptTemplates.ExperienceLevels.Mid,
+                "Senior" => AIPromptTemplates.ExperienceLevels.Senior,
+                "Lead" => AIPromptTemplates.ExperienceLevels.Lead,
+                "Executive" => AIPromptTemplates.ExperienceLevels.Executive,
+                _ => AIPromptTemplates.ExperienceLevels.Mid
+            };
+        }
+
+        // Fallback to detecting from job description
+        var description = jobDescription.ToLowerInvariant();
+
+        if (description.Contains("entry") || description.Contains("junior") || description.Contains("graduate") ||
+            description.Contains("0-2 years") || description.Contains("1-3 years"))
+            return AIPromptTemplates.ExperienceLevels.Entry;
+
+        if (description.Contains("senior") || description.Contains("lead") || description.Contains("principal") ||
+            description.Contains("5+ years") || description.Contains("7+ years"))
+            return AIPromptTemplates.ExperienceLevels.Senior;
+
+        if (description.Contains("executive") || description.Contains("director") || description.Contains("vp") ||
+            description.Contains("10+ years") || description.Contains("15+ years"))
+            return AIPromptTemplates.ExperienceLevels.Executive;
+
+        return AIPromptTemplates.ExperienceLevels.Mid; // Default fallback
+    }
+
+    public ScreeningAnalysisResult ParseAnalysisResult(string analysisJson)
+    {
+        try
+        {
+            // Try to extract JSON from the response (in case there's extra text)
+            var jsonStart = analysisJson.IndexOf('{');
+            var jsonEnd = analysisJson.LastIndexOf('}');
+
+            if (jsonStart >= 0 && jsonEnd > jsonStart)
+            {
+                analysisJson = analysisJson.Substring(jsonStart, jsonEnd - jsonStart + 1);
+            }
+
             var analysis = JsonSerializer.Deserialize<JsonElement>(analysisJson);
 
             return new ScreeningAnalysisResult
             {
-                OverallScore = analysis.GetProperty("OverallScore").GetInt32(),
-                Summary = analysis.GetProperty("Summary").GetString() ?? "",
-                Strengths = analysis.GetProperty("Strengths").EnumerateArray().Select(x => x.GetString() ?? "").ToList(),
-                Weaknesses = analysis.GetProperty("Weaknesses").EnumerateArray().Select(x => x.GetString() ?? "").ToList(),
-                DetailedAnalysis = analysis.GetProperty("DetailedAnalysis").GetString() ?? ""
+                OverallScore = analysis.TryGetProperty("OverallScore", out var score) ? score.GetInt32() : 50,
+                Summary = analysis.TryGetProperty("Summary", out var summary) ? summary.GetString() ?? "" : "",
+                Strengths = analysis.TryGetProperty("Strengths", out var strengths)
+                    ? strengths.EnumerateArray().Select(x => x.GetString() ?? "").ToList()
+                    : new List<string>(),
+                Weaknesses = analysis.TryGetProperty("Weaknesses", out var weaknesses)
+                    ? weaknesses.EnumerateArray().Select(x => x.GetString() ?? "").ToList()
+                    : new List<string>(),
+                DetailedAnalysis = analysis.TryGetProperty("DetailedAnalysis", out var detailed)
+                    ? detailed.GetString() ?? ""
+                    : ""
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error parsing analysis result");
+            _logger.LogError(ex, "Error parsing analysis result: {AnalysisJson}", analysisJson);
 
             // Return default result if parsing fails
             return new ScreeningAnalysisResult

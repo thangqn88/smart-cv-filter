@@ -106,15 +106,60 @@ public class ApplicantsController : BaseController
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApplicantResponse>> CreateApplicant(int jobPostId, CreateApplicantRequest request)
+    public async Task<ActionResult<ApplicantResponse>> CreateApplicant(int jobPostId, [FromBody] CreateApplicantRequest request)
     {
         try
         {
+            _logger.LogInformation("CreateApplicant called with JobPostId: {JobPostId}", jobPostId);
+
+            if (request == null)
+            {
+                _logger.LogWarning("Request body is null for job post {JobPostId}", jobPostId);
+                return BadRequest(new { message = "Request body is required." });
+            }
+
+            _logger.LogInformation("Request data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
+                request.FirstName, request.LastName, request.Email);
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                _logger.LogWarning("ModelState is invalid. Errors: {Errors}", string.Join(", ", errors));
+                return BadRequest(new { message = "Validation failed", errors = errors });
+            }
+
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(request.FirstName))
+            {
+                _logger.LogWarning("FirstName is null or empty for job post {JobPostId}", jobPostId);
+                return BadRequest(new { message = "First name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.LastName))
+            {
+                _logger.LogWarning("LastName is null or empty for job post {JobPostId}", jobPostId);
+                return BadRequest(new { message = "Last name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                _logger.LogWarning("Email is null or empty for job post {JobPostId}", jobPostId);
+                return BadRequest(new { message = "Email is required." });
+            }
+
+            if (!(new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(request.Email)))
+            {
+                _logger.LogWarning("Invalid email format: {Email} for job post {JobPostId}", request.Email, jobPostId);
+                return BadRequest(new { message = "Please enter a valid email address." });
+            }
+
             var applicant = await _applicantService.CreateApplicantAsync(request, jobPostId);
+            _logger.LogInformation("Successfully created applicant {ApplicantId} for job post {JobPostId}", applicant.Id, jobPostId);
             return CreatedAtAction(nameof(GetApplicant), new { jobPostId, id = applicant.Id }, applicant);
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning(ex, "Invalid operation when creating applicant for job post {JobPostId}", jobPostId);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
@@ -173,6 +218,30 @@ public class ApplicantsController : BaseController
             _logger.LogError(ex, "Error deleting applicant {ApplicantId} for job post {JobPostId}", id, jobPostId);
             return StatusCode(500, new { message = "An error occurred while deleting the applicant." });
         }
+    }
+
+    [HttpGet("create-example")]
+    public ActionResult GetCreateExample(int jobPostId)
+    {
+        var example = new CreateApplicantRequest
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "john.doe@example.com",
+            PhoneNumber = "+1234567890",
+            LinkedInProfile = "https://linkedin.com/in/johndoe",
+            PortfolioUrl = "https://johndoe.dev",
+            CoverLetter = "I am interested in this position..."
+        };
+
+        return Ok(new
+        {
+            message = "Example request body for creating an applicant",
+            jobPostId = jobPostId,
+            example = example,
+            requiredFields = new[] { "FirstName", "LastName", "Email" },
+            optionalFields = new[] { "PhoneNumber", "LinkedInProfile", "PortfolioUrl", "CoverLetter" }
+        });
     }
 
     [HttpPost("screen")]
