@@ -37,18 +37,7 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromForm] LoginRequest model, string? returnUrl = null)
     {
-        // Debug logging
-        _logger.LogInformation("Login POST received - Model is null: {IsNull}, Email: {Email}, Password: {Password}, ModelState.IsValid: {IsValid}",
-            model == null,
-            model?.Email ?? "NULL",
-            string.IsNullOrEmpty(model?.Password) ? "EMPTY" : "***",
-            ModelState.IsValid);
-
-        // Log all form values
-        foreach (var key in Request.Form.Keys)
-        {
-            _logger.LogInformation("Form key: {Key} = {Value}", key, Request.Form[key]);
-        }
+        _logger.LogInformation("Login attempt for user: {Email}", model?.Email ?? "Unknown");
 
         // If model is null, create a new one
         if (model == null)

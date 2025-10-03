@@ -39,22 +39,15 @@ public class ApiService : IApiService
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var fullUrl = new Uri(_httpClient.BaseAddress!, "Auth/login");
-            _logger.LogInformation("BaseAddress: {BaseAddress}", _httpClient.BaseAddress);
-            _logger.LogInformation("Calling backend API: {FullUrl}", fullUrl);
             var response = await _httpClient.PostAsync(fullUrl, content);
-
-            _logger.LogInformation("Backend API response status: {StatusCode}", response.StatusCode);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Backend API response content: {Content}", responseContent);
-
                 var authResponse = JsonConvert.DeserializeObject<AuthResponse>(responseContent);
 
                 if (authResponse != null)
                 {
-                    _logger.LogInformation("Authentication successful, setting token and signing in user");
                     SetToken(authResponse.Token);
                     await SignInUserAsync(authResponse.User);
                 }
@@ -64,7 +57,7 @@ public class ApiService : IApiService
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Backend API error response: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                _logger.LogWarning("Login failed: {StatusCode} - {Content}", response.StatusCode, errorContent);
             }
 
             return null;
@@ -164,12 +157,10 @@ public class ApiService : IApiService
             }
 
             var response = await _httpClient.SendAsync(request);
-            _logger.LogInformation("API response status: {StatusCode} for endpoint: {Endpoint}", response.StatusCode, endpoint);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("API response content length: {Length} for endpoint: {Endpoint}", responseContent.Length, endpoint);
                 return JsonConvert.DeserializeObject<T>(responseContent);
             }
             else

@@ -90,8 +90,4 @@ public interface IRoleService
     Task<bool> DeleteRoleAsync(string id);
     Task<bool> AssignRoleToUserAsync(AssignRoleRequest request);
     Task<bool> RemoveRoleFromUserAsync(AssignRoleRequest request);
-    Task<List<string>> GetRolePermissionsAsync(string roleName);
-    Task<bool> UpdateRolePermissionsAsync(string roleName, List<string> permissions);
-    Task<List<string>> GetAllPermissionsAsync();
-    Task<Dictionary<string, string>> GetPermissionDescriptionsAsync();
 }

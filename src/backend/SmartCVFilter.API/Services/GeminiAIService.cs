@@ -354,14 +354,11 @@ public class GeminiAIService : IGeminiAIService
             // Use the correct endpoint format from the documentation
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
 
-            _logger.LogInformation("Calling Gemini API with URL: {Url}", url);
-
             var response = await _httpClient.PostAsync(url, content);
 
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Gemini API response received, length: {Length}", responseContent.Length);
 
                 var geminiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
@@ -395,7 +392,6 @@ public class GeminiAIService : IGeminiAIService
                         var text = parts[0].GetProperty("text").GetString();
                         if (!string.IsNullOrEmpty(text))
                         {
-                            _logger.LogInformation("Successfully extracted text from Gemini API response");
                             return text;
                         }
                     }

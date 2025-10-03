@@ -235,147 +235,14 @@ public class ApplicantsController : BaseController
         return View(model);
     }
 
-    [HttpGet]
-    [Authorize]
-    public IActionResult TestCreate(int jobPostId)
-    {
-        _logger.LogInformation("TestCreate GET called with JobPostId: {JobPostId}", jobPostId);
-        ViewData["Title"] = "Test Create Applicant";
-        ViewData["JobPostId"] = jobPostId;
 
-        // Initialize the model
-        var model = new CreateApplicantRequest();
-        return View(model);
-    }
-
-    [HttpGet]
-    [Authorize]
-    public IActionResult DebugCreate(int jobPostId)
-    {
-        _logger.LogInformation("DebugCreate GET called with JobPostId: {JobPostId}", jobPostId);
-        ViewData["Title"] = "Debug Create Applicant";
-        ViewData["JobPostId"] = jobPostId;
-
-        // Initialize the model
-        var model = new CreateApplicantRequest();
-        return View(model);
-    }
-
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public IActionResult TestCreate(int jobPostId, CreateApplicantRequest model)
-    {
-        _logger.LogInformation("TestCreate POST called with JobPostId: {JobPostId}", jobPostId);
-        _logger.LogInformation("Model is null: {IsNull}", model == null);
-
-        // Log all form data
-        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
-        foreach (var key in Request.Form.Keys)
-        {
-            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
-        }
-
-        if (model != null)
-        {
-            _logger.LogInformation("Model data - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
-                model.FirstName, model.LastName, model.Email);
-        }
-
-        return Json(new
-        {
-            success = true,
-            message = "Test form submitted successfully",
-            modelData = model,
-            formData = Request.Form.ToDictionary(k => k.Key, v => v.Value.ToString())
-        });
-    }
-
-    [HttpPost]
-    [Authorize]
-    [ValidateAntiForgeryToken]
-    public IActionResult DebugCreate(int jobPostId, CreateApplicantRequest model)
-    {
-        _logger.LogInformation("DebugCreate POST called with JobPostId: {JobPostId}", jobPostId);
-        _logger.LogInformation("Model is null: {IsNull}", model == null);
-
-        // Log all form data
-        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
-        foreach (var key in Request.Form.Keys)
-        {
-            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
-        }
-
-        // Log request details
-        _logger.LogInformation("Request.ContentType: {ContentType}", Request.ContentType);
-        _logger.LogInformation("Request.Method: {Method}", Request.Method);
-        _logger.LogInformation("Request.HasFormContentType: {HasFormContentType}", Request.HasFormContentType);
-        _logger.LogInformation("Request.ContentLength: {ContentLength}", Request.ContentLength);
-
-        if (model != null)
-        {
-            _logger.LogInformation("Model data - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
-                model.FirstName, model.LastName, model.Email);
-        }
-
-        return Json(new
-        {
-            success = true,
-            message = "Debug form submitted successfully",
-            modelData = model,
-            formData = Request.Form.ToDictionary(k => k.Key, v => v.Value.ToString()),
-            requestDetails = new
-            {
-                contentType = Request.ContentType,
-                method = Request.Method,
-                hasFormContentType = Request.HasFormContentType,
-                contentLength = Request.ContentLength
-            }
-        });
-    }
 
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(int jobPostId, CreateApplicantRequest model)
     {
-        _logger.LogInformation("Create POST called with JobPostId: {JobPostId}", jobPostId);
-        _logger.LogInformation("Model is null: {IsNull}", model == null);
-
-        // Log all form data
-        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
-        foreach (var key in Request.Form.Keys)
-        {
-            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
-        }
-
-        // Log request details
-        _logger.LogInformation("Request.ContentType: {ContentType}", Request.ContentType);
-        _logger.LogInformation("Request.Method: {Method}", Request.Method);
-        _logger.LogInformation("Request.HasFormContentType: {HasFormContentType}", Request.HasFormContentType);
-        _logger.LogInformation("Request.ContentLength: {ContentLength}", Request.ContentLength);
-
-        // Log all headers
-        _logger.LogInformation("Request Headers:");
-        foreach (var header in Request.Headers)
-        {
-            _logger.LogInformation("  {Key}: {Value}", header.Key, header.Value.ToString());
-        }
-
-        // Log the raw request body if possible
-        try
-        {
-            Request.EnableBuffering();
-            Request.Body.Position = 0;
-            using var reader = new StreamReader(Request.Body, leaveOpen: true);
-            var body = await reader.ReadToEndAsync();
-            _logger.LogInformation("Raw request body: {Body}", body);
-            Request.Body.Position = 0;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not read request body");
-        }
+        _logger.LogInformation("Creating applicant for job post {JobPostId}", jobPostId);
 
         // Always create model from form data to ensure binding works
         if (model == null)
@@ -387,7 +254,7 @@ public class ApplicantsController : BaseController
         // Check if model binding worked properly, if not, manually bind from form data
         if (string.IsNullOrEmpty(model.FirstName) || string.IsNullOrEmpty(model.LastName) || string.IsNullOrEmpty(model.Email))
         {
-            _logger.LogWarning("Model binding failed or incomplete - manually binding from form data");
+            _logger.LogWarning("Model binding failed - manually binding from form data");
 
             // Manually bind form data to model
             if (Request.Form.ContainsKey("FirstName"))
@@ -404,23 +271,6 @@ public class ApplicantsController : BaseController
                 model.PortfolioUrl = Request.Form["PortfolioUrl"].ToString();
             if (Request.Form.ContainsKey("CoverLetter"))
                 model.CoverLetter = Request.Form["CoverLetter"].ToString();
-        }
-
-        _logger.LogInformation("Model data - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
-            model.FirstName, model.LastName, model.Email);
-
-        // Additional debugging - check if the model has the required data
-        if (string.IsNullOrEmpty(model.FirstName) || string.IsNullOrEmpty(model.LastName) || string.IsNullOrEmpty(model.Email))
-        {
-            _logger.LogError("Model still has empty required fields after binding - FirstName: '{FirstName}', LastName: '{LastName}', Email: '{Email}'",
-                model.FirstName, model.LastName, model.Email);
-
-            // Try to get the data from Request.Form one more time
-            _logger.LogInformation("Attempting final manual binding from Request.Form");
-            foreach (var key in Request.Form.Keys)
-            {
-                _logger.LogInformation("Final Form[{Key}] = {Value}", key, Request.Form[key]);
-            }
         }
 
         // Clear ModelState and re-validate manually
@@ -517,22 +367,12 @@ public class ApplicantsController : BaseController
     [ActionName("Edit")]
     public async Task<IActionResult> Edit(int jobPostId, int id, UpdateApplicantRequest model)
     {
-        _logger.LogInformation("Edit POST called with JobPostId: {JobPostId}, Id: {Id}", jobPostId, id);
-        _logger.LogInformation("Model is null: {IsNull}", model == null);
+        _logger.LogInformation("Updating applicant {ApplicantId} for job post {JobPostId}", id, jobPostId);
 
-        if (model != null)
+        if (model == null)
         {
-            _logger.LogInformation("Model data - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}",
-                model.FirstName, model.LastName, model.Email);
-        }
-        else
-        {
-            _logger.LogWarning("Model is null - checking form data manually");
-            _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
-            foreach (var key in Request.Form.Keys)
-            {
-                _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
-            }
+            _logger.LogWarning("Model is null - creating new instance");
+            model = new UpdateApplicantRequest();
         }
 
         if (!ModelState.IsValid)
