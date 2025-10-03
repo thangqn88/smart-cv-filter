@@ -171,16 +171,67 @@ public class JobPostsController : BaseController
         try
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // Debug logging
+            _logger.LogInformation("CreateJobPost - User.Identity.IsAuthenticated: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+            _logger.LogInformation("CreateJobPost - User.Identity.Name: {Name}", User.Identity?.Name);
+            _logger.LogInformation("CreateJobPost - UserId from claims: {UserId}", userId);
+            _logger.LogInformation("CreateJobPost - All claims: {Claims}",
+                string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
+
             if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("CreateJobPost - UserId is null or empty, returning Unauthorized");
                 return Unauthorized();
+            }
 
             var jobPost = await _jobPostService.CreateJobPostAsync(request, userId);
             return CreatedAtAction(nameof(GetJobPost), new { id = jobPost.Id }, jobPost);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid operation while creating job post: {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating job post");
             return StatusCode(500, new { message = "An error occurred while creating the job post." });
+        }
+    }
+
+    [HttpGet("test-auth")]
+    public ActionResult TestAuth()
+    {
+        try
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            _logger.LogInformation("TestAuth - User.Identity.IsAuthenticated: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+            _logger.LogInformation("TestAuth - UserId: {UserId}", userId);
+            _logger.LogInformation("TestAuth - UserRole: {UserRole}", userRole);
+            _logger.LogInformation("TestAuth - UserName: {UserName}", userName);
+            _logger.LogInformation("TestAuth - UserEmail: {UserEmail}", userEmail);
+            _logger.LogInformation("TestAuth - All claims: {Claims}",
+                string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
+
+            return Ok(new
+            {
+                IsAuthenticated = User.Identity?.IsAuthenticated,
+                UserId = userId,
+                UserRole = userRole,
+                UserName = userName,
+                UserEmail = userEmail,
+                Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in TestAuth");
+            return StatusCode(500, new { message = "An error occurred while testing authentication." });
         }
     }
 

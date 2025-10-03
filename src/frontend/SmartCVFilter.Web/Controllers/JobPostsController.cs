@@ -187,8 +187,31 @@ public class JobPostsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateJobPostRequest model)
     {
+        _logger.LogInformation("JobPost Create POST called");
+        _logger.LogInformation("Model is null: {IsNull}", model == null);
+
+        // Log all form data
+        _logger.LogInformation("Request.Form keys: {Keys}", string.Join(", ", Request.Form.Keys));
+        foreach (var key in Request.Form.Keys)
+        {
+            _logger.LogInformation("Form[{Key}] = {Value}", key, Request.Form[key]);
+        }
+
+        // Log request details
+        _logger.LogInformation("Request.ContentType: {ContentType}", Request.ContentType);
+        _logger.LogInformation("Request.Method: {Method}", Request.Method);
+        _logger.LogInformation("Request.HasFormContentType: {HasFormContentType}", Request.HasFormContentType);
+
+        if (model != null)
+        {
+            _logger.LogInformation("Model data - Title: '{Title}', Location: '{Location}', Department: '{Department}'",
+                model.Title, model.Location, model.Department);
+        }
+
         if (!ModelState.IsValid)
         {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            _logger.LogWarning("ModelState is invalid. Errors: {Errors}", string.Join(", ", errors));
             return View(model);
         }
 

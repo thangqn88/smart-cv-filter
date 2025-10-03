@@ -20,6 +20,13 @@ public class JobPostService : IJobPostService
 
     public async Task<JobPostResponse> CreateJobPostAsync(CreateJobPostRequest request, string userId)
     {
+        // Validate that the user exists
+        var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+        if (!userExists)
+        {
+            throw new InvalidOperationException($"User with ID '{userId}' does not exist.");
+        }
+
         var jobPost = new JobPost
         {
             Title = request.Title,
@@ -34,7 +41,7 @@ public class JobPostService : IJobPostService
             Benefits = request.Benefits,
             SalaryMin = request.SalaryMin,
             SalaryMax = request.SalaryMax,
-            ClosingDate = request.ClosingDate,
+            ClosingDate = request.ClosingDate.ToUtcSafe(),
             UserId = userId,
             PostedDate = DateTime.UtcNow,
             Status = "Active"
@@ -152,7 +159,7 @@ public class JobPostService : IJobPostService
         if (!string.IsNullOrEmpty(request.Status))
             jobPost.Status = request.Status;
         if (request.ClosingDate.HasValue)
-            jobPost.ClosingDate = request.ClosingDate;
+            jobPost.ClosingDate = request.ClosingDate.ToUtcSafe();
 
         await _context.SaveChangesAsync();
         return await GetJobPostByIdAsync(id, userId) ?? throw new InvalidOperationException("Failed to retrieve updated job post");

@@ -76,7 +76,7 @@ public class JobPostService : IJobPostService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<JobPostResponse>("jobposts", HttpMethod.Post, request);
+            var response = await _apiService.MakeRequestAsync<JobPostResponse>("JobPosts", HttpMethod.Post, request);
             return response;
         }
         catch (Exception ex)

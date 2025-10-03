@@ -32,13 +32,13 @@ public class CreateJobPostRequest
     public string RequiredSkills { get; set; } = string.Empty;
 
     [StringLength(1000)]
-    public string PreferredSkills { get; set; } = string.Empty;
+    public string? PreferredSkills { get; set; }
 
     [StringLength(1000)]
-    public string Responsibilities { get; set; } = string.Empty;
+    public string? Responsibilities { get; set; }
 
     [StringLength(1000)]
-    public string Benefits { get; set; } = string.Empty;
+    public string? Benefits { get; set; }
 
     public decimal? SalaryMin { get; set; }
     public decimal? SalaryMax { get; set; }

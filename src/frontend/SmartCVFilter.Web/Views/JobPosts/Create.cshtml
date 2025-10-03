@@ -26,7 +26,9 @@
     </div>
 </div>
 
-<form asp-controller="JobPosts" asp-action="Create" method="post" class="needs-validation" novalidate>
+<form asp-controller="JobPosts" asp-action="Create" method="post" class="needs-validation" novalidate
+    enctype="application/x-www-form-urlencoded">
+    @Html.AntiForgeryToken()
     <div class="row">
         <div class="col-lg-8">
             <!-- Basic Information -->
@@ -42,9 +44,9 @@
                     <div class="row g-4">
                         <div class="col-md-12">
                             <div class="form-floating">
-                                <input asp-for="Title" class="form-control"
+                                <input type="text" id="Title" name="Title" class="form-control"
                                     placeholder="e.g., Senior Software Developer" required />
-                                <label asp-for="Title">Job Title *</label>
+                                <label for="Title">Job Title *</label>
                             </div>
                             <span asp-validation-for="Title" class="text-danger small"></span>
                         </div>
@@ -52,21 +54,23 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="Location" class="form-label">Location *</label>
-                            <input asp-for="Location" class="form-control" placeholder="e.g., New York, NY" required />
+                            <label for="Location" class="form-label">Location *</label>
+                            <input type="text" id="Location" name="Location" class="form-control"
+                                placeholder="e.g., New York, NY" required />
                             <span asp-validation-for="Location" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="Department" class="form-label">Department *</label>
-                            <input asp-for="Department" class="form-control" placeholder="e.g., Engineering" required />
+                            <label for="Department" class="form-label">Department *</label>
+                            <input type="text" id="Department" name="Department" class="form-control"
+                                placeholder="e.g., Engineering" required />
                             <span asp-validation-for="Department" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="EmploymentType" class="form-label">Employment Type *</label>
-                            <select asp-for="EmploymentType" class="form-select" required>
+                            <label for="EmploymentType" class="form-label">Employment Type *</label>
+                            <select id="EmploymentType" name="EmploymentType" class="form-select" required>
                                 <option value="">Select employment type</option>
                                 <option value="Full-time">Full-time</option>
                                 <option value="Part-time">Part-time</option>
@@ -77,8 +81,8 @@
                             <span asp-validation-for="EmploymentType" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="ExperienceLevel" class="form-label">Experience Level *</label>
-                            <select asp-for="ExperienceLevel" class="form-select" required>
+                            <label for="ExperienceLevel" class="form-label">Experience Level *</label>
+                            <select id="ExperienceLevel" name="ExperienceLevel" class="form-select" required>
                                 <option value="">Select experience level</option>
                                 <option value="Entry Level">Entry Level</option>
                                 <option value="Mid Level">Mid Level</option>
@@ -92,25 +96,25 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="SalaryMin" class="form-label fw-bold text-dark mb-2">
+                            <label for="SalaryMin" class="form-label fw-bold text-dark mb-2">
                                 <i class="bi bi-currency-dollar text-success me-1"></i>
                                 Minimum Salary
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">$</span>
-                                <input asp-for="SalaryMin" type="number" class="form-control border-start-0"
+                                <input type="number" id="SalaryMin" name="SalaryMin" class="form-control border-start-0"
                                     placeholder="50000" min="0" step="1000" />
                             </div>
                             <span asp-validation-for="SalaryMin" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="SalaryMax" class="form-label fw-bold text-dark mb-2">
+                            <label for="SalaryMax" class="form-label fw-bold text-dark mb-2">
                                 <i class="bi bi-currency-dollar text-success me-1"></i>
                                 Maximum Salary
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">$</span>
-                                <input asp-for="SalaryMax" type="number" class="form-control border-start-0"
+                                <input type="number" id="SalaryMax" name="SalaryMax" class="form-control border-start-0"
                                     placeholder="80000" min="0" step="1000" />
                             </div>
                             <span asp-validation-for="SalaryMax" class="text-danger small"></span>
@@ -119,8 +123,8 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="ClosingDate" class="form-label">Closing Date</label>
-                            <input asp-for="ClosingDate" type="date" class="form-control" />
+                            <label for="ClosingDate" class="form-label">Closing Date</label>
+                            <input type="date" id="ClosingDate" name="ClosingDate" class="form-control" />
                             <span asp-validation-for="ClosingDate" class="text-danger"></span>
                         </div>
                     </div>
@@ -138,8 +142,8 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label">Description</label>
-                        <textarea asp-for="Description" class="form-control" rows="6"
+                        <label for="Description" class="form-label">Description</label>
+                        <textarea id="Description" name="Description" class="form-control" rows="6"
                             placeholder="Provide a detailed description of the role, responsibilities, and what the candidate will be working on..."
                             required></textarea>
                         <span asp-validation-for="Description" class="text-danger"></span>
@@ -158,15 +162,15 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label asp-for="RequiredSkills" class="form-label">Required Skills</label>
-                        <textarea asp-for="RequiredSkills" class="form-control" rows="3"
+                        <label for="RequiredSkills" class="form-label">Required Skills</label>
+                        <textarea id="RequiredSkills" name="RequiredSkills" class="form-control" rows="3"
                             placeholder="List the essential skills and qualifications required for this position..."></textarea>
                         <span asp-validation-for="RequiredSkills" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="PreferredSkills" class="form-label">Preferred Skills</label>
-                        <textarea asp-for="PreferredSkills" class="form-control" rows="3"
+                        <label for="PreferredSkills" class="form-label">Preferred Skills</label>
+                        <textarea id="PreferredSkills" name="PreferredSkills" class="form-control" rows="3"
                             placeholder="List any additional skills that would be beneficial but not required..."></textarea>
                         <span asp-validation-for="PreferredSkills" class="text-danger"></span>
                     </div>
@@ -184,15 +188,15 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label asp-for="Responsibilities" class="form-label">Key Responsibilities</label>
-                        <textarea asp-for="Responsibilities" class="form-control" rows="4"
+                        <label for="Responsibilities" class="form-label">Key Responsibilities</label>
+                        <textarea id="Responsibilities" name="Responsibilities" class="form-control" rows="4"
                             placeholder="Outline the main responsibilities and duties for this role..."></textarea>
                         <span asp-validation-for="Responsibilities" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Benefits" class="form-label">Benefits and Perks</label>
-                        <textarea asp-for="Benefits" class="form-control" rows="4"
+                        <label for="Benefits" class="form-label">Benefits and Perks</label>
+                        <textarea id="Benefits" name="Benefits" class="form-control" rows="4"
                             placeholder="Describe the benefits, perks, and opportunities this position offers..."></textarea>
                         <span asp-validation-for="Benefits" class="text-danger"></span>
                     </div>
@@ -250,22 +254,24 @@
     <script>
         // Live preview functionality
         function updatePreview() {
-            const title = document.querySelector('input[name="Title"]').value || 'Job title will appear here';
-            const location = document.querySelector('input[name="Location"]').value || 'Location';
-            const department = document.querySelector('input[name="Department"]').value || 'Department';
-            const employmentType = document.querySelector('select[name="EmploymentType"]').value || 'Employment Type';
-            const experienceLevel = document.querySelector('select[name="ExperienceLevel"]').value || 'Experience Level';
+            const title = document.getElementById('Title')?.value || 'Job title will appear here';
+            const location = document.getElementById('Location')?.value || 'Location';
+            const department = document.getElementById('Department')?.value || 'Department';
+            const employmentType = document.getElementById('EmploymentType')?.value || 'Employment Type';
+            const experienceLevel = document.getElementById('ExperienceLevel')?.value || 'Experience Level';
 
             const previewContent = document.getElementById('previewContent');
-            previewContent.innerHTML = `
-                                                <h6>${title}</h6>
-                                                <p class="text-muted">${location} • ${department}</p>
-                                                <p class="text-muted">${employmentType} • ${experienceLevel}</p>
-                                            `;
+            if (previewContent) {
+                previewContent.innerHTML = `
+                                                    <h6>${title}</h6>
+                                                    <p class="text-muted">${location} • ${department}</p>
+                                                    <p class="text-muted">${employmentType} • ${experienceLevel}</p>
+                                                `;
+            }
         }
 
         // Add event listeners for live preview
-        document.querySelectorAll('input[name="Title"], input[name="Location"], input[name="Department"], select[name="EmploymentType"], select[name="ExperienceLevel"]').forEach(element => {
+        document.querySelectorAll('#Title, #Location, #Department, #EmploymentType, #ExperienceLevel').forEach(element => {
             element.addEventListener('input', updatePreview);
             element.addEventListener('change', updatePreview);
         });

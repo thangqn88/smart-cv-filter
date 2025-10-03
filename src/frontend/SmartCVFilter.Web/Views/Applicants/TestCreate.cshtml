@@ -9,7 +9,8 @@
     <h2>Test Create Applicant Form</h2>
     <p>Job Post ID: @jobPostId</p>
 
-    <form asp-controller="Applicants" asp-action="TestCreate" method="post" class="needs-validation" novalidate>
+    <form asp-controller="Applicants" asp-action="TestCreate" method="post" class="needs-validation" novalidate
+        enctype="application/x-www-form-urlencoded">
         @Html.AntiForgeryToken()
         <input type="hidden" name="jobPostId" value="@jobPostId" />
 

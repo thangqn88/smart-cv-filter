@@ -26,7 +26,8 @@
     </div>
 </div>
 
-<form asp-controller="Applicants" asp-action="Create" method="post" class="needs-validation" novalidate>
+<form asp-controller="Applicants" asp-action="Create" method="post" class="needs-validation" novalidate
+    enctype="application/x-www-form-urlencoded">
     @Html.AntiForgeryToken()
     <input type="hidden" name="jobPostId" value="@jobPostId" />
 
@@ -44,24 +45,24 @@
                 <div class="card-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-4">
-                            <label asp-for="FirstName" class="form-label fw-bold text-dark">First Name *</label>
+                            <label for="FirstName" class="form-label fw-bold text-dark">First Name *</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="FirstName" class="form-control border-start-0"
+                                <input type="text" id="FirstName" name="FirstName" class="form-control border-start-0"
                                     placeholder="Enter first name" required />
                             </div>
                             <span asp-validation-for="FirstName" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6 mb-4">
-                            <label asp-for="LastName" class="form-label fw-bold text-dark">Last Name *</label>
+                            <label for="LastName" class="form-label fw-bold text-dark">Last Name *</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input asp-for="LastName" class="form-control border-start-0"
+                                <input type="text" id="LastName" name="LastName" class="form-control border-start-0"
                                     placeholder="Enter last name" required />
                             </div>
                             <span asp-validation-for="LastName" class="text-danger small"></span>
@@ -70,25 +71,25 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-4">
-                            <label asp-for="Email" class="form-label fw-bold text-dark">Email Address *</label>
+                            <label for="Email" class="form-label fw-bold text-dark">Email Address *</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-envelope text-muted"></i>
                                 </span>
-                                <input asp-for="Email" type="email" class="form-control border-start-0"
+                                <input type="email" id="Email" name="Email" class="form-control border-start-0"
                                     placeholder="Enter email address" required />
                             </div>
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6 mb-4">
-                            <label asp-for="PhoneNumber" class="form-label fw-bold text-dark">Phone Number</label>
+                            <label for="PhoneNumber" class="form-label fw-bold text-dark">Phone Number</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-telephone text-muted"></i>
                                 </span>
-                                <input asp-for="PhoneNumber" class="form-control border-start-0"
-                                    placeholder="Enter phone number" />
+                                <input type="text" id="PhoneNumber" name="PhoneNumber"
+                                    class="form-control border-start-0" placeholder="Enter phone number" />
                             </div>
                             <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
@@ -108,26 +109,27 @@
                 <div class="card-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-4">
-                            <label asp-for="LinkedInProfile" class="form-label fw-bold text-dark">LinkedIn
+                            <label for="LinkedInProfile" class="form-label fw-bold text-dark">LinkedIn
                                 Profile</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-linkedin text-muted"></i>
                                 </span>
-                                <input asp-for="LinkedInProfile" class="form-control border-start-0"
+                                <input type="text" id="LinkedInProfile" name="LinkedInProfile"
+                                    class="form-control border-start-0"
                                     placeholder="https://linkedin.com/in/username" />
                             </div>
                             <span asp-validation-for="LinkedInProfile" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6 mb-4">
-                            <label asp-for="PortfolioUrl" class="form-label fw-bold text-dark">Portfolio URL</label>
+                            <label for="PortfolioUrl" class="form-label fw-bold text-dark">Portfolio URL</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="bi bi-globe text-muted"></i>
                                 </span>
-                                <input asp-for="PortfolioUrl" class="form-control border-start-0"
-                                    placeholder="https://portfolio.com" />
+                                <input type="text" id="PortfolioUrl" name="PortfolioUrl"
+                                    class="form-control border-start-0" placeholder="https://portfolio.com" />
                             </div>
                             <span asp-validation-for="PortfolioUrl" class="text-danger small"></span>
                         </div>
@@ -146,8 +148,8 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="mb-4">
-                        <label asp-for="CoverLetter" class="form-label fw-bold text-dark">Cover Letter</label>
-                        <textarea asp-for="CoverLetter" class="form-control" rows="6"
+                        <label for="CoverLetter" class="form-label fw-bold text-dark">Cover Letter</label>
+                        <textarea id="CoverLetter" name="CoverLetter" class="form-control" rows="6"
                             placeholder="Enter cover letter or additional notes about the applicant..."></textarea>
                         <span asp-validation-for="CoverLetter" class="text-danger small"></span>
                     </div>
@@ -213,21 +215,23 @@
     <script>
         // Live preview functionality
         function updatePreview() {
-            const firstName = document.querySelector('input[name="FirstName"]').value || 'First';
-            const lastName = document.querySelector('input[name="LastName"]').value || 'Last';
-            const email = document.querySelector('input[name="Email"]').value || 'email@example.com';
-            const phone = document.querySelector('input[name="PhoneNumber"]').value || 'Not provided';
+            const firstName = document.getElementById('FirstName')?.value || 'First';
+            const lastName = document.getElementById('LastName')?.value || 'Last';
+            const email = document.getElementById('Email')?.value || 'email@example.com';
+            const phone = document.getElementById('PhoneNumber')?.value || 'Not provided';
 
             const previewContent = document.getElementById('previewContent');
-            previewContent.innerHTML = `
-                                                <h6>${firstName} ${lastName}</h6>
-                                                <p class="text-muted">${email}</p>
-                                                <p class="text-muted">${phone}</p>
-                                            `;
+            if (previewContent) {
+                previewContent.innerHTML = `
+                                                        <h6>${firstName} ${lastName}</h6>
+                                                        <p class="text-muted">${email}</p>
+                                                        <p class="text-muted">${phone}</p>
+                                                    `;
+            }
         }
 
         // Add event listeners for live preview
-        document.querySelectorAll('input[name="FirstName"], input[name="LastName"], input[name="Email"], input[name="PhoneNumber"]').forEach(element => {
+        document.querySelectorAll('#FirstName, #LastName, #Email, #PhoneNumber').forEach(element => {
             element.addEventListener('input', updatePreview);
         });
 
@@ -242,35 +246,33 @@
                 console.log(key + ': ' + value);
             }
 
-            // Check required fields
-            const firstName = document.querySelector('input[name="FirstName"]').value;
-            const lastName = document.querySelector('input[name="LastName"]').value;
-            const email = document.querySelector('input[name="Email"]').value;
+            // Check required fields using ID selectors
+            const firstName = document.getElementById('FirstName')?.value || '';
+            const lastName = document.getElementById('LastName')?.value || '';
+            const email = document.getElementById('Email')?.value || '';
 
             console.log('Required fields check:');
             console.log('FirstName:', firstName, 'Length:', firstName.length);
             console.log('LastName:', lastName, 'Length:', lastName.length);
             console.log('Email:', email, 'Length:', email.length);
 
+            // Only prevent submission if fields are actually empty, don't interfere with normal validation
             if (!firstName || firstName.trim() === '') {
                 console.error('FirstName is empty');
-                e.preventDefault();
-                alert('First Name is required');
-                return false;
+                // Don't prevent default - let the form validation handle it
+                return;
             }
 
             if (!lastName || lastName.trim() === '') {
                 console.error('LastName is empty');
-                e.preventDefault();
-                alert('Last Name is required');
-                return false;
+                // Don't prevent default - let the form validation handle it
+                return;
             }
 
             if (!email || email.trim() === '') {
                 console.error('Email is empty');
-                e.preventDefault();
-                alert('Email is required');
-                return false;
+                // Don't prevent default - let the form validation handle it
+                return;
             }
 
             console.log('Form validation passed, submitting...');
