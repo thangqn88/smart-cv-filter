@@ -17,6 +17,22 @@ public class ApplicantService : IApplicantService
         _screeningService = screeningService;
     }
 
+    private static List<string> DeserializeStringList(string jsonString)
+    {
+        if (string.IsNullOrWhiteSpace(jsonString))
+            return new List<string>();
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(jsonString) ?? new List<string>();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // If JSON deserialization fails, return empty list
+            return new List<string>();
+        }
+    }
+
     public async Task<ApplicantResponse> CreateApplicantAsync(CreateApplicantRequest request, int jobPostId)
     {
         var jobPost = await _context.JobPosts.FindAsync(jobPostId);
@@ -92,8 +108,8 @@ public class ApplicantService : IApplicantService
                 Id = sr.Id,
                 OverallScore = sr.OverallScore,
                 Summary = sr.Summary,
-                Strengths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(sr.Strengths) ?? new List<string>(),
-                Weaknesses = System.Text.Json.JsonSerializer.Deserialize<List<string>>(sr.Weaknesses) ?? new List<string>(),
+                Strengths = DeserializeStringList(sr.Strengths),
+                Weaknesses = DeserializeStringList(sr.Weaknesses),
                 DetailedAnalysis = sr.DetailedAnalysis,
                 Status = sr.Status,
                 CreatedAt = sr.CreatedAt,
@@ -152,8 +168,8 @@ public class ApplicantService : IApplicantService
                 Id = sr.Id,
                 OverallScore = sr.OverallScore,
                 Summary = sr.Summary,
-                Strengths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(sr.Strengths) ?? new List<string>(),
-                Weaknesses = System.Text.Json.JsonSerializer.Deserialize<List<string>>(sr.Weaknesses) ?? new List<string>(),
+                Strengths = DeserializeStringList(sr.Strengths),
+                Weaknesses = DeserializeStringList(sr.Weaknesses),
                 DetailedAnalysis = sr.DetailedAnalysis,
                 Status = sr.Status,
                 CreatedAt = sr.CreatedAt,

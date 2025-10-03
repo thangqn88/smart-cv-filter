@@ -23,7 +23,6 @@ public class CVFile
     [StringLength(50)]
     public string FileExtension { get; set; } = string.Empty;
 
-    [StringLength(1000)]
     public string? ExtractedText { get; set; } // Text extracted from PDF/DOC files
 
     public DateTime UploadedDate { get; set; } = DateTime.UtcNow;

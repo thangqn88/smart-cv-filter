@@ -133,7 +133,16 @@ public class ApiService : IApiService
     public async Task LogoutAsync()
     {
         await _httpContextAccessor.HttpContext!.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        SetToken(string.Empty);
+
+        // Clear both cookies
+        var response = _httpContextAccessor.HttpContext?.Response;
+        if (response != null)
+        {
+            response.Cookies.Delete("auth_token");
+            response.Cookies.Delete("auth_token_js");
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
     public async Task<T?> MakeRequestAsync<T>(string endpoint, HttpMethod method, object? content = null)
@@ -198,7 +207,8 @@ public class ApiService : IApiService
         var response = _httpContextAccessor.HttpContext?.Response;
         if (response != null)
         {
-            var cookieOptions = new CookieOptions
+            // HttpOnly cookie for server-side use
+            var httpOnlyCookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = false, // Set to false for HTTP
@@ -206,7 +216,18 @@ public class ApiService : IApiService
                 Expires = DateTime.UtcNow.AddDays(7)
             };
 
-            response.Cookies.Append("auth_token", token, cookieOptions);
+            response.Cookies.Append("auth_token", token, httpOnlyCookieOptions);
+
+            // Non-HttpOnly cookie for JavaScript access
+            var jsCookieOptions = new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = false, // Set to false for HTTP
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            response.Cookies.Append("auth_token_js", token, jsCookieOptions);
         }
 
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);

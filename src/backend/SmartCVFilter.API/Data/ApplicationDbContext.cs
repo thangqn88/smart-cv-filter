@@ -81,5 +81,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ScreeningResult>()
             .Property(s => s.DetailedAnalysis)
             .HasColumnType("text");
+
+        // Configure CVFile ExtractedText to use text type for large content
+        builder.Entity<CVFile>()
+            .Property(c => c.ExtractedText)
+            .HasColumnType("text");
     }
 }

@@ -29,8 +29,8 @@ public class GeminiAIService : IGeminiAIService
     {
         try
         {
-            var apiKey = _configuration["GeminiAI:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey == "YourGeminiAIApiKeyHere")
+            var apiKey = GetApiKey();
+            if (string.IsNullOrEmpty(apiKey))
             {
                 _logger.LogWarning("Gemini AI API key not configured, using mock analysis");
                 return await GetMockAnalysisAsync(cvText, jobDescription, requiredSkills);
@@ -49,55 +49,8 @@ public class GeminiAIService : IGeminiAIService
             // Add CV content to the prompt
             prompt += $"\n\nCV CONTENT TO ANALYZE:\n{cvText}";
 
-            var requestBody = new
-            {
-                contents = new[]
-                {
-                    new
-                    {
-                        parts = new[]
-                        {
-                            new { text = prompt }
-                        }
-                    }
-                },
-                generationConfig = new
-                {
-                    temperature = 0.3, // Lower temperature for more consistent results
-                    topK = 40,
-                    topP = 0.95,
-                    maxOutputTokens = 2048
-                }
-            };
-
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(
-                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}",
-                content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var geminiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-                if (geminiResponse.TryGetProperty("candidates", out var candidates) &&
-                    candidates.GetArrayLength() > 0)
-                {
-                    var candidate = candidates[0];
-                    if (candidate.TryGetProperty("content", out var contentObj) &&
-                        contentObj.TryGetProperty("parts", out var parts) &&
-                        parts.GetArrayLength() > 0)
-                    {
-                        var text = parts[0].GetProperty("text").GetString();
-                        return text ?? await GetMockAnalysisAsync(cvText, jobDescription, requiredSkills);
-                    }
-                }
-            }
-
-            _logger.LogWarning("Gemini AI API call failed, using mock analysis");
-            return await GetMockAnalysisAsync(cvText, jobDescription, requiredSkills);
+            var response = await CallGeminiAPIAsync(prompt, apiKey);
+            return response ?? await GetMockAnalysisAsync(cvText, jobDescription, requiredSkills);
         }
         catch (Exception ex)
         {
@@ -200,62 +153,15 @@ public class GeminiAIService : IGeminiAIService
     {
         try
         {
-            var apiKey = _configuration["GeminiAI:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey == "YourGeminiAIApiKeyHere")
+            var apiKey = GetApiKey();
+            if (string.IsNullOrEmpty(apiKey))
             {
                 _logger.LogWarning("Gemini AI API key not configured, using mock analysis");
                 return await GetMockAnalysisAsync("", "", "");
             }
 
-            var requestBody = new
-            {
-                contents = new[]
-                {
-                    new
-                    {
-                        parts = new[]
-                        {
-                            new { text = prompt }
-                        }
-                    }
-                },
-                generationConfig = new
-                {
-                    temperature = 0.3,
-                    topK = 40,
-                    topP = 0.95,
-                    maxOutputTokens = 2048
-                }
-            };
-
-            var json = JsonSerializer.Serialize(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(
-                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}",
-                content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var geminiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-                if (geminiResponse.TryGetProperty("candidates", out var candidates) &&
-                    candidates.GetArrayLength() > 0)
-                {
-                    var candidate = candidates[0];
-                    if (candidate.TryGetProperty("content", out var contentObj) &&
-                        contentObj.TryGetProperty("parts", out var parts) &&
-                        parts.GetArrayLength() > 0)
-                    {
-                        var text = parts[0].GetProperty("text").GetString();
-                        return text ?? await GetMockAnalysisAsync("", "", "");
-                    }
-                }
-            }
-
-            _logger.LogWarning("Gemini AI API call failed, using mock analysis");
-            return await GetMockAnalysisAsync("", "", "");
+            var response = await CallGeminiAPIAsync(prompt, apiKey);
+            return response ?? await GetMockAnalysisAsync("", "", "");
         }
         catch (Exception ex)
         {
@@ -387,6 +293,129 @@ public class GeminiAIService : IGeminiAIService
                 Weaknesses = new List<string> { "Analysis failed" },
                 DetailedAnalysis = "The CV analysis could not be completed successfully. Please try again or contact support."
             };
+        }
+    }
+
+    private string GetApiKey()
+    {
+        // First try environment variable (as recommended in the docs)
+        var envApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+        if (!string.IsNullOrEmpty(envApiKey))
+        {
+            return envApiKey;
+        }
+
+        // Fallback to configuration
+        var configApiKey = _configuration["GeminiAI:ApiKey"];
+        if (!string.IsNullOrEmpty(configApiKey) && configApiKey != "YourGeminiAIApiKeyHere")
+        {
+            return configApiKey;
+        }
+
+        return string.Empty;
+    }
+
+    private async Task<string?> CallGeminiAPIAsync(string prompt, string apiKey)
+    {
+        try
+        {
+            // Create request body following the official documentation format
+            var requestBody = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new { text = prompt }
+                        }
+                    }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.3,
+                    topK = 40,
+                    topP = 0.95,
+                    maxOutputTokens = 2048,
+                    thinkingConfig = new
+                    {
+                        thinkingBudget = 0 // Disable thinking for faster responses
+                    }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Use the correct endpoint format from the documentation
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
+
+            _logger.LogInformation("Calling Gemini API with URL: {Url}", url);
+
+            var response = await _httpClient.PostAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Gemini API response received, length: {Length}", responseContent.Length);
+
+                var geminiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                // Check for errors in the response
+                if (geminiResponse.TryGetProperty("error", out var error))
+                {
+                    _logger.LogError("Gemini API returned error: {Error}", error.GetRawText());
+                    return null;
+                }
+
+                // Extract the generated text following the official response format
+                if (geminiResponse.TryGetProperty("candidates", out var candidates) &&
+                    candidates.GetArrayLength() > 0)
+                {
+                    var candidate = candidates[0];
+
+                    // Check if the candidate has a finish reason
+                    if (candidate.TryGetProperty("finishReason", out var finishReason))
+                    {
+                        var reason = finishReason.GetString();
+                        if (reason != "STOP" && reason != "MAX_TOKENS")
+                        {
+                            _logger.LogWarning("Unexpected finish reason: {Reason}", reason);
+                        }
+                    }
+
+                    if (candidate.TryGetProperty("content", out var contentObj) &&
+                        contentObj.TryGetProperty("parts", out var parts) &&
+                        parts.GetArrayLength() > 0)
+                    {
+                        var text = parts[0].GetProperty("text").GetString();
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            _logger.LogInformation("Successfully extracted text from Gemini API response");
+                            return text;
+                        }
+                    }
+                }
+
+                _logger.LogWarning("No valid content found in Gemini API response");
+                return null;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Gemini API call failed with status {StatusCode}: {Error}",
+                    response.StatusCode, errorContent);
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception occurred while calling Gemini API");
+            return null;
         }
     }
 }

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SmartCVFilter.API.Data;
 using SmartCVFilter.API.Services.Interfaces;
 
 namespace SmartCVFilter.API.Controllers;
@@ -10,11 +12,15 @@ namespace SmartCVFilter.API.Controllers;
 public class CVUploadController : ControllerBase
 {
     private readonly ICVUploadService _cvUploadService;
+    private readonly IScreeningService _screeningService;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<CVUploadController> _logger;
 
-    public CVUploadController(ICVUploadService cvUploadService, ILogger<CVUploadController> logger)
+    public CVUploadController(ICVUploadService cvUploadService, IScreeningService screeningService, ApplicationDbContext context, ILogger<CVUploadController> logger)
     {
         _cvUploadService = cvUploadService;
+        _screeningService = screeningService;
+        _context = context;
         _logger = logger;
     }
 
@@ -107,6 +113,67 @@ public class CVUploadController : ControllerBase
         {
             _logger.LogError(ex, "Error getting CV file statuses for applicant {ApplicantId}", applicantId);
             return StatusCode(500, new { message = "An error occurred while getting file statuses." });
+        }
+    }
+
+    [HttpPost("screening")]
+    public async Task<ActionResult> StartScreening(int applicantId)
+    {
+        try
+        {
+            // Get the applicant to find the job post ID
+            var applicant = await _context.Applicants
+                .Include(a => a.JobPost)
+                .FirstOrDefaultAsync(a => a.Id == applicantId);
+
+            if (applicant == null)
+                return NotFound(new { message = "Applicant not found." });
+
+            if (applicant.JobPost == null)
+                return BadRequest(new { message = "No job post associated with this applicant." });
+
+            // Check if there are any processed CV files
+            var hasProcessedCV = await _context.CVFiles
+                .AnyAsync(cf => cf.ApplicantId == applicantId && cf.Status == "Processed");
+
+            if (!hasProcessedCV)
+                return BadRequest(new { message = "No processed CV files found. Please upload and process a CV first." });
+
+            _logger.LogInformation("Starting synchronous screening for applicant {ApplicantId}", applicantId);
+
+            // Start the screening process and wait for completion
+            var result = await _screeningService.ProcessScreeningAsync(applicantId, applicant.JobPostId);
+
+            if (result)
+            {
+                _logger.LogInformation("Screening completed successfully for applicant {ApplicantId}", applicantId);
+                return Ok(new
+                {
+                    message = "CV screening completed successfully!",
+                    success = true,
+                    applicantId = applicantId
+                });
+            }
+            else
+            {
+                _logger.LogWarning("Screening failed for applicant {ApplicantId}", applicantId);
+                return StatusCode(500, new
+                {
+                    message = "CV screening failed. Please try again.",
+                    success = false,
+                    applicantId = applicantId
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during screening for applicant {ApplicantId}", applicantId);
+            return StatusCode(500, new
+            {
+                message = "An error occurred during CV screening. Please try again.",
+                success = false,
+                applicantId = applicantId
+            });
         }
     }
 }

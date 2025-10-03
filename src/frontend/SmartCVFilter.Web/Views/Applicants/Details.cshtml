@@ -221,7 +221,7 @@
                                 <div class="upload-progress-bar" id="uploadProgressBar"></div>
                             </div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-4 d-flex align-items-end gap-2">
                             <button type="submit" class="btn btn-primary" id="uploadBtn">
                                 <span id="uploadBtnText">
                                     <i class="bi bi-upload me-1"></i>
@@ -230,6 +230,16 @@
                                 <span id="uploadBtnLoading" style="display: none;">
                                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                                     Uploading...
+                                </span>
+                            </button>
+                            <button type="button" class="btn btn-success" id="screeningBtn" onclick="startScreening()">
+                                <span id="screeningBtnText">
+                                    <i class="bi bi-search me-1"></i>
+                                    Screen CV
+                                </span>
+                                <span id="screeningBtnLoading" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    Processing...
                                 </span>
                             </button>
                         </div>
@@ -549,6 +559,7 @@
             initializeFileUpload();
             initializeStatusPolling();
             checkForExtractedText();
+            updateScreeningButtonState();
         });
 
         // File upload functionality
@@ -701,7 +712,8 @@
                 formData.append('file', file);
 
                 // Get the auth token from cookies
-                const token = getCookie('auth_token');
+                const token = getCookie('auth_token_js');
+                console.log('Retrieved token:', token ? 'Token found' : 'No token found');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
                     hideUploadLoading();
@@ -741,8 +753,14 @@
 
         function getCookie(name) {
             const value = `; ${document.cookie}`;
+            console.log('All cookies:', document.cookie);
             const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
+            if (parts.length === 2) {
+                const token = parts.pop().split(';').shift();
+                console.log(`Found cookie ${name}:`, token ? 'Token found' : 'No token');
+                return token;
+            }
+            console.log(`Cookie ${name} not found`);
             return null;
         }
 
@@ -876,10 +894,14 @@
                 updateStatusBadge(statusElement, statusTextElement, newStatus);
 
                 // Add status update message
-                if (newStatus === 'Processing') {
+                if (newStatus === 'Uploaded') {
+                    addStatusUpdate(`${fileName} uploaded successfully!`);
+                } else if (newStatus === 'Processing') {
                     addStatusUpdate(`${fileName} started processing...`);
                 } else if (newStatus === 'Processed') {
                     addStatusUpdate(`${fileName} processing completed!`);
+                    // Update screening button state when a file is processed
+                    updateScreeningButtonState();
                 } else if (newStatus === 'Error') {
                     addStatusUpdate(`${fileName} processing failed.`);
                 }
@@ -969,10 +991,10 @@
             const updateElement = document.createElement('div');
             updateElement.className = 'alert alert-info alert-dismissible fade show';
             updateElement.innerHTML = `
-                                <i class="bi bi-info-circle me-2"></i>
-                                ${message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            `;
+                                                    <i class="bi bi-info-circle me-2"></i>
+                                                    ${message}
+                                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                                `;
 
             statusList.insertBefore(updateElement, statusList.firstChild);
 
@@ -999,7 +1021,7 @@
 
         async function deleteCV(cvFileId) {
             try {
-                const token = getCookie('auth_token');
+                const token = getCookie('auth_token_js');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
                     return;
@@ -1036,7 +1058,7 @@
             modal.show();
 
             try {
-                const token = getCookie('auth_token');
+                const token = getCookie('auth_token_js');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
                     modal.hide();
@@ -1066,7 +1088,7 @@
 
         async function downloadCV(cvFileId) {
             try {
-                const token = getCookie('auth_token');
+                const token = getCookie('auth_token_js');
                 if (!token) {
                     showNotification('Authentication required. Please log in again.', 'error');
                     return;
@@ -1128,7 +1150,7 @@
                         modal.show();
                     </text>
             }
-                        }
+                                            }
 
         function showNotification(message, type = 'info') {
             // Create notification element
@@ -1136,9 +1158,9 @@
             notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
             notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             notification.innerHTML = `
-                                ${message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            `;
+                                                    ${message}
+                                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                                `;
 
             document.body.appendChild(notification);
 
@@ -1148,6 +1170,91 @@
                     notification.remove();
                 }
             }, 5000);
+        }
+
+        // Manual screening functionality
+        async function startScreening() {
+            try {
+                // Show loading state
+                showScreeningLoading();
+
+                const token = getCookie('auth_token_js');
+                if (!token) {
+                    showNotification('Authentication required. Please log in again.', 'error');
+                    hideScreeningLoading();
+                    return;
+                }
+
+                // Show progress notification
+                showNotification('Starting CV screening... This may take a few moments.', 'info');
+
+                const response = await fetch(`http://localhost:4000/api/applicants/@Model.Id/cvupload/screening`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('CV screening completed successfully! Results are now available.', 'success');
+
+                        // Reload the page to show updated screening results
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification(result.message || 'CV screening failed. Please try again.', 'error');
+                    }
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Screening failed' }));
+                    showNotification(errorData.message || 'Failed to start CV screening. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Screening error:', error);
+                showNotification('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                hideScreeningLoading();
+            }
+        }
+
+        function showScreeningLoading() {
+            const screeningBtn = document.getElementById('screeningBtn');
+            const screeningBtnText = document.getElementById('screeningBtnText');
+            const screeningBtnLoading = document.getElementById('screeningBtnLoading');
+
+            // Disable button and show loading
+            screeningBtn.disabled = true;
+            screeningBtnText.style.display = 'none';
+            screeningBtnLoading.style.display = 'inline';
+        }
+
+        function hideScreeningLoading() {
+            const screeningBtn = document.getElementById('screeningBtn');
+            const screeningBtnText = document.getElementById('screeningBtnText');
+            const screeningBtnLoading = document.getElementById('screeningBtnLoading');
+
+            // Reset button
+            screeningBtn.disabled = false;
+            screeningBtnText.style.display = 'inline';
+            screeningBtnLoading.style.display = 'none';
+        }
+
+        function updateScreeningButtonState() {
+            const screeningBtn = document.getElementById('screeningBtn');
+            const hasProcessedCV = @Model.CVFiles.Any(cf => cf.Status == "Processed").ToString().ToLower();
+
+            if (!hasProcessedCV) {
+                screeningBtn.disabled = true;
+                screeningBtn.title = "Upload and process a CV first";
+                screeningBtn.classList.add('opacity-50');
+            } else {
+                screeningBtn.disabled = false;
+                screeningBtn.title = "Start AI screening for this applicant";
+                screeningBtn.classList.remove('opacity-50');
+            }
         }
 
         // Cleanup on page unload

@@ -22,6 +22,22 @@ public class ScreeningService : IScreeningService
         _logger = logger;
     }
 
+    private static List<string> DeserializeStringList(string jsonString)
+    {
+        if (string.IsNullOrWhiteSpace(jsonString))
+            return new List<string>();
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(jsonString) ?? new List<string>();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // If JSON deserialization fails, return empty list
+            return new List<string>();
+        }
+    }
+
     public async Task<ScreeningResultResponse?> GetScreeningResultAsync(int resultId, string userId, bool isAdmin = false)
     {
         var query = _context.ScreeningResults
@@ -45,8 +61,8 @@ public class ScreeningService : IScreeningService
             Id = result.Id,
             OverallScore = result.OverallScore,
             Summary = result.Summary,
-            Strengths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result.Strengths) ?? new List<string>(),
-            Weaknesses = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result.Weaknesses) ?? new List<string>(),
+            Strengths = DeserializeStringList(result.Strengths),
+            Weaknesses = DeserializeStringList(result.Weaknesses),
             DetailedAnalysis = result.DetailedAnalysis,
             Status = result.Status,
             CreatedAt = result.CreatedAt,
@@ -77,8 +93,8 @@ public class ScreeningService : IScreeningService
             Id = result.Id,
             OverallScore = result.OverallScore,
             Summary = result.Summary,
-            Strengths = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result.Strengths) ?? new List<string>(),
-            Weaknesses = System.Text.Json.JsonSerializer.Deserialize<List<string>>(result.Weaknesses) ?? new List<string>(),
+            Strengths = DeserializeStringList(result.Strengths),
+            Weaknesses = DeserializeStringList(result.Weaknesses),
             DetailedAnalysis = result.DetailedAnalysis,
             Status = result.Status,
             CreatedAt = result.CreatedAt,
@@ -147,44 +163,43 @@ public class ScreeningService : IScreeningService
             _context.ScreeningResults.Add(screeningResult);
             await _context.SaveChangesAsync();
 
-            // Start the AI screening process in the background
-            _ = Task.Run(async () =>
+            try
             {
-                try
+                // Run the AI screening process synchronously
+                var analysis = await _geminiAIService.PerformScreeningAsync(applicantId, jobPostId);
+
+                // Update the screening result with the analysis
+                screeningResult.OverallScore = analysis.OverallScore;
+                screeningResult.Summary = analysis.Summary;
+                screeningResult.Strengths = System.Text.Json.JsonSerializer.Serialize(analysis.Strengths);
+                screeningResult.Weaknesses = System.Text.Json.JsonSerializer.Serialize(analysis.Weaknesses);
+                screeningResult.DetailedAnalysis = analysis.DetailedAnalysis;
+                screeningResult.Status = "Completed";
+                screeningResult.CompletedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                // Update applicant status
+                var applicant = await _context.Applicants.FindAsync(applicantId);
+                if (applicant != null)
                 {
-                    var analysis = await _geminiAIService.PerformScreeningAsync(applicantId, jobPostId);
-
-                    // Update the screening result with the analysis
-                    screeningResult.OverallScore = analysis.OverallScore;
-                    screeningResult.Summary = analysis.Summary;
-                    screeningResult.Strengths = System.Text.Json.JsonSerializer.Serialize(analysis.Strengths);
-                    screeningResult.Weaknesses = System.Text.Json.JsonSerializer.Serialize(analysis.Weaknesses);
-                    screeningResult.DetailedAnalysis = analysis.DetailedAnalysis;
-                    screeningResult.Status = "Completed";
-                    screeningResult.CompletedAt = DateTime.UtcNow;
-
-                    await _context.SaveChangesAsync();
-
-                    // Update applicant status
-                    var applicant = await _context.Applicants.FindAsync(applicantId);
-                    if (applicant != null)
-                    {
-                        applicant.Status = "Screened";
-                        applicant.LastUpdated = DateTime.UtcNow;
-                        await _context.SaveChangesAsync();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing screening for applicant {ApplicantId}", applicantId);
-
-                    screeningResult.Status = "Failed";
-                    screeningResult.ErrorMessage = ex.Message;
+                    applicant.Status = "Screened";
+                    applicant.LastUpdated = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                 }
-            });
 
-            return true;
+                _logger.LogInformation("Screening completed successfully for applicant {ApplicantId}", applicantId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing screening for applicant {ApplicantId}", applicantId);
+
+                screeningResult.Status = "Failed";
+                screeningResult.ErrorMessage = ex.Message;
+                await _context.SaveChangesAsync();
+                return false;
+            }
         }
         catch (Exception ex)
         {
