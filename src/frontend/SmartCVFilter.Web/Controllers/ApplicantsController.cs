@@ -286,7 +286,7 @@ public class ApplicantsController : BaseController
             foreach (var key in ModelState.Keys)
             {
                 var state = ModelState[key];
-                if (state.Errors.Any())
+                if (state?.Errors.Any() == true)
                 {
                     _logger.LogWarning("Field '{Key}' has errors: {Errors}", key, string.Join(", ", state.Errors.Select(e => e.ErrorMessage)));
                 }

@@ -336,18 +336,21 @@ else
                                         {
                                             // Cast ScreeningResults to IEnumerable<dynamic> to allow LINQ methods
                                             var screeningResultsEnumerable = applicant.ScreeningResults as IEnumerable<dynamic>;
-                                            var latestResult = screeningResultsEnumerable.OrderByDescending((Func<dynamic, DateTime>)(sr => sr.CreatedAt)).First();
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2">
-                                                    <div class="score-circle @(latestResult.OverallScore >= 80 ? "score-excellent" : latestResult.OverallScore >= 60 ? "score-good" : "score-poor")">
-                                                        @latestResult.OverallScore
+                                            var latestResult = screeningResultsEnumerable?.OrderByDescending((Func<dynamic, DateTime>)(sr => sr.CreatedAt)).First();
+                                            @if (latestResult != null)
+                                            {
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        <div class="score-circle @(latestResult.OverallScore >= 80 ? "score-excellent" : latestResult.OverallScore >= 60 ? "score-good" : "score-poor")">
+                                                            @latestResult.OverallScore
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold text-dark">@latestResult.OverallScore/100</div>
+                                                        <small class="text-muted">@(latestResult.OverallScore >= 80 ? "Excellent" : latestResult.OverallScore >= 60 ? "Good" : "Needs Improvement")</small>
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <div class="fw-bold text-dark">@latestResult.OverallScore/100</div>
-                                                    <small class="text-muted">@(latestResult.OverallScore >= 80 ? "Excellent" : latestResult.OverallScore >= 60 ? "Good" : "Needs Improvement")</small>
-                                                </div>
-                                            </div>
+                                            }
                                         }
                                         else
                                         {

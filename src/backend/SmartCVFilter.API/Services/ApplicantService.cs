@@ -287,7 +287,7 @@ public class ApplicantService : IApplicantService
                 a.FirstName.Contains(request.Search) ||
                 a.LastName.Contains(request.Search) ||
                 a.Email.Contains(request.Search) ||
-                a.PhoneNumber.Contains(request.Search));
+                (a.PhoneNumber != null && a.PhoneNumber.Contains(request.Search)));
         }
 
         // Apply sorting

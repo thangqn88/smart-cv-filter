@@ -42,8 +42,8 @@ public class UserService : IUserService
                 query = query.Where(u =>
                     u.FirstName.Contains(search) ||
                     u.LastName.Contains(search) ||
-                    u.Email.Contains(search) ||
-                    u.CompanyName.Contains(search));
+                    (u.Email != null && u.Email.Contains(search)) ||
+                    (u.CompanyName != null && u.CompanyName.Contains(search)));
             }
 
             // Apply role filter

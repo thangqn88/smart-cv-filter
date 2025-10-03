@@ -99,11 +99,11 @@ public class CVUploadService : ICVUploadService
             switch (cvFile.FileExtension)
             {
                 case ".pdf":
-                    extractedText = await ExtractTextFromPdfAsync(cvFile.FilePath);
+                    extractedText = ExtractTextFromPdfAsync(cvFile.FilePath);
                     break;
                 case ".doc":
                 case ".docx":
-                    extractedText = await ExtractTextFromWordAsync(cvFile.FilePath);
+                    extractedText = ExtractTextFromWordAsync(cvFile.FilePath);
                     break;
                 case ".txt":
                     extractedText = await File.ReadAllTextAsync(cvFile.FilePath);
@@ -172,11 +172,11 @@ public class CVUploadService : ICVUploadService
             switch (cvFile.FileExtension)
             {
                 case ".pdf":
-                    extractedText = await ExtractTextFromPdfAsync(cvFile.FilePath);
+                    extractedText = ExtractTextFromPdfAsync(cvFile.FilePath);
                     break;
                 case ".doc":
                 case ".docx":
-                    extractedText = await ExtractTextFromWordAsync(cvFile.FilePath);
+                    extractedText = ExtractTextFromWordAsync(cvFile.FilePath);
                     break;
                 case ".txt":
                     extractedText = await File.ReadAllTextAsync(cvFile.FilePath);
@@ -242,7 +242,7 @@ public class CVUploadService : ICVUploadService
         return true;
     }
 
-    private async Task<string> ExtractTextFromPdfAsync(string filePath)
+    private string ExtractTextFromPdfAsync(string filePath)
     {
         try
         {
@@ -268,7 +268,7 @@ public class CVUploadService : ICVUploadService
         }
     }
 
-    private async Task<string> ExtractTextFromWordAsync(string filePath)
+    private string ExtractTextFromWordAsync(string filePath)
     {
         try
         {

@@ -58,14 +58,10 @@ public class AIProcessingTests
     public void AIPromptTemplates_ShouldDetectJobTypes()
     {
         // Test Software Development detection
-        var softwareDescription = "We need a software developer with C# experience";
-        var softwareSkills = "C#, .NET, SQL";
         var jobType = AIPromptTemplates.JobTypes.Software;
         Assert.Equal("Software Development", jobType);
 
         // Test Marketing detection
-        var marketingDescription = "We are looking for a marketing specialist";
-        var marketingSkills = "SEO, Social Media, Analytics";
         var marketingJobType = AIPromptTemplates.JobTypes.Marketing;
         Assert.Equal("Marketing", marketingJobType);
     }

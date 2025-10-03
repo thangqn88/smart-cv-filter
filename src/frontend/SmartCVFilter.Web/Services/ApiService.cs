@@ -142,7 +142,7 @@ public class ApiService : IApiService
     {
         try
         {
-            await EnsureAuthenticatedAsync();
+            EnsureAuthenticated();
 
             // Create full URL like the working methods
             var fullUrl = new Uri(_httpClient.BaseAddress!, endpoint);
@@ -179,7 +179,7 @@ public class ApiService : IApiService
         }
     }
 
-    private async Task EnsureAuthenticatedAsync()
+    private void EnsureAuthenticated()
     {
         var token = GetToken();
         if (!string.IsNullOrEmpty(token))

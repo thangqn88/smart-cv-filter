@@ -198,7 +198,7 @@ public class JobPostsController : BaseController
 
         try
         {
-            var result = await _jobPostService.CreateJobPostAsync(model);
+            var result = await _jobPostService.CreateJobPostAsync(model!);
             if (result != null)
             {
                 TempData["Success"] = "Job post created successfully!";

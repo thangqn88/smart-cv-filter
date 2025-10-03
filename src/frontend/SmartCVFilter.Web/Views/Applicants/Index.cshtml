@@ -245,7 +245,7 @@
                                             @if (pagedModel.Pagination.HasPreviousPage)
                                             {
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?@GetPageUrl(pagedModel, pagedModel.Pagination.PreviousPage.Value)">
+                                                    <a class="page-link" href="?@GetPageUrl(pagedModel, pagedModel.Pagination.PreviousPage!.Value)">
                                                         <i class="bi bi-chevron-left"></i>
                                                     </a>
                                                 </li>
@@ -300,7 +300,7 @@
                                             @if (pagedModel.Pagination.HasNextPage)
                                             {
                                                 <li class="page-item">
-                                                    <a class="page-link" href="?@GetPageUrl(pagedModel, pagedModel.Pagination.NextPage.Value)">
+                                                    <a class="page-link" href="?@GetPageUrl(pagedModel, pagedModel.Pagination.NextPage!.Value)">
                                                         <i class="bi bi-chevron-right"></i>
                                                     </a>
                                                 </li>
