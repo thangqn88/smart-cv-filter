@@ -17,13 +17,22 @@ public class CVUploadService : ICVUploadService
     {
         try
         {
+            using var httpClient = new HttpClient();
+            var token = _apiService.GetToken();
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
             using var content = new MultipartFormDataContent();
             using var fileContent = new StreamContent(file.OpenReadStream());
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
             content.Add(fileContent, "file", file.FileName);
 
-            var response = await _apiService.MakeRequestAsync<object>($"applicants/{applicantId}/cvupload/upload", HttpMethod.Post, content);
-            return response != null;
+            var baseUrl = "http://localhost:4000/api";
+            var response = await httpClient.PostAsync($"{baseUrl}/applicants/{applicantId}/cvupload/upload", content);
+
+            return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
@@ -36,7 +45,7 @@ public class CVUploadService : ICVUploadService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<object>($"applicants/{applicantId}/cvupload/{cvFileId}", HttpMethod.Delete);
+            var response = await _apiService.MakeRequestAsync<object>($"api/applicants/{applicantId}/cvupload/{cvFileId}", HttpMethod.Delete);
             return response != null;
         }
         catch (Exception ex)
@@ -58,8 +67,8 @@ public class CVUploadService : ICVUploadService
             }
 
             // Use the same base URL as the API service
-            var baseUrl = Environment.GetEnvironmentVariable("API_BASE_URL") ?? "http://localhost:4000";
-            var response = await httpClient.GetAsync($"{baseUrl}/api/applicants/{applicantId}/cvupload/{cvFileId}/download");
+            var baseUrl = "http://localhost:4000/api";
+            var response = await httpClient.GetAsync($"{baseUrl}/applicants/{applicantId}/cvupload/{cvFileId}/download");
 
             if (response.IsSuccessStatusCode)
             {
@@ -79,7 +88,7 @@ public class CVUploadService : ICVUploadService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<object>($"applicants/{applicantId}/cvupload/{cvFileId}/extract-text", HttpMethod.Post);
+            var response = await _apiService.MakeRequestAsync<object>($"api/applicants/{applicantId}/cvupload/{cvFileId}/extract-text", HttpMethod.Post);
             if (response is System.Text.Json.JsonElement jsonElement && jsonElement.TryGetProperty("extractedText", out var textElement))
             {
                 return textElement.GetString() ?? string.Empty;
@@ -97,7 +106,7 @@ public class CVUploadService : ICVUploadService
     {
         try
         {
-            var response = await _apiService.MakeRequestAsync<List<CVFileStatusResponse>>($"applicants/{applicantId}/cvupload/status", HttpMethod.Get);
+            var response = await _apiService.MakeRequestAsync<List<CVFileStatusResponse>>($"api/applicants/{applicantId}/cvupload/status", HttpMethod.Get);
             return response ?? new List<CVFileStatusResponse>();
         }
         catch (Exception ex)
