@@ -1,0 +1,21 @@
+stateDiagram-v2
+    direction TB
+
+    [*] --> No_CV_Uploaded: Bắt đầu
+    
+    No_CV_Uploaded: Chưa tải CV lên (No CV Uploaded)
+    Processing: Đang xử lý (Processing)
+    Processed: Đã đọc và lưu CSDL (Processed)
+    Screened: Đã chấm điểm bởi AI (Screened)
+    
+    %% Flow
+    No_CV_Uploaded --> Processing: Tải lên CV và Kích hoạt AI
+    
+    Processing --> Processed: Hoàn thành đọc dữ liệu thô / Lưu tạm CSDL
+    
+    Processed --> Screened: AI hoàn tất chấm điểm / Lưu kết quả Score
+    
+    Screened --> [*]: Kết thúc quy trình Sàng lọc
+    
+    %% Error/Lỗi
+    Processing --> No_CV_Uploaded: Lỗi Xử lý / Timeout (Yêu cầu Tải lại)

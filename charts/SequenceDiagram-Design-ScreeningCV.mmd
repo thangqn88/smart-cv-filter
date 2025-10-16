@@ -1,0 +1,54 @@
+sequenceDiagram
+    participant R as Giao diện người dùng (Web/UI)
+    participant C as CVUploadController
+    participant S as ScreeningService
+    participant AI as GeminiAIService
+    participant DB as ApplicationDbContext
+    participant API as Gemini API (External)
+
+    Note over R,API: Chức năng: Bắt đầu Sàng lọc CV (POST /api/applicants/{id}/cvupload/screening)
+
+    R->>C: 1. POST /cvupload/screening (applicantId)
+    activate C
+    C->>S: 2. ProcessScreeningAsync(applicantId, jobPostId)
+    activate S
+    
+    S->>DB: 3. Tạo ScreeningResult (Status: Processing)
+    activate DB
+    DB-->>S: 4. (ResultId)
+    deactivate DB
+    
+    S->>AI: 5. PerformScreeningAsync(applicantId, jobPostId)
+    activate AI
+    
+    AI->>DB: 6. Lấy CV đã Processed và JobPost
+    activate DB
+    DB-->>AI: 7. Trả về (ExtractedText, JobData)
+    deactivate DB
+    
+    AI->>AI: 8. GeneratePrompt(JobData, ExtractedText)
+    AI->>API: 9. HTTP POST /generateContent (Prompt, API Key)
+    activate API
+    API-->>AI: 10. Trả về JSON Analysis
+    deactivate API
+    
+    AI-->>S: 11. Trả về ScreeningAnalysisResult (parsed)
+    deactivate AI
+
+    S->>DB: 12. Cập nhật ScreeningResult (Score, Summary, Status: Completed)
+    activate DB
+    S->>DB: 13. Cập nhật Applicant.Status = 'Screened'
+    DB-->>S: 14. (Success)
+    deactivate DB
+    
+    S-->>C: 15. Return true
+    deactivate S
+    
+    C-->>R: 16. HTTP 200 OK (Screening completed)
+    deactivate C
+
+    alt Xử lý Lỗi (Ví dụ: Lỗi kết nối AI)
+        AI--xS: Lỗi: Call API thất bại (hoặc InvalidOperationException)
+        S->>DB: 13a. Cập nhật ScreeningResult (Status: Failed)
+        S--xR: Throw/Return false
+    end

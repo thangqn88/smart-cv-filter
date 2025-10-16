@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant A as Người Dùng (HR)
+    participant F as Frontend (Web MVC)
+    participant B as Backend (Web API)
+    participant D as CSDL
+
+    A->>F: Yêu cầu Tạo/Sửa/Xóa JD
+    F->>A: Hiển thị Form JD
+    A->>F: Nhập chi tiết JD
+    F->>B: /api/jd (Gửi Dữ liệu JD)
+    activate B
+    B->>D: Lưu JD
+    activate D
+    D-->>B: Lưu thành công
+    deactivate D
+    B-->>F: Phản hồi 200 OK (JD đã được xử lý)
+    deactivate B
+    F->>A: Thông báo: Lưu JD thành công

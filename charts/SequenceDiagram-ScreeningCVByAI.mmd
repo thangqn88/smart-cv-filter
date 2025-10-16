@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant A as Người Dùng (HR)
+    participant F as Frontend (Web MVC)
+    participant B as Backend (Web API)
+    participant G as Gemini AI Service
+    participant D as CSDL
+
+    A->>F: Tải lên Tệp CV & Chọn JD
+    F->>B: /api/score (Tệp CV, ID JD)
+    activate B
+    B->>D: Truy vấn chi tiết JD
+    activate D
+    D-->>B: Trả về JD
+    deactivate D
+    B->>G: streamGenerateContent (CV, JD, JSON Schema)
+    activate G
+    
+    loop Xử lý và Hiển thị Dạng Dòng
+        G-->>B: Gửi Tokens/Phân đoạn JSON
+        B->>F: Truyền Tokens Streaming (SSE)
+        F->>A: Hiển thị điểm số cập nhật
+    end
+    
+    G-->>B: Phản hồi cuối cùng (JSON cấu trúc)
+    deactivate G
+    B->>B: Deserialization & Xử lý
+    B->>D: Lưu Kết quả Chấm điểm
+    activate D
+    D-->>B: Hoàn tất lưu trữ
+    deactivate D
+    B-->>F: Phản hồi 200 OK
+    deactivate B
+    F->>A: Hiển thị Kết quả Chấm điểm Hoàn chỉnh

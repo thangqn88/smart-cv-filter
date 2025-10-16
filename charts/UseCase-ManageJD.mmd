@@ -1,0 +1,22 @@
+graph LR
+    %% Định nghĩa Actor
+    A(Nhà tuyển dụng)
+    
+    %% Định nghĩa Ranh giới Hệ thống
+    subgraph Use case quản lý tin tuyển dụng
+        
+        %% Use Case Cốt Lõi
+        UC1(Tạo Tin Tuyển Dụng Mới)
+        UC2(Chỉnh sửa Tin Tuyển Dụng)
+        UC3(Xem Danh sách Tin Tuyển Dụng)
+        UC4(Đóng/Mở Tin Tuyển Dụng)
+        UC5(Chấm điểm CV bằng AI)
+        
+    end
+    
+    %% Mối quan hệ giữa Actor và Use Case
+    A --> UC1
+    A --> UC2
+    A --> UC3
+    A --> UC4
+    A --> UC5

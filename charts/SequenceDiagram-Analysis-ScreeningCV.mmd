@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant R as Nhà tuyển dụng
+    participant B as Giao diện Web
+    participant C as Lớp Logic Điều khiển
+    participant E as Thực thể (CV, Kết quả)
+    participant A as Hệ thống AI (Gemini)
+
+    Note over R,A: Kịch bản: Bắt đầu sàng lọc CV bằng AI (Sàng lọc Synchronous)
+
+    R->>B: 1. Yêu cầu Bắt đầu Sàng lọc (applicantId, jobPostId)
+    activate B
+    B->>C: 2. Xử lý sàng lọc(applicantId, jobPostId)
+    activate C
+    
+    C->>E: 3. Lấy thông tin Tin tuyển dụng & Ứng viên
+    E-->>C: 4. (jobData, applicantData)
+    
+    C->>E: 5. Lấy Nội dung CV đã xử lý (ExtractedText)
+    E-->>C: 6. (CV Content)
+    
+    Note over C: Chuẩn bị Prompt & Lưu trạng thái "Đang xử lý"
+
+    C->>A: 7. Phân tích hồ sơ(CV Content, JobPost Criteria)
+    activate A
+    A->>A: 8. Xử lý & Phân tích (Sử dụng các tiêu chí nghiệp vụ)
+    A-->>C: 9. Trả về Kết quả Phân tích (Score, Strengths, Weaknesses, JSON)
+    deactivate A
+    
+    C->>E: 10. Lưu kết quả sàng lọc & Cập nhật trạng thái "Screened"
+    E-->>C: 11. (Success)
+    deactivate C
+    
+    C-->>B: 12. Trả về thông báo hoàn tất
+    deactivate B
+    B-->>R: 13. Hiển thị thông báo "Sàng lọc hoàn tất"

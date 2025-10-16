@@ -1,0 +1,40 @@
+deploymentDiagram
+    direction LR
+    
+    ' 1. Client Node'
+    actor Client as "Người dùng (Browser)"
+    
+    ' 2. Cloud/Server Node - Sử dụng Docker/K8s'
+    node Cloud_Server as "Môi trường Cloud/Server\n(AWS, Azure, Vultr...)" {
+        
+        ' Node Orchestration - Container Runtime'
+        node Container_Orchestration as "Container Orchestration\n(Docker/Kubernetes)" {
+            
+            ' Artifact 1: Frontend Container'
+            artifact Frontend_App as "SmartCVFilter.Web\n(ASP.NET MVC 8)"
+            
+            ' Artifact 2: Backend Container'
+            artifact Backend_API as "SmartCVFilter.API\n(ASP.NET Web API 8)"
+            
+            ' Artifact 3: Database Container'
+            artifact Database_Container as "PostgreSQL Server"
+            
+            ' Artifact 4: Caching/Session Container'
+            artifact Cache_Server as "Redis Cache"
+            
+            ' Artifact 5: CV Storage (Volume)'
+            artifact CV_Volume as "Persistent Storage\n(/uploads/cvs)"
+            
+            Frontend_App ..> Backend_API : Gọi API (HTTP)
+            Backend_API --> Database_Container : Truy vấn dữ liệu (EF Core)
+            Backend_API --> Cache_Server : Caching/Session (Redis)
+            Backend_API --> CV_Volume : Lưu trữ File CV
+        }
+    }
+    
+    ' 3. External Node'
+    node External_AI as "Google Gemini AI Cloud\n(Dịch vụ ngoài)"
+
+    ' Mối quan hệ giữa các Node'
+    Client --> Cloud_Server : Tương tác Web (HTTP/S)
+    Cloud_Server --> External_AI : Yêu cầu Sàng lọc (API Call)

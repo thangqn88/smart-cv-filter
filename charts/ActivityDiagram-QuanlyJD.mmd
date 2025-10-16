@@ -1,0 +1,26 @@
+graph TB
+    %% Định nghĩa các Swimlane/Lane
+    subgraph "Người Dùng/HR/Tuyển dụng"
+        A1(Bắt đầu: Quản lý JD)
+        A2(Thêm mới/Sửa/Xóa JD)
+        A4(Xem/Truy vấn Danh sách JD)
+    end
+
+    subgraph "Backend Web API"
+        B1(Nhận Dữ liệu JD)
+        B2(Xác thực và Xử lý JD)
+        B3(Lưu/Cập nhật JD vào CSDL)
+        B4(Truy vấn CSDL)
+        B5(Trả về Danh sách JD)
+    end
+
+    %% Flow
+    A1 --> A2
+    A2 --> B1
+    B1 --> B2
+    B2 --> B3
+    A1 --> A4
+    B3 --> A4
+    A4 --> B4
+    B4 --> B5
+    B5 --> A4

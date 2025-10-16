@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant R as Nhà tuyển dụng
+    participant B as Giao diện/Đầu vào (View/Form)
+    participant C as Logic nghiệp vụ (Service Logic)
+    participant E as Các thực thể dữ liệu (Applicant, JobPost)
+
+    Note over R,E: Kịch bản: Thêm mới Ứng viên (Manually Add Applicant)
+
+    R->>B: 1. Nhập thông tin (FirstName, Email, CoverLetter, JobPostId)
+    B->>B: 2. Xác thực dữ liệu (Client-side validation)
+    
+    B->>C: 3. CreateApplicant(request, jobPostId)
+    activate C
+    
+    C->>E: 4. Kiểm tra tồn tại JobPost (jobPostId)
+    activate E
+    E-->>C: 5. JobPost (Thông tin tin tuyển dụng)
+    deactivate E
+    
+    alt Lỗi: Không tìm thấy JobPost (InvalidOperationException)
+        C--xR: 5a. Báo lỗi: "Tin tuyển dụng không tồn tại"
+    end
+    
+    C->>E: 6. Tạo thực thể Applicant mới (Status: Applied)
+    activate E
+    E-->>C: 7. Applicant (Đã lưu vào CSDL)
+    deactivate E
+    
+    C-->>B: 8. Trả về ApplicantResponse (Ứng viên mới)
+    deactivate C
+    
+    B-->>R: 9. Hiển thị thông báo "Thêm ứng viên thành công"

@@ -1,0 +1,32 @@
+graph TD
+    %% Định nghĩa các Swimlane/Lane
+    subgraph "Người Dùng - HR/Tuyển dụng"
+        A1(Chọn JD Mục tiêu)
+        A2(Tải lên Tệp CV Multimodal)
+        A5(Hoàn tất: Lưu trữ và Sàng lọc)
+    end
+
+    subgraph "Backend Web API"
+        B1(Nhận CV & ID JD)
+        B2(Chuẩn bị Prompt, Schema JSON & Xử lý Tệp)
+        B3(Gọi Gemini API: streamGenerateContent)
+        B5(Lưu Kết quả Cuối cùng vào CSDL)
+    end
+    
+    subgraph "Gemini AI Service"
+        G1(Phân tích Multimodal CV và JD)
+        G2(Tạo và Xuất Tokens JSON Dạng Dòng)
+    end
+
+    %% Flow
+    A1 --> A2
+    A2 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> G1
+    G1 --> G2
+
+
+    %% Finalization
+    G2 -- Hoàn tất --> B5
+    B5 --> A5

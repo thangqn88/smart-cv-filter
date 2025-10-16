@@ -1,0 +1,34 @@
+componentDiagram
+    direction TB
+    
+    component Client as "Client App (Trình duyệt)"
+    
+    package FRONTEND_WEB {
+        component FE as "SmartCVFilter.Web (ASP.NET MVC)"
+        interface I_FE_API as "Giao diện API (HttpClient)"
+        FE -- I_FE_API
+    }
+    
+    package BACKEND_API {
+        component API_Ctrl as "Tầng Controller (API Gateway)"
+        component Logic_Svc as "Tầng Logic Nghiệp vụ (Services)"
+        component Data_Repo as "Tầng Truy cập Dữ liệu (Repository)"
+        component AI_Svc as "Dịch vụ Gemini AI Client"
+        
+        API_Ctrl -- Logic_Svc : Gọi phương thức nghiệp vụ
+        Logic_Svc --> Data_Repo : CRUD (Lưu/Đọc dữ liệu)
+        Logic_Svc --> AI_Svc : Yêu cầu Phân tích CV
+        
+        AI_Svc ..> Logic_Svc : Trả về Kết quả Phân tích (JSON)
+    }
+    
+    component DB as "PostgreSQL Database"
+    component Gemini as "Google Gemini AI API"
+
+    Client <--> FE : HTTP/S (Tương tác UI)
+    
+    I_FE_API <--> API_Ctrl : RESTful API (Đăng nhập, Quản lý tin,...)
+    
+    Data_Repo <--> DB : ORM (Entity Framework Core)
+
+    AI_Svc --> Gemini : HTTP POST (Gọi API ngoài)

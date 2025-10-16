@@ -1,0 +1,45 @@
+sequenceDiagram
+    participant Client as Giao diện Web (Web/UI)
+    participant Ctrl as ApplicantsController
+    participant Svc as ApplicantService
+    participant DB as ApplicationDbContext (Database)
+
+    Note over Client,DB: Chức năng: Thêm Ứng viên (POST /api/jobposts/{id}/applicants)
+
+    Client->>Ctrl: 1. POST /jobposts/{jobPostId}/applicants (CreateApplicantRequest)
+    activate Ctrl
+    
+    Ctrl->>Ctrl: 2. ModelState.IsValid & Validate Request
+    
+    alt Validation Failed (Request body/Model invalid)
+        Ctrl--xClient: 2a. HTTP 400 Bad Request
+    end
+
+    Ctrl->>Svc: 3. CreateApplicantAsync(request, jobPostId)
+    activate Svc
+    
+    Svc->>DB: 4. FindAsync(jobPostId)
+    activate DB
+    DB-->>Svc: 5. Trả về JobPost (hoặc null)
+    deactivate DB
+    
+    alt JobPost Not Found (null)
+        Svc--xCtrl: 5a. Throw InvalidOperationException("Job post not found.")
+    end
+    
+    Svc->>DB: 6. Add(new Applicant { ... })
+    activate DB
+    DB->>DB: 7. SaveChangesAsync()
+    DB-->>Svc: 8. Trả về Applicant.Id
+    deactivate DB
+    
+    Svc->>DB: 9. GetApplicantByIdAsync(applicant.Id, ...)
+    activate DB
+    DB-->>Svc: 10. Trả về ApplicantResponse (bao gồm JobTitle)
+    deactivate DB
+    
+    Svc-->>Ctrl: 11. Return ApplicantResponse
+    deactivate Svc
+
+    Ctrl-->>Client: 12. HTTP 201 Created (ApplicantResponse)
+    deactivate Ctrl
