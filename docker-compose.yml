@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL Database
@@ -21,24 +21,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # pgAdmin (Database Management UI)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: smart-cv-filter-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@smartcv.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - smart-cv-filter-network
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   # Backend API
   backend:
@@ -71,7 +53,8 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:80/api/auth/validate || exit 1"]
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:80/api/auth/validate || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,9 +70,6 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
       - ASPNETCORE_URLS=http://+:80
       - ApiSettings__BaseUrl=http://backend:80/api
-      - JwtSettings__Issuer=${JWT_ISSUER:-SmartCVFilter}
-      - JwtSettings__Audience=${JWT_AUDIENCE:-SmartCVFilter}
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     networks:
@@ -100,11 +80,9 @@ services:
 
 volumes:
   postgres_data:
-  pgadmin_data:
   backend_uploads:
   backend_logs:
 
 networks:
   smart-cv-filter-network:
     driver: bridge
-

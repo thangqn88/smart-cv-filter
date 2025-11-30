@@ -13,51 +13,51 @@ $errors = 0
 
 # Check Docker installation
 Write-Host "1. Checking Docker installation..." -ForegroundColor Cyan
-try {
-    $dockerVersion = docker --version
-    Write-Host "   ✓ Docker installed: $dockerVersion" -ForegroundColor Green
-} catch {
-    Write-Host "   ✗ Docker not found. Please install Docker Desktop." -ForegroundColor Red
+$dockerOutput = docker --version 2>&1
+if ($?) {
+    Write-Host "   [OK] Docker installed: $dockerOutput" -ForegroundColor Green
+} else {
+    Write-Host "   [ERROR] Docker not found. Please install Docker Desktop." -ForegroundColor Red
     $errors++
 }
 
 # Check Docker Compose
 Write-Host "2. Checking Docker Compose..." -ForegroundColor Cyan
-try {
-    $composeVersion = docker-compose --version
-    Write-Host "   ✓ Docker Compose installed: $composeVersion" -ForegroundColor Green
-} catch {
-    Write-Host "   ✗ Docker Compose not found." -ForegroundColor Red
+$composeOutput = docker-compose --version 2>&1
+if ($?) {
+    Write-Host "   [OK] Docker Compose installed: $composeOutput" -ForegroundColor Green
+} else {
+    Write-Host "   [ERROR] Docker Compose not found." -ForegroundColor Red
     $errors++
 }
 
 # Check Docker daemon
 Write-Host "3. Checking Docker daemon..." -ForegroundColor Cyan
-try {
-    docker info | Out-Null
-    Write-Host "   ✓ Docker daemon is running" -ForegroundColor Green
-} catch {
-    Write-Host "   ✗ Docker daemon is not running. Please start Docker Desktop." -ForegroundColor Red
+docker info 2>&1 | Out-Null
+if ($?) {
+    Write-Host "   [OK] Docker daemon is running" -ForegroundColor Green
+} else {
+    Write-Host "   [ERROR] Docker daemon is not running. Please start Docker Desktop." -ForegroundColor Red
     $errors++
 }
 
 # Check docker-compose.yml
 Write-Host "4. Checking docker-compose.yml..." -ForegroundColor Cyan
 if (Test-Path "docker-compose.yml") {
-    Write-Host "   ✓ docker-compose.yml found" -ForegroundColor Green
+    Write-Host "   [OK] docker-compose.yml found" -ForegroundColor Green
 } else {
-    Write-Host "   ✗ docker-compose.yml not found" -ForegroundColor Red
+    Write-Host "   [ERROR] docker-compose.yml not found" -ForegroundColor Red
     $errors++
 }
 
 # Check .env file
 Write-Host "5. Checking .env file..." -ForegroundColor Cyan
 if (Test-Path ".env") {
-    Write-Host "   ✓ .env file found" -ForegroundColor Green
+    Write-Host "   [OK] .env file found" -ForegroundColor Green
 } else {
-    Write-Host "   ⚠ .env file not found (will use defaults)" -ForegroundColor Yellow
+    Write-Host "   [WARNING] .env file not found (will use defaults)" -ForegroundColor Yellow
     if (Test-Path ".env.example") {
-        Write-Host "   ℹ You can copy .env.example to .env" -ForegroundColor Yellow
+        Write-Host "   [INFO] You can copy .env.example to .env" -ForegroundColor Yellow
     }
 }
 
@@ -67,38 +67,44 @@ $backendDockerfile = "src/backend/SmartCVFilter.API/Dockerfile"
 $frontendDockerfile = "src/frontend/SmartCVFilter.Web/Dockerfile"
 
 if (Test-Path $backendDockerfile) {
-    Write-Host "   ✓ Backend Dockerfile found" -ForegroundColor Green
+    Write-Host "   [OK] Backend Dockerfile found" -ForegroundColor Green
 } else {
-    Write-Host "   ✗ Backend Dockerfile not found" -ForegroundColor Red
+    Write-Host "   [ERROR] Backend Dockerfile not found" -ForegroundColor Red
     $errors++
 }
 
 if (Test-Path $frontendDockerfile) {
-    Write-Host "   ✓ Frontend Dockerfile found" -ForegroundColor Green
+    Write-Host "   [OK] Frontend Dockerfile found" -ForegroundColor Green
 } else {
-    Write-Host "   ✗ Frontend Dockerfile not found" -ForegroundColor Red
+    Write-Host "   [ERROR] Frontend Dockerfile not found" -ForegroundColor Red
     $errors++
 }
 
 # Check port availability
 Write-Host "7. Checking port availability..." -ForegroundColor Cyan
-$ports = @(3000, 5000, 5050, 5432)
+$ports = @(3000, 5000, 5432)
 foreach ($port in $ports) {
     $connection = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
     if ($connection) {
-        Write-Host "   ⚠ Port $port is already in use" -ForegroundColor Yellow
+        Write-Host "   [WARNING] Port $port is already in use" -ForegroundColor Yellow
     } else {
-        Write-Host "   ✓ Port $port is available" -ForegroundColor Green
+        Write-Host "   [OK] Port $port is available" -ForegroundColor Green
     }
 }
 
 # Validate docker-compose.yml syntax
 Write-Host "8. Validating docker-compose.yml syntax..." -ForegroundColor Cyan
-try {
-    docker-compose config | Out-Null
-    Write-Host "   ✓ docker-compose.yml syntax is valid" -ForegroundColor Green
-} catch {
-    Write-Host "   ✗ docker-compose.yml syntax error" -ForegroundColor Red
+$composeOutput = docker-compose config 2>&1
+$composeExitCode = $LASTEXITCODE
+if ($composeExitCode -eq 0) {
+    Write-Host "   [OK] docker-compose.yml syntax is valid" -ForegroundColor Green
+    # Check for warnings
+    if ($composeOutput -match "warning|obsolete") {
+        Write-Host "   [WARNING] docker-compose.yml has deprecation warnings (non-critical)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "   [ERROR] docker-compose.yml syntax error" -ForegroundColor Red
+    Write-Host "   Error details: $composeOutput" -ForegroundColor Red
     $errors++
 }
 
@@ -109,4 +115,3 @@ if ($errors -eq 0) {
     Write-Host "$errors error(s) found. Please fix them before proceeding." -ForegroundColor Red
     exit 1
 }
-
