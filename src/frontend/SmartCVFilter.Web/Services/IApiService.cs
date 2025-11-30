@@ -11,6 +11,7 @@ public interface IApiService
     string? GetToken();
     void SetToken(string token);
     Task<T?> MakeRequestAsync<T>(string endpoint, HttpMethod method, object? content = null);
+    string GetBaseUrl();
 }
 
 public interface IJobPostService

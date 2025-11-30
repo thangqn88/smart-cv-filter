@@ -27,25 +27,46 @@ public class CVUploadController : ControllerBase
     [HttpPost("upload")]
     public async Task<ActionResult> UploadCV(int applicantId, IFormFile file)
     {
+        _logger.LogInformation("UploadCV endpoint called. ApplicantId: {ApplicantId}, FileName: {FileName}, FileSize: {FileSize}, ContentType: {ContentType}",
+            applicantId, file?.FileName, file?.Length, file?.ContentType);
+
         try
         {
             if (file == null || file.Length == 0)
+            {
+                _logger.LogWarning("UploadCV: File is null or empty. ApplicantId: {ApplicantId}", applicantId);
                 return BadRequest(new { message = "No file uploaded." });
+            }
 
+            _logger.LogDebug("UploadCV: Validating file. ApplicantId: {ApplicantId}, FileName: {FileName}", applicantId, file.FileName);
             if (!_cvUploadService.ValidateCVFile(file))
+            {
+                _logger.LogWarning("UploadCV: File validation failed. ApplicantId: {ApplicantId}, FileName: {FileName}, Size: {Size}, ContentType: {ContentType}",
+                    applicantId, file.FileName, file.Length, file.ContentType);
                 return BadRequest(new { message = "Invalid file format or size. Please upload PDF, DOC, DOCX, or TXT files (max 10MB)." });
+            }
 
+            _logger.LogInformation("UploadCV: File validation passed. Starting upload. ApplicantId: {ApplicantId}", applicantId);
+            var startTime = DateTime.UtcNow;
             var filePath = await _cvUploadService.UploadCVAsync(file, applicantId);
+            var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
+
+            _logger.LogInformation("UploadCV: Upload completed successfully. ApplicantId: {ApplicantId}, FilePath: {FilePath}, Duration: {Duration}ms",
+                applicantId, filePath, duration);
             return Ok(new { message = "File uploaded successfully.", filePath });
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning(ex, "InvalidOperationException in UploadCV. ApplicantId: {ApplicantId}, Message: {Message}",
+                applicantId, ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading CV for applicant {ApplicantId}", applicantId);
-            return StatusCode(500, new { message = "An error occurred while uploading the file." });
+            _logger.LogError(ex, 
+                "Exception in UploadCV. ApplicantId: {ApplicantId}, ExceptionType: {ExceptionType}, Message: {Message}, StackTrace: {StackTrace}",
+                applicantId, ex.GetType().Name, ex.Message, ex.StackTrace);
+            return StatusCode(500, new { message = "An error occurred while uploading the file.", error = ex.Message });
         }
     }
 

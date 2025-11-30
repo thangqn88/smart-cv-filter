@@ -488,10 +488,14 @@ public class ApplicantsController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadCV(int jobPostId, int id, IFormFile cvFile)
     {
+        _logger.LogInformation("UploadCV called. JobPostId: {JobPostId}, ApplicantId: {ApplicantId}, FileName: {FileName}, FileSize: {FileSize}",
+            jobPostId, id, cvFile?.FileName, cvFile?.Length);
+
         try
         {
             if (cvFile == null || cvFile.Length == 0)
             {
+                _logger.LogWarning("UploadCV: File is null or empty. ApplicantId: {ApplicantId}", id);
                 TempData["Error"] = "Please select a file to upload.";
                 return RedirectToAction("Details", new { jobPostId, id });
             }
@@ -499,8 +503,12 @@ public class ApplicantsController : BaseController
             // Validate file type and size
             var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".txt" };
             var fileExtension = Path.GetExtension(cvFile.FileName).ToLowerInvariant();
+            _logger.LogDebug("UploadCV: File extension: {FileExtension}", fileExtension);
+
             if (!allowedExtensions.Contains(fileExtension))
             {
+                _logger.LogWarning("UploadCV: Invalid file extension. ApplicantId: {ApplicantId}, Extension: {Extension}",
+                    id, fileExtension);
                 TempData["Error"] = "Invalid file format. Please upload PDF, DOC, DOCX, or TXT files.";
                 return RedirectToAction("Details", new { jobPostId, id });
             }
@@ -508,23 +516,31 @@ public class ApplicantsController : BaseController
             var maxSize = 10 * 1024 * 1024; // 10MB
             if (cvFile.Length > maxSize)
             {
+                _logger.LogWarning("UploadCV: File too large. ApplicantId: {ApplicantId}, Size: {Size} bytes, MaxSize: {MaxSize} bytes",
+                    id, cvFile.Length, maxSize);
                 TempData["Error"] = "File size too large. Maximum size is 10MB.";
                 return RedirectToAction("Details", new { jobPostId, id });
             }
 
+            _logger.LogInformation("UploadCV: File validation passed. Starting upload to service. ApplicantId: {ApplicantId}", id);
             var result = await _cvUploadService.UploadCVAsync(id, cvFile);
+            
             if (result)
             {
+                _logger.LogInformation("UploadCV: Upload successful. ApplicantId: {ApplicantId}", id);
                 TempData["Success"] = "CV uploaded successfully!";
             }
             else
             {
+                _logger.LogWarning("UploadCV: Upload failed (service returned false). ApplicantId: {ApplicantId}", id);
                 TempData["Error"] = "Failed to upload CV. Please try again.";
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading CV for applicant {ApplicantId}", id);
+            _logger.LogError(ex, 
+                "Exception in UploadCV. JobPostId: {JobPostId}, ApplicantId: {ApplicantId}, ExceptionType: {ExceptionType}, Message: {Message}, StackTrace: {StackTrace}",
+                jobPostId, id, ex.GetType().Name, ex.Message, ex.StackTrace);
             TempData["Error"] = "An error occurred while uploading the CV.";
         }
 

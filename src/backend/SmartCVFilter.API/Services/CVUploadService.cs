@@ -33,14 +33,25 @@ public class CVUploadService : ICVUploadService
 
     public async Task<string> UploadCVAsync(IFormFile file, int applicantId)
     {
+        _logger.LogInformation("CVUploadService.UploadCVAsync called. ApplicantId: {ApplicantId}, FileName: {FileName}, FileSize: {FileSize}",
+            applicantId, file?.FileName, file?.Length);
+
         if (!ValidateCVFile(file))
         {
+            _logger.LogWarning("CVUploadService.UploadCVAsync: File validation failed. ApplicantId: {ApplicantId}, FileName: {FileName}",
+                applicantId, file?.FileName);
             throw new InvalidOperationException("Invalid file format or size.");
         }
 
+        _logger.LogDebug("CVUploadService.UploadCVAsync: File validation passed");
+
         var uploadPath = Path.Combine(_environment.WebRootPath, "uploads", "cvs");
+        _logger.LogDebug("CVUploadService.UploadCVAsync: Upload path: {UploadPath}, WebRootPath: {WebRootPath}",
+            uploadPath, _environment.WebRootPath);
+
         if (!Directory.Exists(uploadPath))
         {
+            _logger.LogInformation("CVUploadService.UploadCVAsync: Creating upload directory: {UploadPath}", uploadPath);
             Directory.CreateDirectory(uploadPath);
         }
 
@@ -48,9 +59,23 @@ public class CVUploadService : ICVUploadService
         var fileName = $"{Guid.NewGuid()}{fileExtension}";
         var filePath = Path.Combine(uploadPath, fileName);
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        _logger.LogDebug("CVUploadService.UploadCVAsync: Generated file path: {FilePath}", filePath);
+
+        try
         {
-            await file.CopyToAsync(stream);
+            _logger.LogInformation("CVUploadService.UploadCVAsync: Starting file copy. ApplicantId: {ApplicantId}", applicantId);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            _logger.LogInformation("CVUploadService.UploadCVAsync: File copy completed. ApplicantId: {ApplicantId}, FilePath: {FilePath}",
+                applicantId, filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CVUploadService.UploadCVAsync: Error copying file. ApplicantId: {ApplicantId}, FilePath: {FilePath}",
+                applicantId, filePath);
+            throw;
         }
 
         var cvFile = new CVFile
@@ -65,12 +90,28 @@ public class CVUploadService : ICVUploadService
             Status = "Uploaded"
         };
 
-        _context.CVFiles.Add(cvFile);
-        await _context.SaveChangesAsync();
+        _logger.LogDebug("CVUploadService.UploadCVAsync: CVFile entity created. Saving to database...");
+
+        try
+        {
+            _context.CVFiles.Add(cvFile);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("CVUploadService.UploadCVAsync: CVFile saved to database. CVFileId: {CvFileId}, ApplicantId: {ApplicantId}",
+                cvFile.Id, applicantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CVUploadService.UploadCVAsync: Error saving CVFile to database. ApplicantId: {ApplicantId}",
+                applicantId);
+            throw;
+        }
 
         // Start text extraction in background
+        _logger.LogInformation("CVUploadService.UploadCVAsync: Starting background text extraction. CVFileId: {CvFileId}", cvFile.Id);
         _ = Task.Run(async () => await ExtractTextFromCVInBackgroundAsync(cvFile.Id));
 
+        _logger.LogInformation("CVUploadService.UploadCVAsync: Upload completed successfully. ApplicantId: {ApplicantId}, FilePath: {FilePath}",
+            applicantId, filePath);
         return filePath;
     }
 

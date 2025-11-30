@@ -249,4 +249,11 @@ public class ApiService : IApiService
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
     }
+
+    public string GetBaseUrl()
+    {
+        var baseUrl = _configuration["ApiSettings:BaseUrl"];
+        // Remove trailing slash if present for consistency
+        return baseUrl?.TrimEnd('/') ?? "http://localhost:4000/api";
+    }
 }
