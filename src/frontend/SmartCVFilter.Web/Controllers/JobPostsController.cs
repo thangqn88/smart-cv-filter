@@ -11,12 +11,14 @@ namespace SmartCVFilter.Web.Controllers;
 public class JobPostsController : BaseController
 {
     private readonly IJobPostService _jobPostService;
+    private readonly IApplicantService _applicantService;
     private readonly ILogger<JobPostsController> _logger;
 
-    public JobPostsController(IJobPostService jobPostService, ILogger<JobPostsController> logger, IOptions<PaginationSettings> paginationSettings)
+    public JobPostsController(IJobPostService jobPostService, IApplicantService applicantService, ILogger<JobPostsController> logger, IOptions<PaginationSettings> paginationSettings)
         : base(logger, paginationSettings)
     {
         _jobPostService = jobPostService;
+        _applicantService = applicantService;
         _logger = logger;
     }
 
@@ -165,7 +167,14 @@ public class JobPostsController : BaseController
                 return RedirectToAction("Index");
             }
 
+            // Load applicants for this job post
+            var applicants = await _applicantService.GetApplicantsAsync(id);
+            
+            // Create view model with job post and applicants
             ViewData["Title"] = $"Job Post Details - {jobPost.Title}";
+            ViewData["Applicants"] = applicants;
+            ViewData["JobPostId"] = id;
+            
             return View(jobPost);
         }
         catch (Exception ex)

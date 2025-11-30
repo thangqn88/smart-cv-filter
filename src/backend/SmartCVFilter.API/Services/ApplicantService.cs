@@ -387,46 +387,72 @@ public class ApplicantService : IApplicantService
                 .Include(a => a.JobPost)
                 .AsQueryable();
 
-            _logger.LogDebug("Initial query created. Total applicants in database: {Count}",
-                await _context.Applicants.CountAsync());
+            var totalApplicants = await _context.Applicants.CountAsync();
+            _logger.LogDebug("Initial query created. Total applicants in database: {Count}", totalApplicants);
 
             // Apply user filter (admin can see all, regular users see only their own job post's applicants)
             if (!isAdmin)
             {
                 query = query.Where(a => a.JobPost.UserId == userId);
-                _logger.LogDebug("Applied user filter. UserId: {UserId}", userId);
+                var userApplicantsCount = await query.CountAsync();
+                _logger.LogDebug("Applied user filter. UserId: {UserId}, User's applicants count: {Count}", userId, userApplicantsCount);
             }
             else
             {
                 _logger.LogDebug("Admin user - no user filter applied");
             }
 
-            // Apply search (case-insensitive)
+            // Apply search (case-insensitive) - trim whitespace for better matching
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var searchPattern = $"%{searchTerm}%";
+                var trimmedSearch = searchTerm.Trim();
+                var searchPattern = $"%{trimmedSearch}%";
+                
+                // Search across multiple fields with OR logic
+                // Note: We search individual fields separately since EF doesn't support string concatenation in ILike
                 query = query.Where(a =>
                     EF.Functions.ILike(a.FirstName, searchPattern) ||
                     EF.Functions.ILike(a.LastName, searchPattern) ||
                     EF.Functions.ILike(a.Email, searchPattern) ||
                     (a.PhoneNumber != null && EF.Functions.ILike(a.PhoneNumber, searchPattern)));
 
-                _logger.LogDebug("Applied search filter. SearchPattern: '{SearchPattern}'", searchPattern);
+                _logger.LogDebug("Applied search filter. SearchTerm: '{SearchTerm}', SearchPattern: '{SearchPattern}'", trimmedSearch, searchPattern);
+                
+                var afterSearchCount = await query.CountAsync();
+                _logger.LogDebug("After search filter, found {Count} matching applicants", afterSearchCount);
             }
             else
             {
                 _logger.LogDebug("No search term provided - returning all matching applicants");
             }
 
-            // Limit results to top 20 most recent matches
-            var applicants = await query
+            // Get all matching applicants first
+            var allApplicants = await query
                 .OrderByDescending(a => a.AppliedDate)
-                .Take(20)
                 .ToListAsync();
 
-            _logger.LogInformation("Query executed successfully. Found {Count} matching applicants", applicants.Count);
+            _logger.LogInformation("Query executed successfully. Found {Count} matching applicants before deduplication", allApplicants.Count);
 
-            var results = applicants.Select(a => new ApplicantResponse
+            // Group by email (case-insensitive) to handle cases where same applicant applied to multiple jobs
+            // Since one applicant can apply to many jobs, we show the most recent application for each unique email
+            // This prevents showing duplicate entries for the same person
+            var uniqueApplicants = allApplicants
+                .GroupBy(a => a.Email.ToLowerInvariant())
+                .Select(g => g.OrderByDescending(a => a.AppliedDate).First())
+                .OrderByDescending(a => a.AppliedDate)
+                .Take(20)
+                .ToList();
+
+            _logger.LogInformation("After grouping by email, found {Count} unique applicants (showing most recent application per email)", uniqueApplicants.Count);
+            
+            // Log all found emails for debugging
+            if (uniqueApplicants.Any())
+            {
+                var foundEmails = string.Join(", ", uniqueApplicants.Select(a => a.Email));
+                _logger.LogDebug("Found applicant emails: {Emails}", foundEmails);
+            }
+
+            var results = uniqueApplicants.Select(a => new ApplicantResponse
             {
                 Id = a.Id,
                 FirstName = a.FirstName,
@@ -441,6 +467,18 @@ public class ApplicantService : IApplicantService
                 JobPostId = a.JobPostId,
                 JobTitle = a.JobPost?.Title ?? "Unknown"
             }).ToList();
+
+            // Log sample results for debugging
+            if (results.Any())
+            {
+                _logger.LogDebug("Sample results: {SampleResults}", 
+                    string.Join(", ", results.Take(3).Select(r => $"{r.FirstName} {r.LastName} ({r.Email})")));
+            }
+            else
+            {
+                _logger.LogWarning("No results found for search term: '{SearchTerm}'. Total applicants in DB: {Total}, User's applicants: {UserCount}",
+                    searchTerm, totalApplicants, !isAdmin ? await _context.Applicants.CountAsync(a => a.JobPost.UserId == userId) : totalApplicants);
+            }
 
             _logger.LogInformation("SearchApplicantsAsync completed successfully. Returning {Count} results", results.Count);
             return results;
