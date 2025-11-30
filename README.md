@@ -57,12 +57,6 @@ POSTGRES_PASSWORD=postgres123
 POSTGRES_DB=smart_cv_filter_db
 POSTGRES_PORT=5432
 
-# JWT Configuration
-JWT_SECRET_KEY=YourSuperSecretKeyThatIsAtLeast32CharactersLong!
-JWT_ISSUER=SmartCVFilter.API
-JWT_AUDIENCE=SmartCVFilter.Client
-JWT_EXPIRATION_DAYS=7
-
 # Google Gemini AI Configuration
 GEMINI_API_KEY=your-gemini-api-key-here
 GEMINI_MODEL_NAME=gemini-2.5-flash
