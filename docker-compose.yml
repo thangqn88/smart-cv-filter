@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-cv-filter-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_DB: ${POSTGRES_DB:-smart_cv_filter_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/backend/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - smart-cv-filter-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin (Database Management UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: smart-cv-filter-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@smartcv.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Backend API
+  backend:
+    build:
+      context: ./src/backend/SmartCVFilter.API
+      dockerfile: Dockerfile
+    container_name: smart-cv-filter-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-smart_cv_filter_db};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres123}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
+      - JwtSettings__Issuer=${JWT_ISSUER:-SmartCVFilter.API}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-SmartCVFilter.Client}
+      - JwtSettings__ExpirationInDays=${JWT_EXPIRATION_DAYS:-7}
+      - GeminiAI__ApiKey=${GEMINI_API_KEY:-}
+      - GeminiAI__ModelName=${GEMINI_MODEL_NAME:-gemini-2.5-flash}
+      - GeminiAI__MaxTokens=${GEMINI_MAX_TOKENS:-2048}
+      - FileUpload__MaxFileSize=${FILE_UPLOAD_MAX_SIZE:-10485760}
+      - FileUpload__AllowedExtensions=${FILE_UPLOAD_ALLOWED_EXTENSIONS:-.pdf,.doc,.docx,.txt}
+      - FileUpload__UploadPath=${FILE_UPLOAD_PATH:-uploads/cvs}
+    ports:
+      - "${BACKEND_PORT:-5000}:80"
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/api/auth/validate || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Web
+  frontend:
+    build:
+      context: ./src/frontend/SmartCVFilter.Web
+      dockerfile: Dockerfile
+    container_name: smart-cv-filter-frontend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:80
+      - ApiSettings__BaseUrl=http://backend:80/api
+      - JwtSettings__Issuer=${JWT_ISSUER:-SmartCVFilter}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-SmartCVFilter}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-YourSuperSecretKeyThatIsAtLeast32CharactersLong!}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      - smart-cv-filter-network
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  backend_uploads:
+  backend_logs:
+
+networks:
+  smart-cv-filter-network:
+    driver: bridge
+

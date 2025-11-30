@@ -56,3 +56,4 @@ nunit-*.xml
 # Visual Studio
 .vs/
 .env
+*appsettings.Development.json

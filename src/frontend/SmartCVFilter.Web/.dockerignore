@@ -9,8 +9,6 @@ obj/
 *.pdb
 *.exe
 *.log
-logs/
-uploads/
 **/node_modules/
 **/.git/
 **/.gitignore
@@ -22,3 +20,4 @@ uploads/
 **/.env.*.local
 *.md
 !README.md
+
