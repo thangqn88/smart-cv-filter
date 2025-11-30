@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SmartCVFilter.API.Data;
 using SmartCVFilter.API.DTOs;
 using SmartCVFilter.API.Models;
@@ -10,11 +11,13 @@ public class ApplicantService : IApplicantService
 {
     private readonly ApplicationDbContext _context;
     private readonly IScreeningService _screeningService;
+    private readonly ILogger<ApplicantService> _logger;
 
-    public ApplicantService(ApplicationDbContext context, IScreeningService screeningService)
+    public ApplicantService(ApplicationDbContext context, IScreeningService screeningService, ILogger<ApplicantService> logger)
     {
         _context = context;
         _screeningService = screeningService;
+        _logger = logger;
     }
 
     private static List<string> DeserializeStringList(string jsonString)
@@ -371,6 +374,86 @@ public class ApplicantService : IApplicantService
             "applieddate" => isDescending ? query.OrderByDescending(a => a.AppliedDate) : query.OrderBy(a => a.AppliedDate),
             _ => query.OrderByDescending(a => a.AppliedDate)
         };
+    }
+
+    public async Task<IEnumerable<ApplicantResponse>> SearchApplicantsAsync(string searchTerm, string userId, bool isAdmin = false)
+    {
+        _logger.LogInformation("SearchApplicantsAsync called. SearchTerm: '{SearchTerm}', UserId: {UserId}, IsAdmin: {IsAdmin}",
+            searchTerm, userId, isAdmin);
+
+        try
+        {
+            var query = _context.Applicants
+                .Include(a => a.JobPost)
+                .AsQueryable();
+
+            _logger.LogDebug("Initial query created. Total applicants in database: {Count}",
+                await _context.Applicants.CountAsync());
+
+            // Apply user filter (admin can see all, regular users see only their own job post's applicants)
+            if (!isAdmin)
+            {
+                query = query.Where(a => a.JobPost.UserId == userId);
+                _logger.LogDebug("Applied user filter. UserId: {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogDebug("Admin user - no user filter applied");
+            }
+
+            // Apply search (case-insensitive)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var searchPattern = $"%{searchTerm}%";
+                query = query.Where(a =>
+                    EF.Functions.ILike(a.FirstName, searchPattern) ||
+                    EF.Functions.ILike(a.LastName, searchPattern) ||
+                    EF.Functions.ILike(a.Email, searchPattern) ||
+                    (a.PhoneNumber != null && EF.Functions.ILike(a.PhoneNumber, searchPattern)));
+
+                _logger.LogDebug("Applied search filter. SearchPattern: '{SearchPattern}'", searchPattern);
+            }
+            else
+            {
+                _logger.LogDebug("No search term provided - returning all matching applicants");
+            }
+
+            // Limit results to top 20 most recent matches
+            var applicants = await query
+                .OrderByDescending(a => a.AppliedDate)
+                .Take(20)
+                .ToListAsync();
+
+            _logger.LogInformation("Query executed successfully. Found {Count} matching applicants", applicants.Count);
+
+            var results = applicants.Select(a => new ApplicantResponse
+            {
+                Id = a.Id,
+                FirstName = a.FirstName,
+                LastName = a.LastName,
+                Email = a.Email,
+                PhoneNumber = a.PhoneNumber,
+                LinkedInProfile = a.LinkedInProfile,
+                PortfolioUrl = a.PortfolioUrl,
+                CoverLetter = a.CoverLetter,
+                Status = a.Status,
+                AppliedDate = a.AppliedDate,
+                JobPostId = a.JobPostId,
+                JobTitle = a.JobPost?.Title ?? "Unknown"
+            }).ToList();
+
+            _logger.LogInformation("SearchApplicantsAsync completed successfully. Returning {Count} results", results.Count);
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error in SearchApplicantsAsync. SearchTerm: '{SearchTerm}', UserId: {UserId}, IsAdmin: {IsAdmin}, ExceptionType: {ExceptionType}, Message: {Message}",
+                searchTerm, userId, isAdmin, ex.GetType().Name, ex.Message);
+
+            // Re-throw to be handled by the controller
+            throw;
+        }
     }
 }
 

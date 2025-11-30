@@ -13,5 +13,8 @@ public interface IApplicantService
 
     // Paged methods
     Task<ApplicantPagedResponse> GetApplicantsPagedAsync(ApplicantPagedRequest request, string userId, bool isAdmin = false);
+    
+    // Search existing applicants
+    Task<IEnumerable<ApplicantResponse>> SearchApplicantsAsync(string searchTerm, string userId, bool isAdmin = false);
 }
 

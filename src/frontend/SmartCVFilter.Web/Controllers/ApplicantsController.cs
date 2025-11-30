@@ -235,6 +235,27 @@ public class ApplicantsController : BaseController
         return View(model);
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> SearchApplicants(string? search)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                return Json(new List<ApplicantResponse>());
+            }
+
+            var applicants = await _applicantService.SearchApplicantsAsync(search);
+            return Json(applicants);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching applicants with term: {SearchTerm}", search);
+            return Json(new List<ApplicantResponse>());
+        }
+    }
+
 
 
     [HttpPost]

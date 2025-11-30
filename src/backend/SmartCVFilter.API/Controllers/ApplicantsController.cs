@@ -275,5 +275,6 @@ public class ApplicantsController : BaseController
             return StatusCode(500, new { message = "An error occurred while starting the screening process." });
         }
     }
+
 }
 

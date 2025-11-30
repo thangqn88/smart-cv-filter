@@ -130,4 +130,19 @@ public class ApplicantService : IApplicantService
         }
     }
 
+    public async Task<List<ApplicantResponse>> SearchApplicantsAsync(string searchTerm)
+    {
+        try
+        {
+            var endpoint = $"applicantssearch?search={Uri.EscapeDataString(searchTerm ?? string.Empty)}";
+            var response = await _apiService.MakeRequestAsync<List<ApplicantResponse>>(endpoint, HttpMethod.Get);
+            return response ?? new List<ApplicantResponse>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching applicants with term: {SearchTerm}", searchTerm);
+            return new List<ApplicantResponse>();
+        }
+    }
+
 }

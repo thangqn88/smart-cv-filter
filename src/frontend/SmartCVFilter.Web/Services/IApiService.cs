@@ -39,6 +39,9 @@ public interface IApplicantService
 
     // Paged methods
     Task<ApplicantPagedResponse?> GetApplicantsPagedAsync(ApplicantPagedRequest request);
+    
+    // Search existing applicants
+    Task<List<ApplicantResponse>> SearchApplicantsAsync(string searchTerm);
 }
 
 public interface ICVUploadService
