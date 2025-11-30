@@ -4,6 +4,7 @@ using SmartCVFilter.Web.Services;
 
 namespace SmartCVFilter.Web.Controllers;
 
+[Authorize]
 public class HomeController : Controller
 {
     private readonly IJobPostService _jobPostService;
@@ -75,6 +76,7 @@ public class HomeController : Controller
         }
     }
 
+    [AllowAnonymous]
     public IActionResult Error()
     {
         ViewData["Title"] = "Error";

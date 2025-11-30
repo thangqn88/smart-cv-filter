@@ -242,12 +242,12 @@ public class JobPostService : IJobPostService
 
         if (!string.IsNullOrEmpty(request.Department))
         {
-            query = query.Where(j => j.Department.Contains(request.Department));
+            query = query.Where(j => EF.Functions.ILike(j.Department, $"%{request.Department}%"));
         }
 
         if (!string.IsNullOrEmpty(request.Location))
         {
-            query = query.Where(j => j.Location.Contains(request.Location));
+            query = query.Where(j => EF.Functions.ILike(j.Location, $"%{request.Location}%"));
         }
 
         if (!string.IsNullOrEmpty(request.EmploymentType))
@@ -260,14 +260,15 @@ public class JobPostService : IJobPostService
             query = query.Where(j => j.ExperienceLevel == request.ExperienceLevel);
         }
 
-        // Apply search
+        // Apply search (case-insensitive)
         if (!string.IsNullOrEmpty(request.Search))
         {
+            var searchPattern = $"%{request.Search}%";
             query = query.Where(j =>
-                j.Title.Contains(request.Search) ||
-                j.Description.Contains(request.Search) ||
-                j.Location.Contains(request.Search) ||
-                j.Department.Contains(request.Search));
+                EF.Functions.ILike(j.Title, searchPattern) ||
+                EF.Functions.ILike(j.Description, searchPattern) ||
+                EF.Functions.ILike(j.Location, searchPattern) ||
+                EF.Functions.ILike(j.Department, searchPattern));
         }
 
         // Apply sorting
@@ -329,12 +330,12 @@ public class JobPostService : IJobPostService
         // Apply filters
         if (!string.IsNullOrEmpty(request.Department))
         {
-            query = query.Where(j => j.Department.Contains(request.Department));
+            query = query.Where(j => EF.Functions.ILike(j.Department, $"%{request.Department}%"));
         }
 
         if (!string.IsNullOrEmpty(request.Location))
         {
-            query = query.Where(j => j.Location.Contains(request.Location));
+            query = query.Where(j => EF.Functions.ILike(j.Location, $"%{request.Location}%"));
         }
 
         if (!string.IsNullOrEmpty(request.EmploymentType))
@@ -347,14 +348,15 @@ public class JobPostService : IJobPostService
             query = query.Where(j => j.ExperienceLevel == request.ExperienceLevel);
         }
 
-        // Apply search
+        // Apply search (case-insensitive)
         if (!string.IsNullOrEmpty(request.Search))
         {
+            var searchPattern = $"%{request.Search}%";
             query = query.Where(j =>
-                j.Title.Contains(request.Search) ||
-                j.Description.Contains(request.Search) ||
-                j.Location.Contains(request.Search) ||
-                j.Department.Contains(request.Search));
+                EF.Functions.ILike(j.Title, searchPattern) ||
+                EF.Functions.ILike(j.Description, searchPattern) ||
+                EF.Functions.ILike(j.Location, searchPattern) ||
+                EF.Functions.ILike(j.Department, searchPattern));
         }
 
         // Apply sorting

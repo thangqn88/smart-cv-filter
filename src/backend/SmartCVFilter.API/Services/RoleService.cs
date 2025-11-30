@@ -36,10 +36,11 @@ public class RoleService : IRoleService
         {
             var query = _roleManager.Roles.AsQueryable();
 
-            // Apply search filter
+            // Apply search filter (case-insensitive)
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(r => r.Name!.Contains(search));
+                var searchPattern = $"%{search}%";
+                query = query.Where(r => EF.Functions.ILike(r.Name!, searchPattern));
             }
 
             var totalRoles = await query.CountAsync();

@@ -36,14 +36,15 @@ public class UserService : IUserService
         {
             var query = _userManager.Users.AsQueryable();
 
-            // Apply search filter
+            // Apply search filter (case-insensitive)
             if (!string.IsNullOrEmpty(search))
             {
+                var searchPattern = $"%{search}%";
                 query = query.Where(u =>
-                    u.FirstName.Contains(search) ||
-                    u.LastName.Contains(search) ||
-                    (u.Email != null && u.Email.Contains(search)) ||
-                    (u.CompanyName != null && u.CompanyName.Contains(search)));
+                    EF.Functions.ILike(u.FirstName, searchPattern) ||
+                    EF.Functions.ILike(u.LastName, searchPattern) ||
+                    (u.Email != null && EF.Functions.ILike(u.Email, searchPattern)) ||
+                    (u.CompanyName != null && EF.Functions.ILike(u.CompanyName, searchPattern)));
             }
 
             // Apply role filter

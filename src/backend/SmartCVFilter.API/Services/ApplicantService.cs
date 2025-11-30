@@ -280,14 +280,15 @@ public class ApplicantService : IApplicantService
             query = query.Where(a => a.AppliedDate <= request.AppliedTo.Value);
         }
 
-        // Apply search
+        // Apply search (case-insensitive)
         if (!string.IsNullOrEmpty(request.Search))
         {
+            var searchPattern = $"%{request.Search}%";
             query = query.Where(a =>
-                a.FirstName.Contains(request.Search) ||
-                a.LastName.Contains(request.Search) ||
-                a.Email.Contains(request.Search) ||
-                (a.PhoneNumber != null && a.PhoneNumber.Contains(request.Search)));
+                EF.Functions.ILike(a.FirstName, searchPattern) ||
+                EF.Functions.ILike(a.LastName, searchPattern) ||
+                EF.Functions.ILike(a.Email, searchPattern) ||
+                (a.PhoneNumber != null && EF.Functions.ILike(a.PhoneNumber, searchPattern)));
         }
 
         // Apply sorting
